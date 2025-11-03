@@ -1,0 +1,166 @@
+<vex-page-layout @fadeInRight>
+
+  <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
+    [class.px-6]="layoutCtrl.value === 'fullwidth'" class="-mt-6">
+    <div class="card mt-4">
+      <div class="dashboard-lite p-4">
+        <div class="bg-app-bar appbar px-6 h-16 border-b sticky top-0 left-0 flex items-center z-10">
+          <nav class="breadcrumb-simple" aria-label="Ruta de navegación">
+            <a routerLink="/administracion" class="crumb-link">
+              <mat-icon inline>home</mat-icon>
+              Administración
+            </a>
+            <span class="sep">/</span>
+            <span class="crumb-current" aria-current="page">Rutas</span>
+          </nav>
+
+          <div class="flex-grow"></div>
+
+          <div class="flex gap-3 actions-bar">
+            <button mat-raised-button color="primary" type="button" class="btn-soft textGenerico"
+              (click)="toggleExpandGroups()" matTooltip="Expandir / Contraer grupos">
+              <mat-icon svgIcon="mat:compare_arrows"></mat-icon>
+              <span class="btn-text">{{ autoExpandAllGroups ? 'Contraer' : 'Expandir' }}</span>
+            </button>
+
+            <button mat-raised-button color="accent" type="button" class="btn-soft textGenerico"
+              (click)="limpiarCampos()" matTooltip="Limpiar filtros">
+              <mat-icon svgIcon="mat:restore"></mat-icon>
+              <span class="btn-text">Limpiar</span>
+            </button>
+
+            <button mat-raised-button color="warn" (click)="agregarRuta()" type="button" class="btn-soft textGenerico"
+              matTooltip="Agregar usuario">
+              <mat-icon>add</mat-icon>
+              <span class="btn-text">Agregar</span>
+            </button>
+          </div>
+        </div>
+
+        <section class="mt-5 table-shell">
+          <dx-data-grid #gridContainer id="gridContainer" [columnHidingEnabled]="true" [showBorders]="true"
+            [showColumnLines]="true" [showRowLines]="true" [rowAlternationEnabled]="true" [dataSource]="listaRutas"
+            [width]="'100%'" [remoteOperations]="{ paging: true }" [paging]="{ pageSize: pageSize }" [pager]="{ 
+                  showPageSizeSelector: true, 
+                  allowedPageSizes: [50], 
+                  showInfo: true,
+                  infoText: 'Página {0} de {1}', 
+                  visible: true 
+              }" (onPageIndexChanged)="onPageIndexChanged($event)" (onOptionChanged)="onGridOptionChanged($event)">
+            <dxo-search-panel [visible]="true" [width]="200" placeholder="Buscar..."></dxo-search-panel>
+            <dxo-group-panel [emptyPanelText]="mensajeAgrupar" [visible]="true"></dxo-group-panel>
+            <dxo-filter-row [visible]="showFilterRow"></dxo-filter-row>
+            <dxo-header-filter [visible]="showHeaderFilter"></dxo-header-filter>
+            <dxo-grouping [autoExpandAll]="true"></dxo-grouping>
+            <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[20]" [showInfo]="true"></dxo-pager>
+            <dxi-column caption="Acciones" cellTemplate="Acciones" alignment="center" [width]="180"></dxi-column>
+            <dxi-column dataField="estatusRuta" caption="Estatus" alignment="center" cellTemplate="est">
+              <div *dxTemplate="let f of 'est'">
+                <span [ngClass]="f.data.estatusRuta === 1 ? 'badge-status activo' : 'badge-status inactivo'">
+                  {{ f.data.estatusRuta === 1 ? 'Activo' : 'Inactivo' }}
+                </span>
+              </div>
+            </dxi-column>
+            <dxi-column dataField="nombre" caption="Nombre" alignment="center" [width]="250"></dxi-column>
+            <dxi-column dataField="nombreInicio" caption="Punto Inicio" [width]="300" alignment="center"
+              cellTemplate="cell">
+              <div *dxTemplate="let data of 'cell'">
+                <div style="white-space: pre-wrap; word-break: break-word; text-align: center;">
+                  {{ data.value }}
+                </div>
+                <div *ngIf="data.value == null" style="display: flex; align-items: center; justify-content: center;">
+                  Sin registro
+                </div>
+              </div>
+            </dxi-column>
+            <dxi-column dataField="nombreFin" caption="Punto Fin" [width]="300" alignment="center" cellTemplate="agw">
+              <div *dxTemplate="let data of 'agw'">
+                <div style="white-space: pre-wrap; word-break: break-word; text-align: center;">
+                  {{ data.value }}
+                </div>
+                <div *ngIf="data.value == null" style="display: flex; align-items: center; justify-content: center;">
+                  Sin registro
+                </div>
+              </div>
+            </dxi-column>
+            <dxi-column dataField="fechaCreacionRuta" caption="Fecha Creación" [width]="200" alignment="center"
+              cellTemplate="regFechaCreacion">
+              <div *dxTemplate="let s of 'regFechaCreacion' ">
+                {{s.data.fechaCreacionRuta | date:'dd/MM/yyyy HH:mm' : '+0000'}}
+              </div>
+            </dxi-column>
+            <dxi-column dataField="nombreZona" caption="Nombre Zona" [width]="200" alignment="center"></dxi-column>
+            <dxi-column dataField="descripcionZona" caption="Descripción" alignment="center"></dxi-column>
+            <dxo-export [enabled]="false" [allowExportSelectedData]="true"
+              [texts]="{ exportAll: 'Exportar todos los datos a Excel', exportSelectedRows: 'Exportar filas seleccionadas a Excel' }">
+            </dxo-export>
+            <div *dxTemplate="let row of 'Acciones'" class="d-flex gap-3 justify-content-center">
+              <div>
+                <button class="btn-edit" (click)="abrirModal(row.data)">
+                  <mat-icon class="btn__icon">place</mat-icon>
+                </button>
+              </div>
+              <div>
+                <button *ngIf="row.data.estatusRuta === 0" class="btn-active" (click)="activar(row.data)">
+                  <mat-icon class="btn__icon">check_circle</mat-icon>
+                </button>
+
+                <button *ngIf="row.data.estatusRuta === 1" class="btn-desactive" (click)="desactivar(row.data)">
+                  <mat-icon class="btn__icon">block</mat-icon>
+                </button>
+              </div>
+            </div>
+          </dx-data-grid>
+        </section>
+      </div>
+    </div>
+  </vex-page-layout-content>
+</vex-page-layout>
+
+
+
+<div *ngIf="modalOpen" class="custom-modal-backdrop" [class.fade-out]="modalClosing || modalAnim === 'out'"
+  (click)="onBackdrop()">
+  <div class="custom-modal-content" [class.animate-in]="modalAnim === 'in'" [class.animate-out]="modalAnim === 'out'"
+    (click)="$event.stopPropagation()">
+    <div class="custom-modal-header">
+      <div class="custom-modal-icon">
+        <i class="fa fa-map-pin"></i>
+      </div>
+      <h2>{{ selectedRuta?.nombre || '' }}</h2>
+      <button class="custom-modal-close" (click)="cerrarModal()">
+        <span>×</span>
+      </button>
+    </div>
+    <div class="custom-modal-body">
+      <div *ngIf="hasCoords; else noMapTpl" id="map" class="trx-map"></div>
+      <div class="pts-grid" *ngIf="selectedRuta">
+        <div class="pt-card">
+          <div class="pt-title">
+            <i class="fa-solid fa-location-dot" style="color:#16a34a;"></i>
+            <span>Punto inicio</span>
+          </div>
+          <div class="pt-addr" *ngIf="inicioDireccion">{{ inicioDireccion }}</div>
+        </div>
+
+        <div class="pt-card">
+          <div class="pt-title">
+            <i class="fa-solid fa-location-dot" style="color:#ef4444;"></i>
+            <span>Punto fin</span>
+          </div>
+          <div class="pt-addr" *ngIf="finDireccion">{{ finDireccion }}</div>
+        </div>
+      </div>
+      <ng-template #noMapTpl>
+        <div class="trx-map-empty">
+          No hay ubicación de esta transacción.
+        </div>
+      </ng-template>
+      <div style="display: flex; justify-content: center; align-items: center;">
+        <button class="btn-success" (click)="accionPrincipal()">
+          Confirmar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

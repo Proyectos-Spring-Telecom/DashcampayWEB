@@ -1,0 +1,27 @@
+// Fonts
+@import "partials/fonts/inter";
+
+// Styles / CSS Variables
+@import "partials/styles/style-dark";
+@import "partials/styles/style-light";
+@import "partials/styles/style-default";
+
+@import "themes";
+
+// Partials
+@import "partials/css-vars";
+@import "partials/layout";
+@import "partials/horizontal";
+@import "partials/misc";
+@import "partials/vertical";
+@import "partials/print";
+@import "partials/plugins/@angular/material/index";
+@import "partials/plugins/apexcharts/apexcharts";
+
+// Layouts
+@import "partials/layouts/layout-apollo";
+@import "partials/layouts/layout-ares";
+@import "partials/layouts/layout-hermes";
+@import "partials/layouts/layout-ikaros";
+@import "partials/layouts/layout-poseidon";
+@import "partials/layouts/layout-zeus";

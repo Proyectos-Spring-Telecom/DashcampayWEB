@@ -1,0 +1,347 @@
+/* =========================
+   VARIABLES (mínimas)
+========================= */
+:root{
+  --azul-oscuro:#0A2E57;
+  --borde:#E1E7EF;
+  --radius:18px;
+  --txt:#0F172A;
+  --muted:#64748B;
+}
+
+/* =========================
+   TITULOS PRINCIPALES
+========================= */
+h1, h2{
+  background:var(--azul-oscuro);
+  color:#fff;
+  display:inline-block;
+  padding:.4rem .7rem;
+  border-radius:10px;
+}
+
+/* =========================
+   SEPARACIÓN Y ALINEACIÓN DE CARDS
+   (solo espaciado y altura pareja)
+========================= */
+.dashboard-wrap .row.g-3{
+  row-gap:1rem;            /* separación vertical entre filas */
+  margin-top:1rem;
+  margin-bottom:1rem;
+}
+.dashboard-wrap .row.g-3 > [class*="col-"]{
+  padding-left:.75rem;      /* separación lateral pareja */
+  padding-right:.75rem;
+  display:flex;             /* permite igualar alturas */
+}
+.dashboard-wrap .row.g-3 > [class*="col-"] > .kpi-card,
+.dashboard-wrap .row.g-3 > [class*="col-"] > .card-plot{
+  width:100%;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  margin:0;
+}
+
+/* =========================
+   KPI CARD (base sobria)
+========================= */
+.kpi-card{
+  background:#fff;
+  border:1px solid var(--borde);
+  border-radius:var(--radius);
+  padding:1rem;
+  box-shadow:none;
+  transition:transform .2s ease;
+}
+.kpi-card:hover{ transform:translateY(-2px); }
+
+.kpi-card .kpi-value{ color:var(--txt); font-weight:800; }
+.kpi-card .kpi-foot{ color:var(--muted); font-weight:600; }
+
+/* Banda del título de cada card al 100% del ancho */
+.kpi-card .kpi-top{
+  margin:-1rem -1rem .75rem;
+  padding:.65rem 1rem;
+  background:var(--azul-oscuro);
+  color:#fff;
+  // border-top-left-radius:var(--radius);
+  // border-top-right-radius:var(--radius);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.kpi-card .kpi-top i.material-icons{ color:#fff; }
+
+/* =========================
+   8 PRIMERAS KPI CON ACENTO (solo color de la banda)
+========================= */
+.kpi-row > div:nth-child(1)  .kpi-card{ --c:#1F5AA8; }
+.kpi-row > div:nth-child(2)  .kpi-card{ --c:#0A2E57; }
+.kpi-row > div:nth-child(3)  .kpi-card{ --c:#A6CE39; }
+.kpi-row > div:nth-child(4)  .kpi-card{ --c:#6AA6E8; }
+.kpi-row > div:nth-child(5)  .kpi-card{ --c:#6CCF9A; }
+.kpi-row > div:nth-child(6)  .kpi-card{ --c:#EDB25C; }
+.kpi-row > div:nth-child(7)  .kpi-card{ --c:#8BA9FF; }
+.kpi-row > div:nth-child(8)  .kpi-card{ --c:#84D1F0; }
+
+.kpi-row > div:nth-child(-n+8) .kpi-card .kpi-top{
+  background: var(--c);   /* solo cambia el color de la banda */
+}
+
+/* =========================
+   CARD CON TABLA / LISTA
+   (rellenan el alto y no se pegan)
+========================= */
+.kpi-card.kpi-table .kpi-top{ margin-bottom:.5rem; }
+
+.kpi-card.kpi-table .table-responsive{
+  flex:1 1 auto;
+  min-height:0;
+  overflow:auto;
+  margin:0;               /* sin márgenes extra */
+  padding:0;
+}
+
+/* =========================
+   CARD DE ALERTAS (solo scroll y espaciado)
+========================= */
+.kpi-card.kpi-table .alerts-list{
+  flex:1 1 auto;
+  min-height:0;
+  overflow:auto;
+  margin:0; padding:0 1rem 1rem;
+}
+.kpi-card.kpi-table .alerts-list .list-group-item{
+  border:1px solid var(--borde);
+  border-radius:12px;
+  margin:.4rem 0;
+}
+
+/* =========================
+   PLOTS: SOLO TÍTULO IGUAL A LAS CARDS
+   (no se tocan estilos de la gráfica)
+========================= */
+.card-plot{
+  background:#fff;
+  border:1px solid var(--borde);
+  border-radius:var(--radius);
+  padding:1rem;
+}
+.card-plot .plot-head{
+  margin:-1rem -1rem .75rem;
+  padding:.65rem 1rem;
+  background:var(--azul-oscuro);
+  color:#fff;
+  // border-top-left-radius:var(--radius);
+  // border-top-right-radius:var(--radius);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.card-plot .plot-head h3{ margin:0; color:#fff; }
+.card-plot .plot-head .hint{ color:#EAF0F6;  }
+
+/* =========================
+   UTILIDADES DE TABLA (mínimas)
+========================= */
+.table .text-end{ text-align:right!important; }
+
+
+/* ===== 1) TÍTULOS AZULES SOLO DONDE DEBE ===== */
+/* Page title, encabezados h1–h3 y títulos de gráficas y de cards con TABLA */
+.page-title,
+h1, h2, h3,
+.card-plot .plot-head,
+.kpi-card.kpi-table .kpi-top {
+  background:#0A2E57 !important;
+  color:#fff !important;
+}
+.card-plot .plot-head .hint,
+.page-title i,
+.card-plot .plot-head i,
+.kpi-card.kpi-table .kpi-top i.material-icons { color:#fff !important; }
+
+/* IMPORTANTE: NO aplicar azul a los títulos de KPI métricas (sin .kpi-table) */
+.kpi-card:not(.kpi-table) .kpi-top { background:initial; color:inherit; }
+
+/* ===== 2) COLORES DE LAS 8 PRIMERAS KPI (solo métricas) ===== */
+.kpi-row > div:nth-child(1) .kpi-card:not(.kpi-table) .kpi-top { background:#1F5AA8 !important; color:#fff; }
+.kpi-row > div:nth-child(2) .kpi-card:not(.kpi-table) .kpi-top { background:#0A2E57 !important; color:#fff; }
+.kpi-row > div:nth-child(3) .kpi-card:not(.kpi-table) .kpi-top { background:#A6CE39 !important; color:#0b1320; }
+.kpi-row > div:nth-child(4) .kpi-card:not(.kpi-table) .kpi-top { background:#E6B24A !important; color:#0b1320; } /* dorado/ámbar */
+.kpi-row > div:nth-child(5) .kpi-card:not(.kpi-table) .kpi-top { background:#2F855A !important; color:#fff; }   /* verde éxito */
+.kpi-row > div:nth-child(6) .kpi-card:not(.kpi-table) .kpi-top { background:#EDB25C !important; color:#0b1320; } /* naranja */
+.kpi-row > div:nth-child(7) .kpi-card:not(.kpi-table) .kpi-top { background:#8BA9FF !important; color:#0b1320; }
+.kpi-row > div:nth-child(8) .kpi-card:not(.kpi-table) .kpi-top { background:#84D1F0 !important; color:#0b1320; }
+
+.kpi-row > div:nth-child(-n+8) .kpi-card:not(.kpi-table) .kpi-top i.material-icons { color:inherit; }
+
+
+/* =======================
+   CARD: Validadores con alertas
+   (scope 100% independiente)
+======================= */
+.kpi-card.kpi-table:has(.alerts-list){
+  background:#fff;
+  border:1px solid #E1E7EF;
+  border-radius:18px;
+  padding:1rem;
+}
+
+/* Encabezado 100% ancho, icono blanco */
+.kpi-card.kpi-table:has(.alerts-list) .kpi-top{
+  margin:-1rem -1rem .75rem;
+  padding:.65rem 1rem;
+  background:#0A2E57;
+  color:#fff;
+  // border-top-left-radius:18px;
+  // border-top-right-radius:18px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+
+.kpi-card.kpi-table:has(.alerts-list) .kpi-top i.material-icons{ color:#fff; }
+
+.kpi-card.kpi-table:has(.alerts-list) .alerts-list{
+  margin:-.25rem -1rem -1rem;
+  padding:.35rem 1rem 1rem;
+  max-height: 420px;
+  overflow:auto;
+}
+
+.kpi-card.kpi-table:has(.alerts-list) .alerts-list::-webkit-scrollbar{ height:8px; width:8px }
+.kpi-card.kpi-table:has(.alerts-list) .alerts-list::-webkit-scrollbar-thumb{
+  background:#D7E0EA; border-radius:999px;
+}
+
+.kpi-card.kpi-table:has(.alerts-list) .alerts-list::-webkit-scrollbar-track{ background:transparent }
+
+.kpi-card.kpi-table:has(.alerts-list) .list-group-item{
+  background:#fff;
+  border:1px solid #E9EEF5 !important;
+  border-radius:12px !important;
+  margin:.4rem 0;
+  padding:.8rem .95rem;
+  transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+.kpi-card.kpi-table:has(.alerts-list) .list-group-item:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 18px rgba(15,23,42,.08);
+  border-color:#DDE6F0;
+}
+
+.kpi-card.kpi-table:has(.alerts-list) .list-group-item:has(.badge.critico),
+.kpi-card.kpi-table:has(.alerts-list) .list-group-item:has(.badge.danger){
+  border-left:4px solid #E11D48;
+}
+.kpi-card.kpi-table:has(.alerts-list) .list-group-item:has(.badge.alta){
+  border-left:4px solid #F59E0B;
+}
+.kpi-card.kpi-table:has(.alerts-list) .list-group-item:has(.badge.media){
+  border-left:4px solid #1F5AA8;
+}
+.kpi-card.kpi-table:has(.alerts-list) .list-group-item:has(.badge.baja){
+  border-left:4px solid #A6CE39;
+}
+
+.kpi-card.kpi-table:has(.alerts-list) .txt-strong{
+  font-weight:800; color:#0F172A; letter-spacing:.2px;
+}
+
+.kpi-card.kpi-table:has(.alerts-list) .txt-dim{
+  color:#64748B; font-weight:500; margin-top:.15rem;
+}
+
+.kpi-card.kpi-table:has(.alerts-list) .badge{
+  border-radius:999px;
+  padding:.35rem .7rem;
+  font-weight:800;
+  letter-spacing:.25px;
+  min-width:92px; text-align:center;
+  text-transform:uppercase; font-size:.75rem;
+}
+
+.kpi-card.kpi-table:has(.alerts-list) .badge.critico,
+.kpi-card.kpi-table:has(.alerts-list) .badge.danger{
+  background:#E11D48; color:#fff;
+}
+
+.kpi-card.kpi-table:has(.alerts-list) .badge.alta{
+  background:#F59E0B; color:#0b1320;
+}
+
+.kpi-card.kpi-table:has(.alerts-list) .badge.media{
+  background:#1F5AA8; color:#fff;
+}
+
+.kpi-card.kpi-table:has(.alerts-list) .badge.baja{
+  background:#A6CE39; color:#0b1320;
+}
+
+@media (max-width: 575.98px){
+  .kpi-card.kpi-table:has(.alerts-list) .alerts-list{ max-height: 320px; }
+}
+/* Validadores con alertas — colorear cada <li> por severidad, sin :has */
+.kpi-card.kpi-table .alerts-list .list-group-item{
+  position: relative;               /* contenedor para el overlay */
+  overflow: visible;
+  border: 1px solid #E1E7EF;
+  border-radius: 12px;
+  margin: .45rem 0;
+  padding: .8rem .95rem;            /* el overlay cubrirá todo el li */
+}
+
+/* Asegura que el contenido quede encima del overlay */
+.kpi-card.kpi-table .alerts-list .list-group-item > *{
+  position: relative;
+  z-index: 1;
+}
+
+/* === Overlay por severidad (se expande al tamaño del <li>) === */
+.kpi-card.kpi-table .alerts-list .badge{ position: static; } /* no cambia layout */
+
+.kpi-card.kpi-table .alerts-list .badge.critico::before,
+.kpi-card.kpi-table .alerts-list .badge.danger::before,
+.kpi-card.kpi-table .alerts-list .badge.alta::before,
+.kpi-card.kpi-table .alerts-list .badge.media::before,
+.kpi-card.kpi-table .alerts-list .badge.baja::before{
+  content:"";
+  position: absolute;               /* relativo al <li> por ser el ancestro posicionado */
+  inset: 0;                         /* cubre todo el <li> */
+  border-radius: 12px;
+  z-index: 0;                       /* queda detrás del contenido */
+  pointer-events: none;
+  border-left: 4px solid transparent;
+}
+
+
+/* Colores por severidad en "Validadores con alertas" usando data-sev */
+.kpi-card.kpi-table .alerts-list .list-group-item{
+  position:relative;
+  border:1px solid #E1E7EF;
+  border-radius:12px;
+  margin:.45rem 0;
+  padding:.8rem .95rem;
+}
+
+/* Fondo tenue + barra lateral */
+.kpi-card.kpi-table .alerts-list .list-group-item[data-sev="critico"],
+.kpi-card.kpi-table .alerts-list .list-group-item[data-sev="danger"]{
+  background:rgba(225,29,72,.10);
+  border-left:4px solid #E11D48;
+}
+.kpi-card.kpi-table .alerts-list .list-group-item[data-sev="alta"]{
+  background:rgba(245,158,11,.12);
+  border-left:4px solid #F59E0B;
+}
+.kpi-card.kpi-table .alerts-list .list-group-item[data-sev="media"]{
+  background:rgba(31,90,168,.12);
+  border-left:4px solid #1F5AA8;
+}
+.kpi-card.kpi-table .alerts-list .list-group-item[data-sev="baja"]{
+  background:rgba(166,206,57,.14);
+  border-left:4px solid #A6CE39;
+}
+
+/* Opcional: badge sólido por claridad (no afecta el fondo del li) */
+.kpi-card.kpi-table .alerts-list .badge.critico,
+.kpi-card.kpi-table .alerts-list .badge.danger{ background:#E11D48; color:#fff; }
+.kpi-card.kpi-table .alerts-list .badge.alta  { background:#F59E0B; color:#0b1320; }
+.kpi-card.kpi-table .alerts-list .badge.media { background:#1F5AA8; color:#fff; }
+.kpi-card.kpi-table .alerts-list .badge.baja  { background:#A6CE39; color:#0b1320; }

@@ -1,0 +1,10 @@
+.vex-layout-ikaros {
+  // Workaround: CSS calc() functions can't deal with values without a unit (e.g. 0 instead of 0px), when this is 0, SCSS or PostCSS make it a 0 instead of 0px, breaking the layout.
+  --vex-navigation-height: 0.00001px;
+
+  &.vex-style-default {
+    // TODO: Check this again
+    //--vex-toolbar-background: #{$sidenav-background};
+    --vex-navigation-color: white;
+  }
+}

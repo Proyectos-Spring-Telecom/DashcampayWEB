@@ -1,0 +1,257 @@
+/* ===== Fondo general ===== */
+.bg-pattern {
+  background-image: url('/assets/img/demo/logo2.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* ===== Loader ===== */
+.loader {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-block;
+  border-top: 3px solid #FFF;
+  border-right: 3px solid transparent;
+  box-sizing: border-box;
+  animation: rotation 1s linear infinite;
+}
+
+@keyframes rotation {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ===== Botón primario de formularios ===== */
+.align {
+  background-color: #0b5791;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  width: 100%;
+  transition: background-color 0.3s ease;
+}
+.align:hover { background-color: #044272; }
+.align:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ===== Variables ===== */
+:root {
+  --azul-oscuro: #0A2E57;
+  --azul: #1F5AA8;
+  --lime: #A6CE39;
+  --blanco: #FFFFFF;
+}
+
+/* ===== Enlaces secundarios ===== */
+.login-link-wrap { display: flex; justify-content: center; margin-top: 8px; }
+.login-link {
+  font-family: 'Montserrat', system-ui, sans-serif;
+  font-size: 0.925rem;
+  font-weight: 600;
+  color: var(--azul);
+  text-decoration: none;
+  padding: 6px 10px;
+  border-radius: 10px;
+  transition: transform .15s ease, background-color .15s ease, color .15s ease;
+  background: rgba(31, 90, 168, 0.08);
+}
+.login-link:hover {
+  color: var(--azul-oscuro);
+  background: rgba(31, 90, 168, 0.14);
+  transform: translateY(-1px);
+}
+.login-link:active { transform: translateY(0); background: rgba(31, 90, 168, 0.2); }
+
+/* ===== Hints de contraseña ===== */
+.pw-hint,
+.match-hint {
+  font-size: 12px;
+  margin-top: 6px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.ok  { color: #01a13c; }   /* verde */
+.bad { color: #ff6b6b; }   /* rojo  */
+.eyeButton { position: absolute; right: 12px; top: 38px; cursor: pointer; color: #a1a1a1; }
+.input-group { position: relative; }
+
+/* ===== Ajuste de mat-form-field dentro de columnas 6/6 ===== */
+.w-100,
+.form-row .mat-mdc-form-field { width: 100%; }
+
+/* ===================================================================
+   MODAL OTP (estilo mejorado)
+   =================================================================== */
+
+/* Backdrop con blur y atenuación */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2, 6, 23, .62);
+  -webkit-backdrop-filter: saturate(120%) blur(6px);
+  backdrop-filter: saturate(120%) blur(6px);
+  padding: 20px;
+  z-index: 60;
+}
+.modal-backdrop:target { display: flex; }
+
+/* Card base y variante grande */
+.modal-card {
+  width: 100%;
+  max-width: 480px;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.25);
+  overflow: hidden;
+}
+.modal-card.modal-xl {
+  max-width: 860px;
+  border-radius: 24px;
+  box-shadow: 0 30px 80px rgba(0,0,0,.35);
+  transform: translateY(6px);
+  animation: otpPop .18s ease-out forwards;
+}
+@keyframes otpPop { to { transform: translateY(0); } }
+
+/* Header */
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  background: linear-gradient(135deg, var(--azul-oscuro), #0c3b73);
+  color: #fff;
+}
+.modal-header h3 { margin: 0; font-weight: 700; }
+.modal-header .close {
+  color: #fff; text-decoration: none; font-size: 22px; line-height: 1;
+  padding: 6px 10px; border-radius: 10px; transition: .15s;
+}
+.modal-header .close:hover { background: rgba(255,255,255,.14); }
+
+/* Título y body del OTP */
+.otp-header { padding: 26px 28px; }
+.otp-title {
+  color: #0A2E57;
+  margin: 0;
+  font-weight: 800;
+  font-size: clamp(24px, 3.4vw, 40px);
+  letter-spacing: .2px;
+}
+
+.modal-body { padding: 18px; }
+.otp-body { padding: 28px 34px 30px; text-align: center; }
+.modal-text { margin: 0 0 10px; color: #0b1220; }
+.otp-subtitle {
+  margin: 10px auto 18px;
+  max-width: 720px;
+  color: #0b1220;
+  font-size: clamp(14px, 1.8vw, 20px);
+}
+.otp-subtitle strong { font-weight: 700; }
+
+/* Inputs OTP estilo tarjeta */
+.otp-inputs {
+  display: flex;
+  gap: 18px;
+  justify-content: center;
+  margin: 20px 0 26px;
+  flex-wrap: wrap;
+}
+.otp-box {
+  width: 84px;
+  height: 84px;
+  border-radius: 20px;
+  border: 2px solid #e5e7eb;
+  background: #fff;
+  text-align: center;
+  font-size: 38px;
+  font-weight: 800;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s, transform .06s;
+  caret-color: transparent;
+}
+.otp-elev {
+  box-shadow: 0 10px 25px rgba(2, 6, 23, .08), inset 0 0 0 0 rgba(0,0,0,0);
+}
+.otp-box:focus {
+  border-color: #0b2847;
+  box-shadow: 0 0 0 4px rgba(11, 40, 71, .12), 0 14px 30px rgba(2,6,23,.12);
+}
+.otp-box:active { transform: scale(.98); }
+
+@media (max-width: 560px) {
+  .otp-box { width: 64px; height: 64px; font-size: 30px; border-radius: 16px; }
+}
+
+/* Acciones */
+.otp-actions {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Botón verificar (nuevo look) */
+.btn-verify {
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+  padding: 14px 30px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 18px;
+  color: #fff;
+  background: linear-gradient(135deg, #2ecc71, #1abc9c);
+  box-shadow: 0 10px 20px rgba(46, 204, 113, .25);
+  transition: filter .15s, transform .06s;
+}
+.btn-verify:hover { filter: brightness(1.06); }
+.btn-verify:active { transform: translateY(1px); }
+.btn-verify:disabled { opacity: .65; cursor: not-allowed; }
+
+/* Reenviar */
+.link-resend {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  color: #0b2847;
+  font-weight: 700;
+  text-decoration: underline;
+  padding: 10px 12px;
+  border-radius: 10px;
+  transition: background .15s;
+}
+.link-resend:hover { background: rgba(2,6,23,.06); }
+.link-resend[disabled] { opacity: .55; cursor: not-allowed; text-decoration: none; }
+
+/* Nota inferior */
+.otp-footnote { margin-top: 14px; color: #475569; font-size: 15px; }
+
+/* Botón primario alterno (por compatibilidad con versiones anteriores del modal) */
+.btn-primary {
+  width: 100%;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--azul), #2a6ed1);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter .15s;
+}
+.btn-primary:disabled { opacity: .65; cursor: not-allowed; }
+.btn-primary:hover:not(:disabled) { filter: brightness(1.05); }

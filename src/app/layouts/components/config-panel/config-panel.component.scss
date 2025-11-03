@@ -1,0 +1,103 @@
+.config-panel {
+  @apply px-4 py-6;
+}
+
+.heading {
+  @apply mb-6;
+}
+
+.section {
+  @apply border-b mb-4 pb-4;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.section-content {
+  @apply ms-3;
+
+  .subheading {
+    @apply mt-6;
+  }
+}
+
+.subheading {
+  @apply my-4 uppercase text-xs text-secondary font-medium;
+}
+
+.layout + .layout {
+  @apply mt-6;
+}
+
+.layout-image {
+  &:hover {
+    .layout-image-overlay {
+      background: rgba(0, 0, 0, 0.7);
+      opacity: 1;
+      visibility: visible;
+    }
+  }
+
+  .layout-image-overlay {
+    border-radius: var(--vex-border-radius);
+    bottom: 0;
+    height: 100%;
+    left: 0;
+    opacity: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    visibility: hidden;
+    width: 100%;
+    @apply transition-all duration-400 ease-out-swift;
+
+    button {
+      padding: 0 8px;
+    }
+  }
+}
+
+.vex-color-picker {
+  user-select: none;
+  @apply transition-all duration-400 ease-out-swift;
+
+  p {
+    @apply transition-all duration-400 ease-out-swift;
+  }
+}
+
+.color {
+  align-items: center;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: row;
+  height: 36px;
+  justify-content: center;
+  text-align: center;
+  vertical-align: middle;
+  width: 36px;
+  @apply shadow-lg me-4;
+
+  &.light {
+    background: white;
+    color: #000;
+  }
+
+  &.dark {
+    background: #303030;
+    color: white;
+  }
+
+  &.flat {
+    background: #f5f5f5;
+    color: #000;
+  }
+}
+
+mat-slide-toggle + mat-slide-toggle,
+mat-slide-toggle + mat-checkbox,
+mat-checkbox + mat-slide-toggle,
+mat-checkbox + mat-checkbox {
+  @apply block mt-3;
+}

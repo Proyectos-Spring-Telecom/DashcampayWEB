@@ -1,0 +1,44 @@
+// @formatter:off
+.dark {
+  // Sidenav
+  --vex-sidenav-background: theme("colors.gray.900");
+  --vex-sidenav-color: theme("colors.white");
+
+  --vex-sidenav-toolbar-background: theme("colors.gray.900");
+  --vex-sidenav-section-divider-color: theme("colors.white / 0.12");
+
+  // Sidenav Item
+  --vex-sidenav-item-background-hover: theme("colors.gray.950 / 30%");
+  --vex-sidenav-item-background-active: theme("colors.gray.950 / 30%");
+  --vex-sidenav-item-color: theme("colors.gray.300");
+  --vex-sidenav-item-color-hover: theme("colors.white");
+  --vex-sidenav-item-color-active: theme("colors.white");
+  --vex-sidenav-item-icon-color: theme("colors.primary.600 / 50%");
+  --vex-sidenav-item-icon-color-hover: theme("colors.primary.600");
+  --vex-sidenav-item-icon-color-active: theme("colors.primary.600");
+  --vex-sidenav-item-dropdown-background: var(
+    --vex-sidenav-item-background-active
+  );
+  --vex-sidenav-item-dropdown-background-hover: theme("colors.gray.950 / 80%");
+  --vex-sidenav-item-dropdown-color-hover: var(--vex-sidenav-item-color-hover);
+  --vex-sidenav-item-dropdown-background-active: var(
+    --vex-sidenav-item-dropdown-background-hover
+  );
+  --vex-sidenav-item-dropdown-color-active: var(
+    --vex-sidenav-item-color-active
+  );
+  --vex-sidenav-item-ripple-color: theme("colors.white / 10%");
+  --vex-sidenav-subheading-color: theme("colors.gray.500");
+
+  // Toolbar
+  --vex-toolbar-background: var(--vex-background-background);
+  --vex-toolbar-icon-color: rgb(var(--vex-color-primary-600));
+
+  // Secondary Toolbar
+  --vex-secondary-toolbar-background: var(--vex-background-background);
+
+  // Navigation
+  --vex-navigation-color: theme("textColor.default");
+  --vex-navigation-background: theme("colors.gray.900");
+}
+// @formatter:on

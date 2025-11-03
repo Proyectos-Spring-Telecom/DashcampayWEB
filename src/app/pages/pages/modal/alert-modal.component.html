@@ -1,0 +1,42 @@
+<div class="am-overlay"
+     *ngIf="open || closing"
+     [class.am--success]="state?.type==='success'"
+     [class.am--error]="state?.type==='error'"
+     [class.am--warning]="state?.type==='warning'"
+     [class.am--info]="state?.type==='info'"
+     [class.closing]="closing"
+     (click)="onBackdrop()"
+     (animationend)="onAnimEnd($event)">
+
+  <div class="am-modal"
+       [class.closing]="closing"
+       role="dialog"
+       aria-modal="true"
+       [attr.aria-labelledby]="'am-title'"
+       [attr.aria-describedby]="'am-msg'"
+       (click)="$event.stopPropagation()"
+       (animationend)="onAnimEnd($event)">
+
+    <div class="am-header">
+      <button class="am-close" aria-label="Cerrar" (click)="cancel()">&times;</button>
+    </div>
+
+    <div class="am-body">
+      <div class="am-iconCircle" aria-hidden="true">
+        <svg class="am-icon" viewBox="0 0 24 24" focusable="false">
+          <path [attr.d]="iconD"></path>
+        </svg>
+      </div>
+
+      <h3 id="am-title" class="am-title">{{ state?.title }}</h3>
+      <p id="am-msg" class="am-msg" [innerHTML]="state?.message"></p>
+    </div>
+
+    <div class="am-divider"></div>
+
+    <div class="am-footer">
+      <button #confirmBtn class="am-btn am-btn--primary" (click)="confirm()">{{ state?.confirmText }}</button>
+      <button *ngIf="state?.showCancel" class="am-btn am-btn--ghost" (click)="cancel()">{{ state?.cancelText }}</button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,297 @@
+/* Raíz de la sección (opcionalmente anteponer :host ::ng-deep) */
+.form-skin-lite {
+  /* Labels Montserrat Regular */
+  .form-label {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    margin-bottom: .35rem;
+    font-family: 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    font-size: .78rem;
+
+    .fa { color: #8bc34a; font-size: .95rem; }
+  }
+
+  .section-bar {
+    height: 3px;
+    margin: 8px 0 12px;
+    background: linear-gradient(90deg, #2a5bff, #8a2be2);
+    border-radius: 3px;
+  }
+
+  /* Contenedor de uploads */
+  .uploads-skin {
+    --dz-bg: #f7f7f8;
+    --dz-border: rgba(31, 42, 55, .18);
+    --dz-border-strong: #2a5bff;
+    --dz-text: #374151;
+
+    .dropzone {
+      position: relative;
+      background: var(--dz-bg);
+      border: 2px dashed var(--dz-border);
+      border-radius: 10px;
+      padding: 16px 14px 48px; /* espacio para botones */
+      min-height: 150px;
+      cursor: pointer;
+      transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+
+      &.dragging {
+        border-color: var(--dz-border-strong);
+        box-shadow: 0 0 0 3px rgba(42, 91, 255, .15);
+        background: #eef2ff;
+      }
+
+      .dz-body {
+        text-align: center;
+        color: var(--dz-text);
+      }
+
+      .dz-icon {
+        font-size: 42px;
+        opacity: .7;
+        display: block;
+        margin: 8px auto;
+      }
+
+      .dz-title {
+        font-weight: 600;
+        margin-top: 2px;
+      }
+
+      .dz-file {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        padding: 8px 10px;
+        background: #fff;
+        border: 1px solid rgba(0,0,0,.08);
+        border-radius: 8px;
+        color: #1f2937;
+        margin-top: 6px;
+      }
+
+      .dz-action, .dz-clear {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        margin-left: 8px;
+      }
+      .dz-clear { right: 150px; } /* separa los dos botones */
+
+      mat-progress-bar {
+        position: absolute;
+        left: 0; right: 0; bottom: 0;
+        border-bottom-left-radius: 8px;
+        border-bottom-right-radius: 8px;
+        overflow: hidden;
+      }
+    }
+
+    /* Ajuste responsive para botones si hay poco ancho */
+    @media (max-width: 576px) {
+      .dropzone {
+        padding-bottom: 84px;
+        .dz-clear { right: 130px; }
+      }
+    }
+  }
+
+  /* Angular Material input look suave (relleno gris) */
+  .mat-mdc-form-field .mat-mdc-text-field-wrapper,
+  .mdc-text-field--filled {
+    background: #f3f3f3 !important;
+    border-radius: 6px;
+    box-shadow: inset 0 -1px 0 rgba(0,0,0,.08);
+  }
+  .mat-mdc-form-field-infix { padding: 12px 12px !important; }
+}
+
+
+.pwd-hint { font-size: 0.85rem; line-height: 1.2; margin-bottom: 0; display: flex; align-items: center; }
+.pwd-hint i { width: 1rem; text-align: center; font-size: 0.9rem; }
+.pwd-hint .ms-2 { margin-left: .5rem; }
+
+
+/* Paleta */
+$brand-dark:  #0A2E57; // azul oscuro
+$brand-mid:   #1F5AA8; // azul medio
+$brand-accent:#A6CE39; // verde limón
+$surface:     #0f172a; // fondo neutro oscuro (opcional)
+
+/* Card del módulo (estilo plano) */
+.perm-card{
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 12px;
+  background: white; /* sin transparencia ni blur */
+  box-shadow: 0 2px 10px rgba(0,0,0,.18); /* sutil, no difuminado fuerte */
+  display: flex;
+  flex-direction: column;
+
+  &__head{
+    padding: 12px 14px;
+    background: $brand-dark; /* sólido, sin gradiente */
+    color: #fff;
+    border-bottom: 1px solid rgba(255,255,255,.15);
+
+    mat-icon{
+      font-size: 20px; width: 20px; height: 20px;
+    }
+    h6{ font-weight: 800; letter-spacing: .2px; }
+  }
+
+  &__body{
+    padding: 12px;
+    display: grid;
+    gap: 10px;
+    background: white; /* sólido */
+  }
+}
+
+.perm-chip{
+  background: rgba(255,255,255,.15);
+  color: #fff;
+  font-size: .75rem;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.2);
+}
+
+/* Fila de permiso (plano) */
+.perm-item{
+  padding: 10px 10px;
+  border-radius: 10px;
+  background: white;             /* sólido */
+  border: 1px solid rgba(255,255,255,.10);
+  transition: border-color .12s ease, transform .12s ease;
+
+  &:hover{
+    transform: translateY(-1px);
+    border-color: $brand-mid;      /* solo cambia el borde */
+  }
+
+  &__text{
+    padding-right: 10px;
+    min-width: 0;
+  }
+
+  &__title{
+    font-weight: 700;
+    font-size: .95rem;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__desc{
+    font-size: .8rem;
+    color: #000000;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* Switch con color de marca (sin sombras extra) */
+/* Aplica a tu toggle con clase `brand-switch` */
+.brand-switch.mat-mdc-slide-toggle {
+  /* Colores cuando está ACTIVADO (selected) */
+  --mdc-switch-selected-handle-color: #A6CE39;
+  --mdc-switch-selected-track-color: rgba(166, 206, 57, 0.5);
+  --mdc-switch-selected-icon-color: #fff;
+
+  /* Estados de interacción */
+  --mdc-switch-selected-hover-handle-color: #A6CE39;
+  --mdc-switch-selected-hover-track-color: rgba(166, 206, 57, 0.55);
+
+  --mdc-switch-selected-focus-handle-color: #A6CE39;
+  --mdc-switch-selected-focus-track-color: rgba(166, 206, 57, 0.55);
+
+  --mdc-switch-selected-pressed-handle-color: #8FB431; /* un pelín más oscuro al presionar */
+  --mdc-switch-selected-pressed-track-color: rgba(166, 206, 57, 0.6);
+
+  /* Capa de estado (ripple/state layer) */
+  --mdc-switch-selected-hover-state-layer-color: #A6CE39;
+  --mdc-switch-selected-focus-state-layer-color: #A6CE39;
+  --mdc-switch-selected-pressed-state-layer-color: #A6CE39;
+}
+
+:host ::ng-deep .mat-slide-toggle.brand-switch.mat-checked .mat-slide-toggle-bar {
+  background-color: rgba(166, 206, 57, 0.5);
+}
+
+:host ::ng-deep .mat-slide-toggle.brand-switch.mat-checked .mat-slide-toggle-thumb {
+  background-color: #A6CE39;
+}
+
+:host ::ng-deep .mat-slide-toggle.brand-switch.mat-checked .mat-ripple-element {
+  background: rgba(166, 206, 57, 0.25);
+}
+
+
+/* Responsivo */
+@media (max-width: 575.98px){
+  .perm-card__head{ padding: 10px 12px; }
+  .perm-item{ padding: 8px 8px; }
+  .perm-item__title{ font-size: .9rem; }
+  .perm-item__desc{ font-size: .78rem; }
+}
+
+
+/* ==== BLOQUEA SCROLL HORIZONTAL ==== */
+html, body { overflow-x: hidden; }
+
+/* Contenedor con scroll vertical, nunca horizontal */
+.perm-grid-scroll{
+  max-height: 56vh;
+  overflow-y: auto;
+  overflow-x: hidden;         /* <- clave */
+  padding-right: 6px;
+  min-height: 0;
+}
+
+/* Bootstrap pone márgenes negativos en .row; neutralízalos aquí
+   para que no “empuje” y genere scroll lateral */
+.perm-grid-scroll > .row{
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  --bs-gutter-x: 1rem;
+}
+
+/* Card y body deben poder encogerse sin empujar lateralmente */
+.perm-card{ display:flex; flex-direction:column; min-height:0; max-width:100%; }
+.perm-card__body{ min-height:0; max-width:100%; }
+
+/* Lista de permisos: solo scroll vertical interno (si lo usas) */
+.scroll-inner{
+  max-height: 320px;
+  overflow-y: auto;
+  overflow-x: hidden;         /* <- clave */
+}
+
+/* Evita desbordes por textos largos */
+.perm-item__title,
+.perm-item__desc{
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Flex seguro: que el texto pueda encogerse y el switch no rompa el layout */
+.perm-item{ display:flex; align-items:center; justify-content:space-between; min-width:0; }
+.perm-item__text{ min-width:0; flex:1 1 auto; }
+.brand-switch{ flex: 0 0 auto; }
+
+/* Cualquier imagen dentro de la sección no debe desbordar */
+.perm-grid-scroll img{ max-width:100%; height:auto; display:block; }
+
+/* Responsive: baja alturas en móviles */
+@media (max-width: 575.98px){
+  .perm-grid-scroll{ max-height: 60vh; }
+  .scroll-inner{ max-height: 260px; }
+}

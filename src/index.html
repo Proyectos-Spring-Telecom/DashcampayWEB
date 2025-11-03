@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>DashCam PAY</title>
+  <base href="/" />
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-o9N1j7kGQKZL2kS7ZkG7x2b6Yg4v0v+w3Zfe1wS1XGk=" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-o9N1j7kGQKZL2kS7ZkG7x2b6Yg4v0v+w3Zfe1wS1XGk=" crossorigin=""></script>
+<script async
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBpLS8xONczrVarb5aZz-mXj1hBMLxhQpU&v=weekly&language=es&region=MX&loading=async&libraries=marker">
+</script>
+
+
+
+  <meta content="width=device-width, initial-scale=1" name="viewport" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link href="./assets/img/logo/2f26f5aa-367b-4771-b0a1-ed3adf9f4a4a.webp" rel="icon" type="image/x-icon" />
+
+</head>
+
+<body dir="ltr">
+  <style>
+    #vex-splash-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #fff;
+      z-index: 99999;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+    }
+
+    .vex-splash-screen-loader {
+      width: 150px;
+      height: 22px;
+      border-radius: 20px;
+      color: #1f83cf;
+      border: 2px solid;
+      position: relative;
+    }
+
+    .vex-splash-screen-loader::before {
+      content: "";
+      position: absolute;
+      margin: 2px;
+      inset: 0 100% 0 0;
+      border-radius: inherit;
+      background: currentColor;
+      animation: vex-splash-screen-loader-animation 2s forwards;
+    }
+
+    @keyframes vex-splash-screen-loader-animation {
+      100% {
+        inset: 0;
+      }
+    }
+  </style>
+
+  <div id="vex-splash-screen">
+    <img height="70" width="70" loading="eager" src="./assets/img/logo/2f26f5aa-367b-4771-b0a1-ed3adf9f4a4a.webp" />
+    <div class="vex-splash-screen-loader"></div>
+  </div>
+
+  <vex-root></vex-root>
+</body>
+
+</html>

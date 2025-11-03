@@ -1,0 +1,167 @@
+<vex-page-layout @fadeInRight>
+
+  <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
+    [class.px-6]="layoutCtrl.value === 'fullwidth'" class="-mt-6">
+    <div class="card mt-4">
+      <div class="dashboard-lite p-4">
+        <div class="bg-app-bar appbar px-6 h-16 border-b sticky top-0 left-0 flex items-center z-10">
+          <nav class="breadcrumb-simple" aria-label="Ruta de navegación">
+            <a routerLink="/administracion" class="crumb-link">
+              <mat-icon inline>home</mat-icon>
+              Administración
+            </a>
+            <span class="sep">/</span>
+            <span class="crumb-current" aria-current="page">Transacciones</span>
+          </nav>
+
+          <div class="flex-grow"></div>
+
+          <div class="flex gap-3 actions-bar">
+            <button mat-raised-button color="primary" type="button" class="btn-soft textGenerico"
+              (click)="toggleExpandGroups()" matTooltip="Expandir / Contraer grupos">
+              <mat-icon svgIcon="mat:compare_arrows"></mat-icon>
+              <span class="btn-text">{{ autoExpandAllGroups ? 'Contraer' : 'Expandir' }}</span>
+            </button>
+
+            <button mat-raised-button color="accent" type="button" class="btn-soft textGenerico"
+              (click)="limpiarCampos()" matTooltip="Limpiar filtros">
+              <mat-icon svgIcon="mat:restore"></mat-icon>
+              <span class="btn-text">Limpiar</span>
+            </button>
+
+            <button (click)="agregarTransaccion()" mat-raised-button color="warn" type="button"
+              class="btn-soft textGenerico" matTooltip="Agregar usuario">
+              <mat-icon>add</mat-icon>
+              <span class="btn-text">Agregar</span>
+            </button>
+          </div>
+        </div>
+
+        <section class="mt-5 table-shell">
+          <dx-data-grid #gridContainer id="gridContainer" [columnHidingEnabled]="true" [showBorders]="true"
+            [showColumnLines]="true" [showRowLines]="true" [rowAlternationEnabled]="true"
+            [dataSource]="listaTransacciones" [keyExpr]="'Id'" [width]="'100%'" [remoteOperations]="{ paging: true }"
+            [paging]="{ pageSize: pageSize }" [pager]="{ 
+                                showPageSizeSelector: true, 
+                                allowedPageSizes: [20], 
+                                showInfo: true,
+                                infoText: 'Página {0} de {1}', 
+                                visible: true 
+                            }" (onPageIndexChanged)=" onPageIndexChanged($event)"
+            (onOptionChanged)="onGridOptionChanged($event)">
+            <dxo-search-panel [visible]="true" [width]="200" placeholder="Buscar..."></dxo-search-panel>
+            <dxo-group-panel [emptyPanelText]="mensajeAgrupar" [visible]="true"></dxo-group-panel>
+            <dxo-filter-row [visible]="showFilterRow"></dxo-filter-row>
+            <dxo-header-filter [visible]="showHeaderFilter"></dxo-header-filter>
+            <dxo-grouping [autoExpandAll]="true"></dxo-grouping>
+            <dxi-column caption="Acciones" cellTemplate="Acciones" alignment="center" [width]="200"></dxi-column>
+            <dxi-column dataField="fhRegistro" caption="Fecha" alignment="center" cellTemplate="fecActi">
+              <div *dxTemplate="let a of 'fecActi'">
+                {{ a.data.fhRegistro | date:'dd/MM/yyyy HH:mm' : '+0000' }}
+              </div>
+            </dxi-column>
+
+            <dxi-column dataField="monto" caption="Monto" alignment="center" cellTemplate="sald">
+              <div *dxTemplate="let f of 'sald' ">
+                {{f.data.monto | currency: '$'}}
+              </div>
+            </dxi-column>
+            <dxi-column dataField="tipoTransaccion" caption="Tipo Transacción" alignment="center" cellTemplate="est">
+              <div *dxTemplate="let f of 'est'">
+                <span *ngIf="f.data.tipoTransaccion === 'RECARGA' " class="estatus estatus-activo">
+                  Recarga
+                </span>
+                <span *ngIf="f.data.tipoTransaccion === 'DEBITO' " class="estatus estatus-inactivo">
+                  Débito
+                </span>
+              </div>
+            </dxi-column>
+            <dxi-column dataField="numeroSerieMonedero" caption="N° Serie de Monedero" alignment="center"></dxi-column>
+            <dxi-column caption="Pasajero" alignment="center" cellTemplate="psaj">
+              <div *dxTemplate="let f of 'psaj' ">
+                <ng-container
+                  *ngIf="f?.nombrePasajero || f?.apellidoPaternoPasajero || f?.apellidoMaternoPasajero; else sinRegistro">
+                  {{ f?.nombrePasajero || '' }} {{ f?.apellidoPaternoPasajero || '' }} {{ f?.apellidoMaternoPasajero ||
+                  '' }}
+                </ng-container>
+                <ng-template #sinRegistro>sin registro</ng-template>
+              </div>
+            </dxi-column>
+
+            <div *dxTemplate="let transaccion of 'Acciones'" class="d-flex gap-3 justify-content-center">
+              <div>
+                <button class="btn-edit" (click)="abrirModal(transaccion.data)" style="border-radius: 5px;">
+                  <i class="fa fa-map-pin ml-2"></i>&nbsp;&nbsp;Ubicar
+                </button>
+              </div>
+            </div>
+            <dxo-export [enabled]="false" [allowExportSelectedData]="true"
+              [texts]="{ exportAll: 'Exportar todos los datos a Excel', exportSelectedRows: 'Exportar filas seleccionadas a Excel' }">
+            </dxo-export>
+          </dx-data-grid>
+        </section>
+      </div>
+    </div>
+  </vex-page-layout-content>
+</vex-page-layout>
+
+
+<div *ngIf="modalOpen" class="custom-modal-backdrop" [class.fade-out]="modalClosing || modalAnim === 'out'"
+  (click)="onBackdrop()">
+  <div class="custom-modal-content" [class.animate-in]="modalAnim === 'in'" [class.animate-out]="modalAnim === 'out'"
+    (click)="$event.stopPropagation()">
+    <div class="custom-modal-header">
+      <div class="custom-modal-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path
+            d="M12 1a4 4 0 0 1 4 4v1h2.5A2.5 2.5 0 0 1 21 8.5v10A2.5 2.5 0 0 1 18.5 21h-13A2.5 2.5 0 0 1 3 18.5v-10A2.5 2.5 0 0 1 5.5 6H8V5a4 4 0 0 1 4-4Zm0 2a2 2 0 0 0-2 2v1h4V5a2 2 0 0 0-2-2Z" />
+        </svg>
+      </div>
+      <h2>Id De La Transacción: {{ selectedTransaccion?.id }}</h2>
+      <button class="custom-modal-close" (click)="cerrarModal()">
+        <span>×</span>
+      </button>
+    </div>
+    <div class="custom-modal-body">
+      <div class="detalle-grid">
+        <div class="detalle-item">
+          <div class="detalle-label">Fecha</div>
+          <div class="detalle-value">
+            {{ selectedTransaccion?.fecha | date:'dd/MM/yyyy HH:mm' }}
+          </div>
+        </div>
+        <div class="detalle-item">
+          <div class="detalle-label">Tipo</div>
+          <div class="detalle-value">
+            <span *ngIf="selectedTransaccion?.tipo === 'Recarga'; else debitoTpl" class="badge-tipo is-recarga">
+              {{ selectedTransaccion?.tipo }}
+            </span>
+            <ng-template #debitoTpl>
+              <span class="badge-tipo is-debito">
+                {{ selectedTransaccion?.tipo || '—' }}
+              </span>
+            </ng-template>
+          </div>
+        </div>
+        <div class="detalle-item">
+          <div class="detalle-label">Monto</div>
+          <div class="detalle-value monto-destacado">
+            {{ selectedTransaccion?.monto | currency:'MXN':'symbol-narrow':'1.2-2' }}
+          </div>
+        </div>
+      </div>
+      <div *ngIf="hasCoords; else noMapTpl" id="map" class="trx-map"></div>
+      <ng-template #noMapTpl>
+        <div class="trx-map-empty">
+          No hay ubicación de esta transacción.
+        </div>
+      </ng-template>
+
+      <div style="display: flex; justify-content: center; align-items: center;">
+        <button class="btn-success" (click)="accionPrincipal()">
+          Confirmar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

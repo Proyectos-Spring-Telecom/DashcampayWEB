@@ -1,0 +1,32 @@
+<div
+  (mouseenter)="showButton = true"
+  (mouseleave)="showButton = false"
+  class="card h-full flex flex-col justify-between relative hover:shadow-lg transition duration-200 ease-out-swift">
+  <div class="flex-none p-6 flex items-center justify-between gap-6">
+    <div>
+      <h2 class="headline font-bold m-0">{{ value }}</h2>
+      <p class="caption text-secondary m-0">{{ label }}</p>
+    </div>
+
+    <div
+      [ngClass]="iconClass"
+      class="rounded-full w-12 h-12 flex items-center justify-center">
+      <mat-icon [svgIcon]="icon"></mat-icon>
+    </div>
+  </div>
+
+  <div class="rounded-b overflow-hidden">
+    <vex-chart [options]="options" [series]="series"></vex-chart>
+  </div>
+
+  <button
+    (click)="openSheet()"
+    *ngIf="showButton"
+    @scaleInOut
+    class="absolute -top-3 -right-3 bg-foreground shadow-xl"
+    color="primary"
+    mat-icon-button
+    type="button">
+    <mat-icon svgIcon="mat:share"></mat-icon>
+  </button>
+</div>

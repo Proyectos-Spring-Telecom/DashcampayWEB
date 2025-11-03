@@ -1,0 +1,111 @@
+/* Raíz de la sección (opcionalmente anteponer :host ::ng-deep) */
+.form-skin-lite {
+  /* Labels Montserrat Regular */
+  .form-label {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    margin-bottom: .35rem;
+    font-family: 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    font-size: .78rem;
+
+    .fa { color: #8bc34a; font-size: .95rem; }
+  }
+
+  .section-bar {
+    height: 3px;
+    margin: 8px 0 12px;
+    background: linear-gradient(90deg, #2a5bff, #8a2be2);
+    border-radius: 3px;
+  }
+
+  /* Contenedor de uploads */
+  .uploads-skin {
+    --dz-bg: #f7f7f8;
+    --dz-border: rgba(31, 42, 55, .18);
+    --dz-border-strong: #2a5bff;
+    --dz-text: #374151;
+
+    .dropzone {
+      position: relative;
+      background: var(--dz-bg);
+      border: 2px dashed var(--dz-border);
+      border-radius: 10px;
+      padding: 16px 14px 48px; /* espacio para botones */
+      min-height: 150px;
+      cursor: pointer;
+      transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+
+      &.dragging {
+        border-color: var(--dz-border-strong);
+        box-shadow: 0 0 0 3px rgba(42, 91, 255, .15);
+        background: #eef2ff;
+      }
+
+      .dz-body {
+        text-align: center;
+        color: var(--dz-text);
+      }
+
+      .dz-icon {
+        font-size: 42px;
+        opacity: .7;
+        display: block;
+        margin: 8px auto;
+      }
+
+      .dz-title {
+        font-weight: 600;
+        margin-top: 2px;
+      }
+
+      .dz-file {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        padding: 8px 10px;
+        background: #fff;
+        border: 1px solid rgba(0,0,0,.08);
+        border-radius: 8px;
+        color: #1f2937;
+        margin-top: 6px;
+      }
+
+      .dz-action, .dz-clear {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        margin-left: 8px;
+      }
+      .dz-clear { right: 150px; } /* separa los dos botones */
+
+      mat-progress-bar {
+        position: absolute;
+        left: 0; right: 0; bottom: 0;
+        border-bottom-left-radius: 8px;
+        border-bottom-right-radius: 8px;
+        overflow: hidden;
+      }
+    }
+
+    /* Ajuste responsive para botones si hay poco ancho */
+    @media (max-width: 576px) {
+      .dropzone {
+        padding-bottom: 84px;
+        .dz-clear { right: 130px; }
+      }
+    }
+  }
+
+  /* Angular Material input look suave (relleno gris) */
+  .mat-mdc-form-field .mat-mdc-text-field-wrapper,
+  .mdc-text-field--filled {
+    background: #f3f3f3 !important;
+    border-radius: 6px;
+    box-shadow: inset 0 -1px 0 rgba(0,0,0,.08);
+  }
+  .mat-mdc-form-field-infix { padding: 12px 12px !important; }
+}

@@ -1,0 +1,11 @@
+:host {
+  background: var(--vex-navigation-background);
+  display: block;
+  height: var(--vex-navigation-height);
+  position: relative;
+  z-index: 200;
+}
+
+.navigation {
+  height: var(--vex-navigation-height);
+}

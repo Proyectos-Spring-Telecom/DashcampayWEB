@@ -1,0 +1,49 @@
+<div
+  (mouseenter)="showButton = true"
+  (mouseleave)="showButton = false"
+  class="card p-6 relative hover:shadow-lg transition duration-200 ease-out-swift flex flex-col items-center">
+  <div
+    [ngClass]="iconClass"
+    class="rounded-full w-12 h-12 flex items-center justify-center">
+    <mat-icon [svgIcon]="icon"></mat-icon>
+  </div>
+
+  <h2 class="display-2 font-bold mt-4 mb-2">{{ value }}</h2>
+  <h3 class="subheading-2 font-medium text-secondary m-0">{{ label }}</h3>
+
+  <h4
+    [class.text-green-600]="change > 0"
+    [class.text-red-600]="change <= 0"
+    class="subheading-1 font-medium mt-4 mb-0 flex items-center">
+    <mat-icon
+      *ngIf="change > 0"
+      class="icon-sm"
+      svgIcon="mat:arrow_drop_up"></mat-icon>
+    <mat-icon
+      *ngIf="change <= 0"
+      class="icon-sm"
+      svgIcon="mat:arrow_drop_down"></mat-icon>
+    <span>{{ change }}%</span>
+  </h4>
+
+  <button
+    *ngIf="helpText"
+    [matTooltip]="helpText"
+    class="absolute top-0 left-0 mt-2 ml-2 text-hint"
+    mat-icon-button
+    matTooltipPosition="after"
+    type="button">
+    <mat-icon class="icon-sm" svgIcon="mat:help"></mat-icon>
+  </button>
+
+  <button
+    (click)="openSheet()"
+    *ngIf="showButton"
+    @scaleInOut
+    class="absolute -top-3 -right-3 bg-foreground shadow-xl"
+    color="primary"
+    mat-icon-button
+    type="button">
+    <mat-icon svgIcon="mat:share"></mat-icon>
+  </button>
+</div>

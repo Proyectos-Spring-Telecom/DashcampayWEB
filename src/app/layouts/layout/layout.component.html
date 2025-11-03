@@ -1,0 +1,48 @@
+<vex-base-layout *ngIf="config$ | async as config">
+  <vex-progress-bar></vex-progress-bar>
+
+  <vex-search></vex-search>
+
+  <mat-sidenav-container class="vex-layout-sidenav-container">
+    <mat-sidenav
+      (closedStart)="onSidenavClosed()"
+      [disableClose]="!!(sidenavDisableClose$ | async)"
+      [fixedInViewport]="!!(sidenavFixedInViewport$ | async)"
+      [mode]="(sidenavMode$ | async) ?? 'side'"
+      [opened]="!!(sidenavOpen$ | async)">
+      <vex-sidenav [collapsed]="!!(sidenavCollapsed$ | async)"></vex-sidenav>
+    </mat-sidenav>
+
+    <mat-sidenav (closedStart)="onQuickpanelClosed()"
+                 [opened]="!!(quickpanelOpen$ | async)"
+                 class="vex-layout-quickpanel"
+                 mode="over"
+                 position="end">
+      <vex-quickpanel></vex-quickpanel>
+    </mat-sidenav>
+
+    <mat-sidenav-content class="vex-layout-sidenav-content">
+      <vex-toolbar [collapsed]="collapsed"
+  [showCollapsePin$]="showCollapsePin$" [class.dark]="config.layout === 'vertical'" class="vex-toolbar"></vex-toolbar>
+
+      <main class="vex-layout-content">
+        <router-outlet></router-outlet>
+      </main>
+
+      <vex-footer *ngIf="config.footer.visible" class="vex-footer"></vex-footer>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+
+  <!-- <vex-config-panel-toggle
+    (openConfig)="configpanel.open()"></vex-config-panel-toggle> -->
+
+  <!-- CONFIGPANEL -->
+  <vex-sidebar
+    #configpanel
+    [invisibleBackdrop]="true"
+    [opened]="!!(configPanelOpen$ | async)"
+    position="right">
+    <vex-config-panel></vex-config-panel>
+  </vex-sidebar>
+  <!-- END CONFIGPANEL -->
+</vex-base-layout>

@@ -1,0 +1,29 @@
+// TODO: Check this again
+.vex-style-light {
+  .vex-sidenav {
+    @apply border-r border-r-gray-200;
+
+    .vex-sidenav-user {
+      .vex-sidenav-user__subtitle,
+      .vex-sidenav-user__dropdown-icon {
+        @apply text-black/50;
+      }
+
+      &:hover {
+        @apply bg-gray-100 text-gray-900;
+      }
+    }
+
+    .vex-sidenav-search {
+      @apply bg-gray-100 text-gray-600;
+
+      &:hover {
+        @apply bg-gray-200 text-gray-900;
+      }
+    }
+  }
+
+  .vex-sidenav-user--open {
+    @apply bg-gray-100;
+  }
+}

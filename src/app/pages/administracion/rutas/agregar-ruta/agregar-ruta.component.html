@@ -1,0 +1,91 @@
+<vex-page-layout @fadeInRight>
+    <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
+        [class.px-6]="layoutCtrl.value === 'fullwidth'" class="-mt-6">
+        <div class="card mt-4">
+            <div class="dashboard-lite p-4">
+                <section class="mt-2 table-shell">
+                    <div class="card variantes-card shadow-sm border-0">
+                        <div class="card-header d-flex flex-wrap align-items-center gap-2 justify-content-between">
+                            <div class="d-flex align-items-center gap-2">
+                                <h2 style="color: white;" class="m-0 titulo-card">Ubica el punto inicio y el punto fin
+                                    en el mapa</h2>
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <!-- Nombre Ruta (ligado al FormGroup) -->
+                                <div class="col-12 col-md-6" [formGroup]="rutaForm">
+                                    <div class="meta-item d-flex align-items-center gap-2">
+                                        <mat-icon inline>trip_origin</mat-icon>
+                                        <span class="me-2"><strong>Nombre Ruta:</strong></span>
+                                        <input type="text" class="form-control form-control-sm"
+                                            placeholder="Ej. Ruta Centro - Norte" formControlName="nombre"
+                                            style="max-width: 320px;" />
+                                    </div>
+                                </div>
+
+                                <!-- Zona (select nativo ligado al FormGroup) -->
+                                <div class="col-12 col-md-6" [formGroup]="rutaForm">
+                                    <div class="meta-item d-flex align-items-center gap-2">
+                                        <mat-icon inline>trip_origin</mat-icon>
+                                        <span class="me-2"><strong>Nombre Zona:</strong></span>
+                                        <select style="max-width: 320px;" class="form-control form-control-sm"
+                                            formControlName="idRegion" [ngClass]="{
+        'is-invalid': rutaForm.get('idRegion')?.invalid
+          && (rutaForm.get('idRegion')?.touched || rutaForm.get('idRegion')?.dirty)
+      }">
+                                            <option [ngValue]="null" disabled>Selecciona una zona</option>
+                                            <option *ngFor="let z of listaRegiones" [ngValue]="z.id">{{ z.nombre }}
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+
+
+                                <div class="col-12">
+                                    <!-- Contenedor del mapa -->
+                                    <div id="map" class="map-wrapper" role="region" aria-label="Mapa de variante"></div>
+
+                                </div>
+                                <!-- Inicio: muestra nombre del lugar -->
+                                <div class="col-12 col-md-6">
+                                    <div class="meta-item">
+                                        <mat-icon inline>trip_origin</mat-icon>
+                                        <span><strong>Inicio:</strong> {{ nombreInicio || '—' }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- Fin: muestra nombre del lugar -->
+                                <div class="col-12 col-md-6">
+                                    <div class="meta-item">
+                                        <mat-icon inline>flag</mat-icon>
+                                        <span><strong>Fin:</strong> {{ nombreFin || '—' }}</span>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                        <div class="card-footer col-12 d-flex justify-content-end gap-2 pt-2">
+                            <button
+                                mat-raised-button
+                                color="primary"
+                                type="button"
+                                (click)="finalizarTrayecto()"
+                                [disabled]="!puedeGuardar"
+                            >
+                                <mat-icon>save</mat-icon> Guardar
+                            </button>
+                            <button mat-raised-button color="accent" type="button" (click)="limpiarProceso()">
+                                <mat-icon>delete_sweep</mat-icon> Limpiar proceso
+                            </button>
+                            <button mat-raised-button color="warn" type="button" (click)="regresar()">
+                                <mat-icon>close</mat-icon> Cancelar
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </vex-page-layout-content>
+</vex-page-layout>

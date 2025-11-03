@@ -1,0 +1,198 @@
+<vex-page-layout @fadeInRight>
+  <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
+    [class.px-6]="layoutCtrl.value === 'fullwidth'" class="-mt-6">
+    <div class="container-fluid px-3 px-md-4 py-3 dashboard-wrap">
+      <!-- <div class="row align-items-center mb-3 g-2">
+        <div class="col-12 col-md">
+          <h1 class="page-title mb-0">Panel Operativo</h1>
+          <p class="page-subtitle mb-0">Cliente DEMO · {{ ahora | date:'dd/MM/yyyy HH:mm' }}</p>
+        </div>
+        <div class="col-12 col-md-auto text-md-end">
+          <div class="badge-fecha d-inline-flex align-items-center">
+            <span class="me-2 dot-live"></span>
+            <span>Actualización en vivo</span>
+          </div>
+        </div>
+      </div> -->
+
+      <div class="row g-3 kpi-row">
+        <div class="col-12 col-sm-6 col-lg-3">
+          <div class="kpi-card kpi-primary shadow-sm">
+            <div class="kpi-top"><span>Ingresos del día</span><i class="material-icons">paid</i></div>
+            <div class="kpi-value">{{ kpis.ingresosHoy | currency:'MXN':'symbol':'1.0-0' }}</div>
+            <div class="kpi-foot">vs ayer <span class="trend" [class.up]="kpis.deltaIngresos>=0"
+                [class.down]="kpis.deltaIngresos<0">{{ kpis.deltaIngresos | number:'1.0-1' }}%</span></div>
+          </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+          <div class="kpi-card kpi-secondary shadow-sm">
+            <div class="kpi-top"><span>Pasajeros validados hoy</span><i class="material-icons">verified_user</i></div>
+            <div class="kpi-value">{{ kpis.pasajerosValidadosHoy | number }}</div>
+            <div class="kpi-foot">Últimas 24 h</div>
+          </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+          <div class="kpi-card kpi-accent shadow-sm">
+            <div class="kpi-top"><span>Ticket promedio</span><i class="material-icons">confirmation_number</i></div>
+            <div class="kpi-value">{{ kpis.ticketProm | currency:'MXN':'symbol':'1.2-2' }}</div>
+            <div class="kpi-foot">Hoy</div>
+          </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+          <div class="kpi-card kpi-green shadow-sm">
+            <div class="kpi-top"><span>% Pagos electrónicos</span><i class="material-icons">payments</i></div>
+            <div class="kpi-value">{{ kpis.pctElectronico | percent:'1.0-1' }}</div>
+            <div class="kpi-foot">Efectivo: {{ (1 - kpis.pctElectronico) | percent:'1.0-1' }}</div>
+          </div>
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg-3">
+          <div class="kpi-card kpi-slim shadow-sm">
+            <div class="kpi-top"><span>Validaciones exitosas</span><i class="material-icons">task_alt</i></div>
+            <div class="kpi-value">{{ kpis.validacionesOk | number }}</div>
+            <div class="kpi-foot">Fallidas: {{ kpis.validacionesFail | number }}</div>
+          </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+          <div class="kpi-card kpi-slim shadow-sm">
+            <div class="kpi-top"><span>Unidades en servicio / total</span><i class="material-icons">directions_bus</i>
+            </div>
+            <div class="kpi-value">{{ kpis.enServicio }}/{{ kpis.totalVehiculos }}</div>
+            <div class="kpi-foot">Ventana {{ ventanaMin }} min</div>
+          </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+          <div class="kpi-card kpi-slim shadow-sm">
+            <div class="kpi-top"><span>Cumplimiento de turnos</span><i class="material-icons">done_all</i></div>
+            <div class="kpi-value">{{ kpis.cumplimientoTurnos | percent:'1.0-1' }}</div>
+            <div class="kpi-foot">{{ kpis.turnosFin }}/{{ kpis.turnosInicio }} turnos</div>
+          </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+          <div class="kpi-card kpi-slim shadow-sm">
+            <div class="kpi-top"><span>Ocupación promedio</span><i class="material-icons">event_seat</i></div>
+            <div class="kpi-value">{{ kpis.ocupacion | percent:'1.0-1' }}</div>
+            <div class="kpi-foot">Proxy por conteo</div>
+          </div>
+        </div>
+
+        <div class="col-12 col-xl-8">
+          <div class="kpi-card kpi-table shadow-sm">
+            <div class="kpi-top"><span>Top 5 rutas por ingreso</span><i class="material-icons">trending_up</i></div>
+            <div class="table-responsive">
+              <table class="table table-sm table-striped align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th>Ruta</th>
+                    <th class="text-end">Ingresos</th>
+                    <th class="text-end">Pasajeros</th>
+                    <th class="text-end">Ticket</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let r of topRutas">
+                    <td>{{ r.ruta }}</td>
+                    <td class="text-end">{{ r.monto | currency:'MXN':'symbol':'1.0-0' }}</td>
+                    <td class="text-end">{{ r.pasajeros | number }}</td>
+                    <td class="text-end">{{ r.ticket | currency:'MXN' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-xl-4">
+          <div class="kpi-card kpi-table shadow-sm">
+            <div class="kpi-top"><span>Validadores con alertas</span><i class="material-icons">warning_amber</i></div>
+            <ul class="list-group list-group-flush alerts-list">
+              <li class="list-group-item d-flex justify-content-between align-items-center"
+    *ngFor="let a of alertasValidadores"
+    [attr.data-sev]="a.severidad">
+
+                <div>
+                  <div class="txt-strong">{{ a.nombre }}</div>
+                  <div class="txt-dim">{{ a.detalle }}</div>
+                </div>
+                <span class="badge" [ngClass]="a.severidad">{{ a.tag }}</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-3 mt-1">
+        <div class="col-12 col-xl-7">
+          <div class="card-plot shadow-sm">
+            <div class="plot-head">
+              <h3>Ingresos por hora (hoy)</h3><span class="hint">Barras + ticket</span>
+            </div>
+            <dx-chart [dataSource]="ingresosHora" class="dx-chart-brand">
+              <dxi-series type="bar" argumentField="hora" valueField="ingresos" name="Ingresos"></dxi-series>
+              <dxi-series type="line" argumentField="hora" valueField="ticket" name="Ticket"></dxi-series>
+              <dxo-legend [visible]="true" position="inside" horizontalAlignment="right"
+                verticalAlignment="top"></dxo-legend>
+              <dxo-tooltip [enabled]="true"></dxo-tooltip>
+            </dx-chart>
+          </div>
+        </div>
+
+        <div class="col-12 col-xl-5">
+          <div class="card-plot shadow-sm">
+            <div class="plot-head">
+              <h3>Distribución de medios de pago</h3><span class="hint">Hoy</span>
+            </div>
+            <dx-pie-chart [dataSource]="pagoDistrib" type="doughnut" class="dx-chart-brand">
+              <dxi-series argumentField="metodo" valueField="valor"></dxi-series>
+              <dxo-legend [visible]="true" horizontalAlignment="center" verticalAlignment="bottom"></dxo-legend>
+              <dxo-tooltip [enabled]="true"></dxo-tooltip>
+              <dxo-label [visible]="true" [format]="{ type:'percent', precision:0 }"></dxo-label>
+            </dx-pie-chart>
+          </div>
+        </div>
+
+        <div class="col-12 col-xl-7">
+          <div class="card-plot shadow-sm">
+            <div class="plot-head">
+              <h3>Curva de ascensos vs boletos</h3><span class="hint">Brecha</span>
+            </div>
+            <dx-chart [dataSource]="ascensosVsBoletos" class="dx-chart-brand">
+              <dxi-series type="line" argumentField="hora" valueField="ascensos" name="Ascensos"></dxi-series>
+              <dxi-series type="line" argumentField="hora" valueField="boletos" name="Validaciones"></dxi-series>
+              <dxo-legend [visible]="true"></dxo-legend>
+              <dxo-tooltip [enabled]="true"></dxo-tooltip>
+            </dx-chart>
+          </div>
+        </div>
+
+        <div class="col-12 col-xl-5">
+          <div class="card-plot shadow-sm">
+            <div class="plot-head">
+              <h3>Puntualidad de inicio de viaje</h3><span class="hint">Δ minutos</span>
+            </div>
+            <dx-chart [dataSource]="histPuntualidad" class="dx-chart-brand">
+              <dxi-series type="bar" argumentField="bucket" valueField="conteo" name="Viajes"></dxi-series>
+              <dxo-legend [visible]="false"></dxo-legend>
+              <dxo-tooltip [enabled]="true"></dxo-tooltip>
+            </dx-chart>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="card-plot shadow-sm">
+            <div class="plot-head">
+              <h3>Pasajeros por ruta</h3><span class="hint">Apilado por franja</span>
+            </div>
+            <dx-chart [dataSource]="pasajerosPorRuta" [resolveLabelOverlapping]="'stack'" class="dx-chart-brand">
+              <dxi-series *ngFor="let f of franjas" valueField="{{ f.value }}" name="{{ f.name }}" argumentField="ruta"
+                type="stackedBar"></dxi-series>
+              <dxo-legend [visible]="true"></dxo-legend>
+              <dxo-tooltip [enabled]="true"></dxo-tooltip>
+            </dx-chart>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </vex-page-layout-content>
+</vex-page-layout>

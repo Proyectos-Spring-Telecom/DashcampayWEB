@@ -1,0 +1,28 @@
+.vex-user-menu {
+  @apply bg-foreground shadow-lg border border-divider rounded py-2;
+}
+
+.vex-user-menu-item {
+  @apply relative flex items-center gap-4 px-2 mx-2 py-2 rounded hover:bg-primary-600/10 cursor-pointer transition duration-100 ease-out select-none h-10;
+
+  &:hover {
+    .vex-user-menu-item__icon {
+      @apply text-primary-600;
+    }
+  }
+}
+
+.vex-user-menu-item__label {
+  @apply flex-auto font-medium transition duration-100 ease-out;
+}
+
+.vex-user-menu-item__badge {
+  @apply px-2 py-1 rounded bg-primary-600/10 text-primary-600 text-2xs font-semibold flex-none;
+}
+
+.vex-user-menu-item__icon {
+  @apply flex-none transition duration-100 ease-out;
+}
+
+.vex-user-menu-item__dropdown-icon {
+}

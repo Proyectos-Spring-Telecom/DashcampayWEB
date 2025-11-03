@@ -1,0 +1,146 @@
+<vex-page-layout @fadeInRight>
+
+    <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
+        [class.px-6]="layoutCtrl.value === 'fullwidth'" class="-mt-6">
+        <div class="card mt-4">
+            <div class="dashboard-lite p-4">
+                <div class="bg-app-bar appbar px-6 h-16 border-b sticky top-0 left-0 flex items-center z-10">
+                    <nav class="breadcrumb-simple" aria-label="Ruta de navegación">
+                        <a routerLink="/administracion" class="crumb-link">
+                            <mat-icon inline>home</mat-icon>
+                            Administración
+                        </a>
+                        <span class="sep">/</span>
+                        <span class="crumb-current" aria-current="page">Tarifas</span>
+                    </nav>
+
+                    <div class="flex-grow"></div>
+
+                    <div class="flex gap-3 actions-bar">
+                        <button mat-raised-button color="primary" type="button" class="btn-soft textGenerico"
+                            (click)="toggleExpandGroups()" matTooltip="Expandir / Contraer grupos">
+                            <mat-icon svgIcon="mat:compare_arrows"></mat-icon>
+                            <span class="btn-text">{{ autoExpandAllGroups ? 'Contraer' : 'Expandir' }}</span>
+                        </button>
+
+                        <button mat-raised-button color="accent" type="button" class="btn-soft textGenerico"
+                            (click)="limpiarCampos()" matTooltip="Limpiar filtros">
+                            <mat-icon svgIcon="mat:restore"></mat-icon>
+                            <span class="btn-text">Limpiar</span>
+                        </button>
+
+                        <button (click)="agregarTarifa()" mat-raised-button color="warn" type="button"
+                            class="btn-soft textGenerico" matTooltip="Agregar usuario">
+                            <mat-icon>add</mat-icon>
+                            <span class="btn-text">Agregar</span>
+                        </button>
+                    </div>
+                </div>
+
+                <section class="mt-5 table-shell">
+                    <dx-data-grid #gridContainer id="gridContainer" [columnHidingEnabled]="true" [showBorders]="true"
+                        [showColumnLines]="true" [showRowLines]="true" [rowAlternationEnabled]="true"
+                        [dataSource]="listaTarifas" [keyExpr]="'Id'" [width]="'100%'"
+                        [remoteOperations]="{ paging: true }" [paging]="{ pageSize: pageSize }" [pager]="{ 
+                                showPageSizeSelector: true, 
+                                allowedPageSizes: [50], 
+                                showInfo: true,
+                                infoText: 'Página {0} de {1}', 
+                                visible: true 
+                            }" (onPageIndexChanged)=" onPageIndexChanged($event)"
+                        (onOptionChanged)="onGridOptionChanged($event)">
+                        <dxo-search-panel [visible]="true" [width]="200" placeholder="Buscar..."></dxo-search-panel>
+                        <dxo-toolbar>
+                            <dxi-item name="groupPanel" location="before"></dxi-item>
+                            <dxi-item name="exportButton" location="after"
+                                [options]="{ text: 'Exportar Grid', icon: 'export' }" [showText]="'always'">
+                            </dxi-item>
+                            <dxi-item name="searchPanel" location="after"></dxi-item>
+                        </dxo-toolbar>
+                        <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[20]"
+                            [showInfo]="true"></dxo-pager>
+                        <dxo-group-panel [emptyPanelText]="mensajeAgrupar" [visible]="true"></dxo-group-panel>
+                        <dxo-filter-row [visible]="showFilterRow"></dxo-filter-row>
+                        <dxo-header-filter [visible]="showHeaderFilter"></dxo-header-filter>
+                        <dxi-column caption="Acciones" cellTemplate="acciones" alignment="center"
+                            [width]="150"></dxi-column>
+                        <dxo-grouping #expand [autoExpandAll]="true"></dxo-grouping>
+                        <dxi-column dataField="nombreRuta" caption="Nombre Ruta" alignment="center" dataType="string"
+                            [allowSearch]="true"></dxi-column>
+                        <dxi-column dataField="TarifaBase" caption="Tarifa" alignment="center" dataType="string"
+                            [allowSearch]="true" cellTemplate="tarBase">
+                            <div *dxTemplate="let t of 'tarBase' ">
+                                {{t.data.TarifaBase | currency: '$'}}
+                            </div>
+                        </dxi-column>
+                        <dxi-column dataField="DistanciaBaseKm" caption="Distancia en KM" alignment="center"
+                            dataType="string" [allowSearch]="true" cellTemplate="disBaseKM">
+                            <div *dxTemplate="let t of 'disBaseKM'">
+                                {{t.data.DistanciaBaseKm + ' '+ 'km'}}
+                            </div>
+                        </dxi-column>
+                        <dxi-column dataField="IncrementoCadaMetros" caption="Incremento por Metros" alignment="center"
+                            dataType="string" [allowSearch]="true" cellTemplate="incrCadaMetros">
+                            <div *dxTemplate="let r of 'incrCadaMetros' ">
+                                {{r.data.IncrementoCadaMetros + ' ' + 'm'}}
+                            </div>
+                        </dxi-column>
+                        <dxi-column dataField="CostoAdicional" caption="Costo Adicional" alignment="center"
+                            dataType="string" [allowSearch]="true" cellTemplate="cosAdicional">
+                            <div *dxTemplate="let r of 'cosAdicional' ">
+                                {{r.data.CostoAdicional | currency: '$'}}
+                            </div>
+                        </dxi-column>
+                        <dxi-column dataField="fechaCreacionTarifa" caption="Fecha Creación" alignment="center"
+                            dataType="string" [allowSearch]="true" cellTemplate="fechCreacion">
+                            <div *dxTemplate="let r of 'fechCreacion' ">
+                                {{r.data.fechaCreacionTarifa | date:'dd/MM/yyyy HH:mm' : '+0000'}}
+                            </div>
+                        </dxi-column>
+                        <dxi-column caption="Cliente" alignment="center" dataType="string" [allowSearch]="true"
+                            cellTemplate="nomCliente">
+                            <div *dxTemplate="let u of 'nomCliente' ">
+                                {{u.data.nombreCliente}} {{u.data.apellidoPaternoCliente || ' '}}
+                                {{u.data.apellidoMaternoCliente || ' '}}
+                            </div>
+                        </dxi-column>
+                        <dxi-column dataField="estatusTarifa" caption="Estatus" alignment="center" cellTemplate="est">
+                            <div *dxTemplate="let f of 'est'">
+                                <span
+                                    [ngClass]="f.data.estatusTarifa === 1 ? 'badge-status activo' : 'badge-status inactivo'">
+                                    {{ f.data.estatusTarifa === 1 ? 'Activo' : 'Inactivo' }}
+                                </span>
+                            </div>
+                        </dxi-column>
+                        <div *dxTemplate="let row of 'acciones'" class="d-flex gap-3 justify-content-center">
+                            <div>
+                                <button class="btn-edit" (click)="actualizarTarifa(row.data.id)">
+                                    <mat-icon class="btn__icon">edit</mat-icon>
+                                </button>
+                            </div>
+                            <div>
+                                <button *ngIf="row.data.estatusTarifa === 0" class="btn-active"
+                                    (click)="activar(row.data)">
+                                    <mat-icon class="btn__icon">check_circle</mat-icon>
+                                </button>
+
+                                <button *ngIf="row.data.estatusTarifa === 1" class="btn-desactive"
+                                    (click)="desactivar(row.data)">
+                                    <mat-icon class="btn__icon">block</mat-icon>
+                                </button>
+                            </div>
+                            <!-- <div>
+                                    <button id="deleteButton" class="btnAcciones" (click)="eliminarTarifa(row.data)">
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                </div> -->
+                        </div>
+                        <dxo-export [enabled]="false" [allowExportSelectedData]="false"
+                            [texts]="{ exportAll: 'Exportar todos los datos a Excel' }">
+                        </dxo-export>
+                    </dx-data-grid>
+                </section>
+            </div>
+        </div>
+    </vex-page-layout-content>
+</vex-page-layout>

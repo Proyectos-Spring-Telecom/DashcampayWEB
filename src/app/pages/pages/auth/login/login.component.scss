@@ -1,0 +1,87 @@
+.bg-pattern {
+  background-image: url('/assets/img/demo/logo2.jpg'); 
+  background-size: cover; 
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+
+.loader {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: inline-block;
+  border-top: 3px solid #FFF;
+  border-right: 3px solid transparent;
+  box-sizing: border-box;
+  animation: rotation 1s linear infinite;
+}
+
+@keyframes rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+} 
+.align {
+  background-color: #0b5791;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 8px; 
+  padding: 10px 20px; 
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  width: 100%; 
+  transition: background-color 0.3s ease;
+}
+
+.align:hover {
+  background-color: #044272; 
+}
+
+.align:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+:root {
+  --azul-oscuro: #0A2E57;
+  --azul: #1F5AA8;
+  --lime: #A6CE39;
+  --blanco: #FFFFFF;
+}
+
+.login-link-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.login-link {
+  font-family: 'Montserrat', system-ui, sans-serif;
+  font-size: 0.925rem;
+  font-weight: 600;
+  color: var(--azul);
+  text-decoration: none;
+  padding: 6px 10px;
+  border-radius: 10px;
+  transition: transform .15s ease, background-color .15s ease, color .15s ease;
+  background: rgba(31, 90, 168, 0.08);
+}
+
+.login-link:hover {
+  color: var(--azul-oscuro);
+  background: rgba(31, 90, 168, 0.14);
+  transform: translateY(-1px);
+}
+
+.login-link:active {
+  transform: translateY(0);
+  background: rgba(31, 90, 168, 0.2);
+}

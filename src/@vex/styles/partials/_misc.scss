@@ -1,0 +1,60 @@
+/** SCROLLBARS */
+body.is-blink {
+  ::-webkit-scrollbar {
+    background-color: rgba(0, 0, 0, 0);
+    height: var(--vex-blink-scrollbar-width);
+    width: var(--vex-blink-scrollbar-width);
+  }
+
+  ::-webkit-scrollbar:hover {
+    background-color: rgba(0, 0, 0, 0.12);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    border-radius: var(--vex-blink-scrollbar-width);
+    box-shadow: inset 0 0 0 12px rgba(0, 0, 0, 0.37);
+  }
+
+  ::-webkit-scrollbar-thumb:active {
+    border-radius: var(--vex-blink-scrollbar-width);
+    box-shadow: inset 0 0 0 12px rgba(0, 0, 0, 0.54);
+  }
+}
+
+/** SCROLLBLOCK */
+.vex-scrollblock {
+  position: fixed;
+  width: 100%;
+}
+
+/** GLOSSY DIALOG */
+.vex-dialog-glossy .mat-mdc-dialog-container {
+  @apply rounded;
+}
+
+.is-blink {
+  .vex-dialog-glossy .mat-mdc-dialog-container .mdc-dialog__surface {
+    backdrop-filter: saturate(180%) blur(20px);
+    @apply bg-foreground/60;
+  }
+}
+
+.container {
+  @apply px-6;
+
+  @screen lg {
+    margin-left: auto;
+    margin-right: auto;
+    max-width: theme("screens.lg");
+    width: 100%;
+  }
+}
+
+.card {
+  @apply rounded shadow bg-foreground;
+}
+
+.avatar {
+  @apply h-10 w-10 object-cover rounded-full bg-hover;
+}

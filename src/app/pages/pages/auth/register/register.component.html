@@ -1,0 +1,160 @@
+<!-- register.component.html -->
+<div class="w-full h-full bg-pattern flex flex-col items-center justify-center">
+  <div @fadeInRight  class="card overflow-hidden w-full max-w-xl md:max-w-2xl" style="background-color: white;">
+    <div class="p-6 pb-0 flex flex-col mt-4">
+      <div class="fill-current text-center" style="display: flex; align-items: center; justify-content: center;">
+        <img style="width: 50%;" src="/assets/img/logo/DashCamPay_trasparente_large.png" />
+      </div>
+    </div>
+
+    <div class="text-center" style="margin-top: 7%;">
+      <h2 class="title m-0">Afiliación de Pasajero</h2>
+      <h4 class="body-2 text-secondary m-0">
+        Completa tus datos y crea tu cuenta.
+      </h4>
+    </div>
+
+    <div class="p-2 flex flex-col gap-2">
+      <form [formGroup]="afiliacionPasajero" (ngSubmit)="agregar()" class="p-6 flex flex-col gap-4" novalidate>
+        <!-- Reemplaza este bloque dentro del form -->
+        <div class="row g-3 form-row">
+          <div class="col-12 col-md-6">
+            <mat-form-field class="w-100">
+              <mat-label>Nombre</mat-label>
+              <input matInput formControlName="nombre" required />
+              <mat-error *ngIf="afiliacionPasajero.get('nombre')?.hasError('required')">Campo requerido</mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="col-12 col-md-6">
+            <mat-form-field class="w-100">
+              <mat-label>Apellido Paterno</mat-label>
+              <input matInput formControlName="apellidoPaterno" required />
+              <mat-error *ngIf="afiliacionPasajero.get('apellidoPaterno')?.hasError('required')">Campo
+                requerido</mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="col-12 col-md-6">
+            <mat-form-field class="w-100">
+              <mat-label>Apellido Materno</mat-label>
+              <input matInput formControlName="apellidoMaterno" />
+            </mat-form-field>
+          </div>
+
+          <div class="col-12 col-md-6">
+            <mat-form-field class="w-100">
+              <mat-label>Fecha de Nacimiento</mat-label>
+              <input matInput type="date" formControlName="fechaNacimiento" required />
+              <mat-error *ngIf="afiliacionPasajero.get('fechaNacimiento')?.hasError('required')">Campo
+                requerido</mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="col-12 col-md-6">
+            <mat-form-field class="w-100">
+              <mat-label>Teléfono (10 dígitos)</mat-label>
+              <input matInput maxlength="10" formControlName="telefono" required
+                (keypress)="allowOnlyNumbers($event)" />
+              <mat-error *ngIf="afiliacionPasajero.get('telefono')?.hasError('required')">Campo requerido</mat-error>
+              <mat-error *ngIf="afiliacionPasajero.get('telefono')?.hasError('pattern')">Formato inválido</mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="col-12 col-md-6">
+            <mat-form-field class="w-100">
+              <mat-label>Correo Electrónico</mat-label>
+              <input matInput formControlName="correo" type="email" required />
+              <mat-error *ngIf="afiliacionPasajero.get('correo')?.hasError('required')">Campo requerido</mat-error>
+              <mat-error *ngIf="afiliacionPasajero.get('correo')?.hasError('email')">Correo inválido</mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="col-12 col-md-6">
+            <mat-form-field class="w-100">
+              <mat-label>Contraseña</mat-label>
+              <input matInput [type]="type" formControlName="passwordHash" required autocomplete="new-password"
+                (focus)="pwFocused = true" (blur)="pwFocused = false" />
+              <button type="button" mat-icon-button matIconSuffix (click)="myFunctionPasswordCurrent()">
+                <mat-icon>{{ type === 'password' ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
+
+              <div *ngIf="showPwHint" class="pw-hint" [class.ok]="pwAllOk" [class.bad]="!pwAllOk"
+                [@fadeOnChange]="pwGuideKey" [@fadeInOut] aria-live="polite">
+                <i class="fa" [ngClass]="pwAllOk ? 'fa-check-circle' : 'fa-exclamation-circle'"></i>
+                {{ pwGuideText }}
+              </div>
+
+              <mat-error *ngIf="afiliacionPasajero.get('passwordHash')?.hasError('required')">Campo
+                requerido</mat-error>
+              <mat-error *ngIf="afiliacionPasajero.get('passwordHash')?.hasError('pattern')">No cumple la
+                política</mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="col-12 col-md-6">
+            <mat-form-field class="w-100">
+              <mat-label>Número de Serie del Monedero</mat-label>
+              <input matInput formControlName="numeroSerieMonedero" required maxlength="50" />
+              <mat-error *ngIf="afiliacionPasajero.get('numeroSerieMonedero')?.hasError('required')">Campo
+                requerido</mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+
+
+        <button class="mt-2 align" type="submit" [disabled]="afiliacionPasajero.invalid || loading">
+          <span *ngIf="loading" class="loader"></span>
+          <span style="margin-left: 3%;">{{ submitButton }}</span>
+        </button>
+
+        <div class="login-link-wrap">
+          <a class="login-link" [routerLink]="['/login']">Inicia Sesión</a>
+
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal OTP -->
+<div id="otp-modal" class="modal-backdrop">
+  <div class="modal-card modal-xl" @fadeInRight>
+    <div class="modal-header otp-header">
+      <h3 class="otp-title">Verificación de Cuenta</h3>
+      <a class="close" href="#">×</a>
+    </div>
+
+    <div class="modal-body otp-body">
+      <p class="otp-subtitle">
+        Nos alegra que estés aquí. Para terminar el registro, ingresa el código de <strong>4 dígitos</strong> que te enviamos a tu correo.
+      </p>
+
+      <form [formGroup]="verifyForm" (ngSubmit)="onVerify()" class="otp-form">
+        <div class="otp-inputs">
+          <input #otpInput class="otp-box otp-elev" maxlength="1" inputmode="numeric" pattern="[0-9]*"
+                 aria-label="Dígito 1" (input)="onOtpInput($event,0)" (keydown)="onOtpKeydown($event,0)" />
+          <input #otpInput class="otp-box otp-elev" maxlength="1" inputmode="numeric" pattern="[0-9]*"
+                 aria-label="Dígito 2" (input)="onOtpInput($event,1)" (keydown)="onOtpKeydown($event,1)" />
+          <input #otpInput class="otp-box otp-elev" maxlength="1" inputmode="numeric" pattern="[0-9]*"
+                 aria-label="Dígito 3" (input)="onOtpInput($event,2)" (keydown)="onOtpKeydown($event,2)" />
+          <input #otpInput class="otp-box otp-elev" maxlength="1" inputmode="numeric" pattern="[0-9]*"
+                 aria-label="Dígito 4" (input)="onOtpInput($event,3)" (keydown)="onOtpKeydown($event,3)" />
+        </div>
+
+        <div class="otp-actions">
+          <button class="btn-verify" type="submit" [disabled]="verifyForm.invalid || loading">
+            Verificar
+          </button>
+          <button class="link-resend" type="button" (click)="onResend()" [disabled]="resendDisabled">
+            Reenviar código <span *ngIf="resendDisabled">({{ resendSeconds }}s)</span>
+          </button>
+        </div>
+
+        <p class="otp-footnote">
+          ¿No recibiste el correo? Revisa tu carpeta de spam o solicita reenviar.
+        </p>
+      </form>
+    </div>
+  </div>
+</div>

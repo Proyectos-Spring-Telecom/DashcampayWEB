@@ -1,0 +1,142 @@
+<vex-page-layout @fadeInRight>
+
+    <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
+        [class.px-6]="layoutCtrl.value === 'fullwidth'" class="-mt-6">
+        <div class="card mt-4">
+            <div class="dashboard-lite p-4">
+
+                <section class="mt-2 table-shell">
+                    <form class="dc-filters mb-4" novalidate>
+                        <div class="dc-card">
+                            <!-- Cinta de marca -->
+                            <div class="dc-brand-strip d-flex align-items-center gap-2">
+                                <div class="dc-title d-flex align-items-center gap-2">
+                                    <mat-icon>tune</mat-icon>
+                                    <div>
+                                        <h3 class="m-0">Administración / Recaudación por Operador</h3>
+                                        <small>Rango de Fecha, Cliente y Operador</small>
+                                    </div>
+                                </div>
+
+                                <div class="dc-actions d-flex gap-2 ms-auto">
+                                    <button type="button" class="dc-btn dc-btn-primary">
+                                        <mat-icon>filter_alt</mat-icon><span>Aplicar</span>
+                                    </button>
+                                    <button type="button" class="dc-btn dc-btn-ghost">
+                                        <mat-icon>restart_alt</mat-icon><span>Limpiar</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Controles (Bootstrap responsive) -->
+                            <div class="container-fluid py-3">
+                                <div
+                                    class="row g-3 row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 row-cols-xxl-5">
+                                    <!-- Fecha -->
+                                    <div class="col">
+                                        <mat-form-field appearance="outline" class="dc-ff dc-date w-100">
+                                            <mat-label>Fecha</mat-label>
+                                            <!-- <mat-icon matPrefix>event</mat-icon> -->
+                                            <mat-date-range-input [rangePicker]="picker" [separator]="'—'">
+                                                <input matStartDate placeholder="Inicio">
+                                                <input matEndDate placeholder="Fin">
+                                            </mat-date-range-input>
+                                            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                                            <mat-date-range-picker #picker></mat-date-range-picker>
+                                        </mat-form-field>
+                                    </div>
+
+                                    <!-- Cliente -->
+                                    <div class="col">
+                                        <mat-form-field appearance="outline" class="dc-ff dc-select w-100">
+                                            <mat-label>Cliente</mat-label>
+                                            <!-- <mat-icon matPrefix>store</mat-icon> -->
+                                            <mat-select panelClass="dc-select-panel">
+                                                <mat-option value="1">Logistica</mat-option>
+                                                <mat-option value="2">MobilExpress</mat-option>
+                                            </mat-select>
+                                        </mat-form-field>
+                                    </div>
+
+                                    <!-- Zona -->
+                                    <div class="col">
+                                        <mat-form-field appearance="outline" class="dc-ff dc-select w-100">
+                                            <mat-label>Operador</mat-label>
+                                            <!-- <mat-icon matPrefix>map</mat-icon> -->
+                                            <mat-select panelClass="dc-select-panel">
+                                                <mat-option value="10">Eduardo Cruz</mat-option>
+                                                <mat-option value="20">Rodrigo Martinez</mat-option>
+                                                <mat-option value="30">Sergio Torres</mat-option>
+                                            </mat-select>
+                                        </mat-form-field>
+                                    </div>
+                                </div>
+
+                                <!-- Chips -->
+                                <dx-data-grid #gridContainer id="gridContainer" [columnHidingEnabled]="true"
+                                    [showBorders]="true" [showColumnLines]="true" [showRowLines]="true"
+                                    [rowAlternationEnabled]="true" [dataSource]="informacion" [keyExpr]="'id'"
+                                    [width]="'100%'" [remoteOperations]="{ paging: true }"
+                                    [paging]="{ pageSize: pageSize }" [pager]="{ 
+                                showPageSizeSelector: true, 
+                                allowedPageSizes: [50], 
+                                showInfo: true,
+                                infoText: 'Página {0} de {1}', 
+                                visible: true 
+                            }">
+                                    <dxo-search-panel [visible]="true" [width]="200"
+                                        placeholder="Buscar..."></dxo-search-panel>
+                                    <dxo-toolbar>
+                                        <dxi-item name="groupPanel" location="before"></dxi-item>
+                                        <dxi-item name="exportButton" location="after"
+                                            [options]="{ text: 'Exportar Grid', icon: 'export' }" [showText]="'always'">
+                                        </dxi-item>
+                                        <dxi-item name="searchPanel" location="after"></dxi-item>
+                                    </dxo-toolbar>
+                                    <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[20]"
+                                        [showInfo]="true"></dxo-pager>
+                                    <dxo-group-panel [emptyPanelText]="mensajeAgrupar"
+                                        [visible]="true"></dxo-group-panel>
+                                    <dxo-filter-row [visible]="showFilterRow"></dxo-filter-row>
+                                    <dxo-header-filter [visible]="showHeaderFilter"></dxo-header-filter>
+                                    <dxo-export [enabled]="false" [allowExportSelectedData]="false"
+                                        [texts]="{ exportAll: 'Exportar todos los datos a Excel' }">
+                                    </dxo-export>
+                                    <dxi-column dataField="operador" caption="Operador" dataType="string"
+                                        alignment="center"></dxi-column>
+
+                                    <dxi-column dataField="licencia" caption="Licencia" dataType="string"
+                                        alignment="center"></dxi-column>
+
+                                    <dxi-column dataField="turnos" caption="Turnos" dataType="number"
+                                        [format]="{ type: 'fixedPoint', precision: 0 }" alignment="center"></dxi-column>
+
+                                    <dxi-column dataField="viajes" caption="Viajes" dataType="number"
+                                        [format]="{ type: 'fixedPoint', precision: 0 }" alignment="center"></dxi-column>
+
+                                    <dxi-column dataField="validaciones" caption="Validaciones" dataType="number"
+                                        [format]="{ type: 'fixedPoint', precision: 0 }" alignment="center"></dxi-column>
+
+                                    <dxi-column dataField="ingresos" caption="Ingresos" dataType="number"
+                                        [format]="{ type: 'currency', currency: 'MXN', precision: 2 }"
+                                        alignment="center"></dxi-column>
+
+                                    <dxi-column dataField="ticketPromedio" caption="Ticket promedio" dataType="number"
+                                        [format]="{ type: 'currency', currency: 'MXN', precision: 2 }"
+                                        alignment="center"></dxi-column>
+
+                                    <dxi-column dataField="evasionPorcentaje" caption="Evasión %" dataType="number"
+                                        [format]="{ type: 'percent', precision: 2 }" alignment="center"></dxi-column>
+
+                                    <dxi-column dataField="ultimoTurno" caption="Último turno" dataType="datetime"
+                                        [format]="'dd/MM/yyyy HH:mm'" alignment="center"></dxi-column>
+
+                                </dx-data-grid>
+                            </div>
+                        </div>
+                    </form>
+                </section>
+            </div>
+        </div>
+    </vex-page-layout-content>
+</vex-page-layout>

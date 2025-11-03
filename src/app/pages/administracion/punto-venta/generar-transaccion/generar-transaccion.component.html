@@ -1,0 +1,204 @@
+<vex-page-layout @fadeInRight>
+    <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
+        [class.px-6]="layoutCtrl.value === 'fullwidth'" class="-mt-6">
+        <div class="card mt-4">
+            <div class="dashboard-lite p-4">
+                <section class="mt-2 table-shell">
+                    <div class="card variantes-card shadow-sm border-0">
+                        <div class="card-header d-flex flex-wrap align-items-center gap-2 justify-content-between">
+                            <div class="d-flex align-items-center gap-2">
+                                <h2 style="color: white;" class="m-0 titulo-card"><i class="fa fa-money"></i> Realizar
+                                    Pago</h2>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <section class="mt-5 table-shell">
+                                    <div class="recarga-wrap">
+                                        <div class="recarga-header">
+                                            <div class="recarga-step" [class.active]="step===1">
+                                                <div class="badge">1</div>
+                                                <div class="txt">
+                                                    <strong>Selecciona Monedero</strong>
+                                                    <span>Elige a quién recargar</span>
+                                                </div>
+                                            </div>
+                                            <div class="divider"></div>
+                                            <div class="recarga-step" [class.active]="step===2">
+                                                <div class="badge">2</div>
+                                                <div class="txt">
+                                                    <strong>Ingresa Monto</strong>
+                                                    <span>Define cuánto recargar</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="recarga-card" *ngIf="step===1">
+                                            <div class="recarga-toolbar">
+                                                <div class="left">
+                                                    <i class="fa fa-wallet"></i>
+                                                    <h3>Monedero</h3>
+                                                </div>
+                                                <div class="right">
+                                                    <mat-form-field class="recarga-search" appearance="outline">
+                                                        <mat-label>Buscar pasajero / cliente / serie</mat-label>
+                                                        <input matInput [(ngModel)]="query"
+                                                            (ngModelChange)="filtrarMonederos()"
+                                                            placeholder="Escribe para filtrar">
+                                                        <button mat-icon-button matSuffix *ngIf="query"
+                                                            (click)="query=''; filtrarMonederos()" aria-label="Limpiar">
+                                                            <mat-icon>close</mat-icon>
+                                                        </button>
+                                                    </mat-form-field>
+                                                </div>
+                                            </div>
+                                            <ul class="recarga-list" role="list">
+                                                <li class="recarga-list-item" *ngFor="let m of listaMonederosFiltrados"
+                                                    [class.selected]="m.id===monederoSeleccionado?.id"
+                                                    (click)="seleccionarMonedero(m)" tabindex="0"
+                                                    (keyup.enter)="seleccionarMonedero(m)" role="listitem"
+                                                    [attr.aria-pressed]="m.id===monederoSeleccionado?.id">
+
+                                                    <div class="linea">
+                                                        <i class="fa fa-id-card"></i>
+                                                        <span class="clave">Serie:</span>
+                                                        <b>{{ m.numeroSerie || m.serie }}</b>
+                                                    </div>
+                                                    <div class="linea">
+                                                        <i class="fa fa-user"></i>
+                                                        <span class="clave">Pasajero:</span>
+                                                        <b>{{ getNombrePasajero(m) }}</b>
+                                                    </div>
+
+                                                    <div class="linea">
+                                                        <i class="fa fa-user-tie"></i>
+                                                        <span class="clave">Cliente:</span>
+                                                        <b>{{ m.nombreCompletoCliente || m.clienteNombre }}</b>
+                                                    </div>
+                                                    <div class="linea saldo">
+                                                        <i class="fa fa-coins"></i>
+                                                        <span class="clave">Saldo:</span>
+                                                        <b>{{ m.saldo | currency:'MXN':'symbol-narrow':'1.2-2' }}</b>
+                                                    </div>
+                                                </li>
+                                            </ul>
+                                            <div class="recarga-actions mt-3">
+                                                <button mat-raised-button color="primary"
+                                                    [disabled]="!monederoSeleccionado" (click)="irPaso(2)">
+                                                    Continuar
+                                                    <mat-icon>arrow_forward</mat-icon>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="recarga-card" *ngIf="step===2">
+                                            <div class="recarga-toolbar">
+                                                <div class="left">
+                                                    <i class="fa fa-coins"></i>
+                                                    <h3>Monto a Recargar</h3>
+                                                </div>
+                                                <div class="right">
+                                                    <button mat-raised-button color="accent" type="button"
+                                                        (click)="irPaso(1)">
+                                                        <mat-icon>arrow_back</mat-icon> Cambiar monedero
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="recarga-layout">
+                                                <div class="recarga-left">
+                                                    <div class="monto-input">
+                                                        <span class="signo">$</span>
+                                                        <input type="text" inputmode="decimal" [value]="montoView"
+                                                            (input)="onInputMonto($event)" placeholder="0.00"
+                                                            aria-label="Monto a recargar" />
+                                                    </div>
+                                                    <div class="monto-chips">
+                                                        <button mat-stroked-button (click)="agregarMonto(1)">$1</button>
+                                                        <button mat-stroked-button (click)="agregarMonto(2)">$2</button>
+                                                        <button mat-stroked-button (click)="agregarMonto(5)">$5</button>
+                                                        <button mat-stroked-button
+                                                            (click)="agregarMonto(10)">$10</button>
+                                                        <button mat-stroked-button
+                                                            (click)="agregarMonto(20)">$20</button>
+                                                        <button mat-stroked-button
+                                                            (click)="agregarMonto(50)">$50</button>
+                                                        <button mat-stroked-button
+                                                            (click)="agregarMonto(100)">$100</button>
+                                                        <button mat-stroked-button
+                                                            (click)="agregarMonto(200)">$200</button>
+                                                    </div>
+                                                    <div class="keypad">
+                                                        <button type="button" (click)="key('1')">1</button>
+                                                        <button type="button" (click)="key('2')">2</button>
+                                                        <button type="button" (click)="key('3')">3</button>
+                                                        <button type="button" (click)="key('4')">4</button>
+                                                        <button type="button" (click)="key('5')">5</button>
+                                                        <button type="button" (click)="key('6')">6</button>
+                                                        <button type="button" (click)="key('7')">7</button>
+                                                        <button type="button" (click)="key('8')">8</button>
+                                                        <button type="button" (click)="key('9')">9</button>
+                                                        <button type="button" (click)="key('00')">00</button>
+                                                        <button type="button" (click)="key('0')">0</button>
+                                                        <button type="button"
+                                                            (click)="borrar()"><mat-icon>backspace</mat-icon></button>
+                                                    </div>
+                                                </div>
+                                                <div class="recarga-right">
+                                                    <div class="summary">
+                                                        <div class="summary-head">
+                                                            <i class="fa fa-receipt"></i>
+                                                            <h4>Resumen</h4>
+                                                        </div>
+                                                        <div class="summary-row">
+                                                            <span>Saldo actual</span>
+                                                            <b class="monto">
+                                                                {{ monederoSeleccionado?.saldo |
+                                                                currency:'MXN':'symbol-narrow':'1.2-2' }}
+                                                            </b>
+                                                        </div>
+                                                        <div class="summary-row">
+                                                            <span>Monedero</span>
+                                                            <b>#{{ monederoSeleccionado?.numeroSerie ||
+                                                                monederoSeleccionado?.serie || '—' }}</b>
+                                                        </div>
+                                                        <div class="summary-row">
+                                                            <span>Pasajero</span>
+                                                            <b>{{ getNombrePasajero(monederoSeleccionado) }}</b>
+                                                        </div>
+
+
+                                                        <div class="summary-row">
+                                                            <span>Cliente</span>
+                                                            <b>{{ monederoSeleccionado?.nombreCompletoCliente ||
+                                                                monederoSeleccionado?.clienteNombre || '—' }}</b>
+                                                        </div>
+
+                                                        <div class="summary-row">
+                                                            <span>Monto</span>
+                                                            <b class="monto">{{ monto |
+                                                                currency:'MXN':'symbol-narrow':'1.2-2' }}</b>
+                                                        </div>
+                                                        <div class="summary-foot">
+                                                            <button mat-raised-button color="primary"
+                                                                [disabled]="!monto || monto<=0"
+                                                                (click)="confirmarRecarga()">
+                                                                Confirmar Recarga
+                                                                <mat-icon>bolt</mat-icon>
+                                                            </button>
+                                                            <button mat-stroked-button color="warn"
+                                                                (click)="cancelar()">
+                                                                Cancelar
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </vex-page-layout-content>
+</vex-page-layout>

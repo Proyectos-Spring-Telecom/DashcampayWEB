@@ -1,0 +1,33 @@
+@media print {
+  html,
+  body {
+    height: auto !important;
+    overflow: initial !important;
+  }
+
+  .vex-toolbar,
+  .vex-sidenav {
+    display: none !important;
+  }
+
+  .vex-layout-content {
+    margin-top: 0 !important;
+  }
+
+  .mat-drawer-container {
+    overflow: visible !important;
+  }
+
+  .vex-layout-sidenav-content {
+    margin-left: 0 !important;
+    @apply bg-foreground;
+  }
+
+  .vex-footer {
+    display: none !important;
+  }
+
+  .config-panel-toggle {
+    display: none !important;
+  }
+}

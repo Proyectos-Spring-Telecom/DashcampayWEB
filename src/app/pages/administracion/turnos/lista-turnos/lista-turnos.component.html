@@ -1,0 +1,134 @@
+<vex-page-layout @fadeInRight>
+
+  <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
+    [class.px-6]="layoutCtrl.value === 'fullwidth'" class="-mt-6">
+    <div class="card mt-4">
+      <div class="dashboard-lite p-4">
+        <div class="bg-app-bar appbar px-6 h-16 border-b sticky top-0 left-0 flex items-center z-10">
+          <nav class="breadcrumb-simple" aria-label="Ruta de navegación">
+            <a routerLink="/administracion" class="crumb-link">
+              <mat-icon inline>home</mat-icon>
+              Administración
+            </a>
+            <span class="sep">/</span>
+            <span class="crumb-current" aria-current="page">Turnos</span>
+          </nav>
+
+          <div class="flex-grow"></div>
+
+          <div class="flex gap-3 actions-bar">
+            <button mat-raised-button color="primary" type="button" class="btn-soft textGenerico"
+              (click)="toggleExpandGroups()" matTooltip="Expandir / Contraer grupos">
+              <mat-icon svgIcon="mat:compare_arrows"></mat-icon>
+              <span class="btn-text">{{ autoExpandAllGroups ? 'Contraer' : 'Expandir' }}</span>
+            </button>
+
+            <button mat-raised-button color="accent" type="button" class="btn-soft textGenerico"
+              (click)="limpiarCampos()" matTooltip="Limpiar filtros">
+              <mat-icon svgIcon="mat:restore"></mat-icon>
+              <span class="btn-text">Limpiar</span>
+            </button>
+
+            <button (click)="agregarTurno()" mat-raised-button color="warn" type="button"
+              class="btn-soft textGenerico" matTooltip="Agregar usuario">
+              <mat-icon>add</mat-icon>
+              <span class="btn-text">Agregar</span>
+            </button>
+          </div>
+        </div>
+
+        <section class="mt-5 table-shell">
+          <dx-data-grid #gridContainer id="gridContainer" [columnHidingEnabled]="true"
+                            [showBorders]="true" [showColumnLines]="true" [showRowLines]="true"
+                            [rowAlternationEnabled]="true" [dataSource]="listaTurnos" [keyExpr]="'Id'"
+                            [width]="'100%'" [remoteOperations]="{ paging: true }" [paging]="{ pageSize: pageSize }"
+                            [pager]="{ 
+                                showPageSizeSelector: true, 
+                                allowedPageSizes: [50], 
+                                showInfo: true,
+                                infoText: 'Página {0} de {1}', 
+                                visible: true 
+                            }" (onPageIndexChanged)=" onPageIndexChanged($event)"
+                            (onOptionChanged)="onGridOptionChanged($event)">
+                            <dxo-search-panel [visible]="true" [width]="200" placeholder="Buscar..."></dxo-search-panel>
+                            <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[20]"
+                                [showInfo]="true"></dxo-pager>
+                            <dxo-group-panel [emptyPanelText]="mensajeAgrupar" [visible]="true"></dxo-group-panel>
+                            <dxo-filter-row [visible]="showFilterRow"></dxo-filter-row>
+                            <dxo-header-filter [visible]="showHeaderFilter"></dxo-header-filter>
+                            <dxo-grouping [autoExpandAll]="true"></dxo-grouping>
+                            <dxi-column caption="Acciones" cellTemplate="Acciones" alignment="center"></dxi-column>
+                            <dxi-column dataField="inicio" caption="Inicio del Turno" cellTemplate="fechaInicioData" alignment="center">
+                                <div *dxTemplate="let rf of 'fechaInicioData'">
+                                    {{ rf.data.inicio | date:'dd/MM/yyyy HH:mm' : '+0000' }}
+                                </div>
+                            </dxi-column>
+                            <dxi-column dataField="fin" caption="Fin del Turno" cellTemplate="fechFin" alignment="center">
+                                <div *dxTemplate="let a of 'fechFin'">
+                                    {{ a.data.fin | date:'dd/MM/yyyy HH:mm' : '+0000' }}
+                                </div>
+                            </dxi-column>
+                            <dxi-column caption="Operador" alignment="center" cellTemplate="nomOperador">
+                                <div *dxTemplate="let re of 'nomOperador'">
+                                    {{ re.data?.nombreOperador }}
+                                    {{ re.data?.apellidoPaternoOperador || '' }}
+                                    {{ re.data?.apellidoMaternoOperador || '' }}
+                                </div>
+                            </dxi-column>
+                            <dxi-column caption="Cliente" alignment="center" cellTemplate="nomCliente">
+                                <div *dxTemplate="let re of 'nomCliente'">
+                                    {{ re.data?.nombreCliente }}
+                                    {{ re.data?.apellidoPaternoCliente || '' }}
+                                    {{ re.data?.apellidoMaternoCliente || '' }}
+                                </div>
+                            </dxi-column>
+                            <dxi-column caption="Vehículo" alignment="center" cellTemplate="vehic">
+                                <div *dxTemplate="let re of 'vehic'">
+                                    {{ re.data?.placaVehiculo }}
+                                </div>
+                            </dxi-column>
+                            <dxi-column caption="Validador" alignment="center" cellTemplate="valid">
+                                <div *dxTemplate="let re of 'valid'">
+                                    {{ re.data?.numeroSerieValidador }}
+                                </div>
+                            </dxi-column>
+                            <dxi-column caption="Contadora" alignment="center" cellTemplate="contr">
+                                <div *dxTemplate="let re of 'contr'">
+                                    {{ re.data?.numeroSerieContador }}
+                                </div>
+                            </dxi-column>
+                            <dxi-column dataField="fechaCreacion" caption="Fecha Creación" alignment="center"
+                                cellTemplate="fechCreaci">
+                                <div *dxTemplate="let a of 'fechCreaci'">
+                                    {{ a.data.fechaCreacion | date:'dd/MM/yyyy HH:mm' : '+0000' }}
+                                </div>
+                            </dxi-column>
+                            <dxi-column dataField="estatus" caption="Estatus" alignment="center" cellTemplate="est">
+              <div *dxTemplate="let f of 'est'">
+                <span [ngClass]="f.data.estatus === 1 ? 'badge-status activo' : 'badge-status inactivo'">
+                  {{ f.data.estatus === 1 ? 'Activo' : 'Inactivo' }}
+                </span>
+              </div>
+            </dxi-column>
+            <div *dxTemplate="let row of 'Acciones'" class="d-flex gap-3 justify-content-center">
+              <div>
+                <button class="btn-edit" (click)="actualizarTurno(row.data.id)">
+                  <mat-icon class="btn__icon">edit</mat-icon>
+                </button>
+              </div>
+              <div>
+                <button *ngIf="row.data.estatus === 0" class="btn-active" (click)="activar(row.data)">
+                  <mat-icon class="btn__icon">check_circle</mat-icon>
+                </button>
+
+                <button *ngIf="row.data.estatus === 1" class="btn-desactive" (click)="desactivar(row.data)">
+                  <mat-icon class="btn__icon">block</mat-icon>
+                </button>
+              </div>
+            </div>
+                        </dx-data-grid>
+        </section>
+      </div>
+    </div>
+  </vex-page-layout-content>
+</vex-page-layout>

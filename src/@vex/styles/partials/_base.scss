@@ -1,0 +1,41 @@
+html {
+  box-sizing: border-box;
+  font-size: 16px;
+  height: 100%;
+  overflow: hidden;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11", "salt", "calt", "case";
+  @apply font-sans leading-normal antialiased;
+}
+
+body {
+  height: 100%;
+  letter-spacing: -0.006em;
+  @apply text-sm text-default;
+}
+
+div {
+  box-sizing: border-box;
+}
+
+input,
+textarea {
+  @apply leading-normal;
+}
+
+button:focus {
+  outline: unset !important;
+}
+
+code {
+  @apply font-mono text-default bg-app-bar rounded text-sm px-2 py-1;
+}
+
+blockquote {
+  background: rgb(var(--vex-color-primary-600) / 0.1);
+  border-left: 3px solid theme("backgroundColor.primary.600");
+  @apply my-3 px-4 py-2;
+
+  > * {
+    margin: 0;
+  }
+}

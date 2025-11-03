@@ -1,0 +1,101 @@
+<vex-page-layout @fadeInRight>
+  <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
+      [class.px-6]="layoutCtrl.value === 'fullwidth'">
+    <div class="card mt-4">
+      <div class="container-fluid p-4">
+        <div class="bg-app-bar appbar px-6 h-16 border-b sticky top-0 left-0 flex items-center z-10">
+          <nav class="breadcrumb-simple" aria-label="Ruta de navegación">
+            <a routerLink="/administracion" class="crumb-link">
+              <mat-icon inline>home</mat-icon>
+              Administración
+            </a>
+            <span class="sep">/</span>
+            <span class="crumb-current" aria-current="page">Tarifas</span>
+            <span class="sep">/</span>
+            <span class="crumb-current" aria-current="page">{{title}}</span>
+          </nav>
+        </div>
+
+        <section class="mt-4">
+          <form [formGroup]="tarifaForm" class="container-fluid form-skin-lite">
+            <div class="row g-3">
+              <div class="col-12">
+                <div class="section-head">
+                  <h5 class="mb-1">Datos Generales</h5>
+                </div>
+                <div class="section-bar"></div>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-tags"></i><span>Variante</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-select placeholder="Variante" formControlName="idVariante">
+                    <mat-option *ngFor="let c of listaVariantes" [value]="c.id">
+                      {{ c.nombreVariantes }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-coins"></i><span>Tarifa Base</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput type="text" class="form-control" formControlName="tarifaBase"
+                    placeholder="Ej: 10.00" inputmode="decimal" (keydown)="moneyKeydown($event)"
+                    (input)="moneyInput($event)" (paste)="moneyPaste($event)" (blur)="moneyBlur($event)" />
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-road"></i><span>Distancia Base Km</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput type="text" class="form-control" formControlName="distanciaBaseKm"
+                    placeholder="Ej: 100" inputmode="decimal" (keydown)="distanciaKeydown($event)"
+                    (input)="distanciaInput($event)" (paste)="distanciaPaste($event)" />
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-ruler-horizontal"></i><span>Incremento Por Metros</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput type="text" class="form-control" formControlName="incrementoCadaMetros"
+                    placeholder="Ej: 10" inputmode="decimal" (keydown)="incrementoKeydown($event)"
+                    (input)="incrementoInput($event)" (paste)="incrementoPaste($event)" />
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-circle-plus"></i><span>Costo Adicional</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput type="text" class="form-control" formControlName="costoAdicional"
+                    placeholder="Ej: 2.00" inputmode="decimal" (keydown)="costoKeydown($event)"
+                    (input)="costoInput($event)" (paste)="costoPaste($event)" (blur)="costoBlur($event)" />
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 d-flex justify-content-end gap-2 pt-2">
+                <button mat-raised-button color="primary" type="button" (click)="submit()">
+                  <mat-icon>save</mat-icon> Guardar
+                </button>
+                <button mat-raised-button color="warn" type="button" (click)="regresar()">
+                  <mat-icon>close</mat-icon> Cancelar
+                </button>
+              </div>
+            </div>
+          </form>
+        </section>
+      </div>
+    </div>
+
+  </vex-page-layout-content>
+</vex-page-layout>

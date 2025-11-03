@@ -1,0 +1,29 @@
+<div [class.container]="isVerticalLayout$ | async" class="toolbar text-default w-full px-6 flex items-center">
+  <div class="flex-auto flex items-center ml-l">
+    <button style="color: black;" (click)="toggleCollapse()" *ngIf="showCollapsePin$ | async" mat-icon-button type="button">
+      <mat-icon *ngIf="!collapsed" class="icon-xs" svgIcon="mat:menu"></mat-icon>
+      <mat-icon *ngIf="collapsed" class="icon-xs" svgIcon="mat:menu"></mat-icon>
+    </button>&nbsp;&nbsp;
+    <div class="action flex-none textPrincipal" color="secondary" id="get-vex" mat-flat-button>
+      <span>DashCam PAY - Sistema de Administración</span>
+    </div>
+  </div>
+
+
+  <a *ngIf="isVerticalLayout$ | async" [routerLink]="['/']" class="ltr:mr-4 rtl:ml-4 flex items-center">
+    <img alt="Logo" class="w-8 select-none" src="assets/img/logo/logo.svg" />
+    <h1 [class.hidden]="isDesktop$ | async" class="text-2xl font-bold tracking-wide ltr:pl-4 rtl:pr-4 m-0 select-none">
+      {{ title$ | async }}
+    </h1>
+  </a>
+
+  <div *ngIf="(isVerticalLayout$ | async) && (isNavbarInToolbar$ | async)" [class.hidden]="!(isDesktop$ | async)"
+    class="px-6 flex-none flex items-center">
+    <vex-navigation-item *ngFor="let item of navigationItems$ | async" [item]="item"></vex-navigation-item>
+  </div>
+  <span class="flex-1"></span>
+</div>
+
+<vex-navigation *ngIf="(isVerticalLayout$ | async) && (isNavbarBelowToolbar$ | async)"
+  [class.hidden]="!(isDesktop$ | async)">
+</vex-navigation>

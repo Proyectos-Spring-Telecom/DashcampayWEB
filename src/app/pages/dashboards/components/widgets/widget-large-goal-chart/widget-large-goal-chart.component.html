@@ -1,0 +1,52 @@
+<div class="card">
+  <div class="border-b py-2 px-6 flex items-center">
+    <h2 class="m-0 title flex-auto">Sales Overview</h2>
+
+    <button mat-icon-button type="button">
+      <mat-icon class="text-secondary" svgIcon="mat:cloud_download"></mat-icon>
+    </button>
+
+    <button mat-icon-button type="button">
+      <mat-icon class="text-secondary" svgIcon="mat:more_horiz"></mat-icon>
+    </button>
+  </div>
+
+  <div class="pt-4 pb-6 px-6 grid grid-cols-1 md:grid-cols-2 gap-12">
+    <div class="pb-6 pt-4 px-6 flex flex-col">
+      <h2 class="display-2 font-bold m-0">{{ total }}</h2>
+      <h3 class="title font-medium mt-2 mb-0">Sales this month</h3>
+
+      <div class="mt-6 flex items-center gap-4">
+        <div
+          class="w-8 h-8 rounded text-green-600 bg-green-600/10 flex-none flex items-center justify-center">
+          <mat-icon class="icon-sm" svgIcon="mat:arrow_drop_up"></mat-icon>
+        </div>
+
+        <p class="text-secondary m-0">
+          <span class="font-medium text-green-600">11% more sales</span> in
+          comparison to last month.
+        </p>
+      </div>
+
+      <div class="mt-4 flex items-center gap-4">
+        <div
+          class="w-8 h-8 rounded text-red-600 bg-red-600/10 flex-none flex items-center justify-center">
+          <mat-icon class="icon-sm" svgIcon="mat:arrow_drop_down"></mat-icon>
+        </div>
+
+        <p class="text-secondary m-0">
+          <span class="font-medium text-red-600">-2% revenue per sale</span> in
+          comparison to last month.
+        </p>
+      </div>
+
+      <div class="mt-6 flex-auto flex flex-col justify-end">
+        <button color="primary" mat-flat-button type="button">
+          View Details
+        </button>
+      </div>
+    </div>
+
+    <vex-chart [options]="options" [series]="series"></vex-chart>
+  </div>
+</div>

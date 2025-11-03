@@ -1,0 +1,43 @@
+.vex-page-layout {
+  display: block;
+}
+
+.vex-page-layout-simple {
+  .vex-page-layout-content {
+    @apply py-6;
+  }
+}
+
+.vex-page-layout-card {
+  @apply pb-6;
+
+  .vex-page-layout-header {
+    margin-bottom: calc(var(--vex-page-layout-toolbar-height) * -1);
+    padding-bottom: var(--vex-page-layout-toolbar-height);
+  }
+
+  .vex-page-layout-content {
+    > * > .mat-mdc-tab-group .mat-tab-label,
+    > .mat-tab-group .mat-tab-label {
+      height: var(--vex-page-layout-toolbar-height);
+    }
+  }
+}
+
+.vex-page-layout-header {
+  align-items: center;
+  background-color: #d1e6f7;
+  box-sizing: content-box !important;
+  display: flex;
+  flex-direction: row;
+  height: calc(
+    var(--vex-page-layout-header-height) - var(--vex-page-layout-toolbar-height)
+  );
+  place-content: center flex-start;
+}
+
+.vex-page-layout-content {
+  box-sizing: border-box;
+  display: block;
+  @apply px-6;
+}

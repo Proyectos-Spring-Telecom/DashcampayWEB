@@ -1,0 +1,14 @@
+<div
+  *ngIf="config$ | async as config"
+  [class.vex-layout-boxed]="config.boxed"
+  [class.vex-layout-footer-enabled]="isFooterVisible$ | async"
+  [class.vex-layout-footer-fixed]="config.footer.fixed && (isFooterVisible$ | async)"
+  [class.vex-layout-horizontal]="config.layout === 'horizontal'"
+  [class.vex-layout-scroll-disabled]="scrollDisabled$ | async"
+  [class.vex-layout-search-overlay-open]="searchOpen$ | async"
+  [class.vex-layout-sidenav-collapsed]="sidenavCollapsed$ | async"
+  [class.vex-layout-toolbar-fixed]="config.toolbar.fixed"
+  [class.vex-layout-vertical]="config.layout === 'vertical'"
+  class="vex-base-layout-container">
+  <ng-content></ng-content>
+</div>

@@ -1,0 +1,144 @@
+<vex-page-layout @fadeInRight>
+
+    <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
+        [class.px-6]="layoutCtrl.value === 'fullwidth'" class="-mt-6">
+        <div class="card mt-4">
+            <div class="dashboard-lite p-4">
+                <div class="bg-app-bar appbar px-6 h-16 border-b sticky top-0 left-0 flex items-center z-10">
+                    <nav class="breadcrumb-simple" aria-label="Ruta de navegación">
+                        <a routerLink="/administracion" class="crumb-link">
+                            <mat-icon inline>home</mat-icon>
+                            Administración
+                        </a>
+                        <span class="sep">/</span>
+                        <span class="crumb-current" aria-current="page">Operadores</span>
+                    </nav>
+
+                    <div class="flex-grow"></div>
+
+                    <div class="flex gap-3 actions-bar">
+                        <button mat-raised-button color="primary" type="button" class="btn-soft textGenerico"
+                            (click)="toggleExpandGroups()" matTooltip="Expandir / Contraer grupos">
+                            <mat-icon svgIcon="mat:compare_arrows"></mat-icon>
+                            <span class="btn-text">{{ autoExpandAllGroups ? 'Contraer' : 'Expandir' }}</span>
+                        </button>
+
+                        <button mat-raised-button color="accent" type="button" class="btn-soft textGenerico"
+                            (click)="limpiarCampos()" matTooltip="Limpiar filtros">
+                            <mat-icon svgIcon="mat:restore"></mat-icon>
+                            <span class="btn-text">Limpiar</span>
+                        </button>
+
+                        <button (click)="agregarOperador()" mat-raised-button color="warn" type="button"
+                            class="btn-soft textGenerico" matTooltip="Agregar usuario">
+                            <mat-icon>add</mat-icon>
+                            <span class="btn-text">Agregar</span>
+                        </button>
+                    </div>
+                </div>
+
+                <section class="mt-5 table-shell">
+                    <dx-data-grid #gridContainer id="gridContainer" [columnHidingEnabled]="true" [showBorders]="true"
+                        [showColumnLines]="true" [showRowLines]="true" [rowAlternationEnabled]="true"
+                        [dataSource]="listaOperadores" [keyExpr]="'id'" [width]="'100%'"
+                        [remoteOperations]="{ paging: true }" [paging]="{ pageSize: pageSize }" [pager]="{ 
+                                showPageSizeSelector: true, 
+                                allowedPageSizes: [50], 
+                                showInfo: true,
+                                infoText: 'Página {0} de {1}', 
+                                visible: true 
+                            }" (onPageIndexChanged)=" onPageIndexChanged($event)"
+                        (onOptionChanged)="onGridOptionChanged($event)">
+                        <dxo-search-panel [visible]="true" [width]="200" placeholder="Buscar..."></dxo-search-panel>
+                        <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[20]" [showInfo]="true"></dxo-pager>
+                        <dxo-group-panel [emptyPanelText]="mensajeAgrupar" [visible]="true"></dxo-group-panel>
+                        <dxo-filter-row [visible]="showFilterRow"></dxo-filter-row>
+                        <dxo-header-filter [visible]="showHeaderFilter"></dxo-header-filter>
+                        <dxo-grouping [autoExpandAll]="true"></dxo-grouping>
+                        <dxi-column caption="Acciones" cellTemplate="Acciones" alignment="center" [width]="180"></dxi-column>
+                        <dxi-column caption="Licencia de Conducir" [width]="150" alignment="center" [allowSorting]="false"
+                            [allowFiltering]="false" cellTemplate="licen">
+                        </dxi-column>
+                        <div *dxTemplate="let f of 'licen'">
+                            <button class="btn-graphite"  [disabled]="!f?.data?.licencia"
+                                (click)="f?.data?.licencia && irAVerDocumento(f.data.licencia, 'Licencia de Conducir', f.data)"
+                                aria-label="Ver Licencia">
+                                <i class="fa fa-file-pdf-o btn__icon"></i>
+                            </button>
+                        </div>
+                        <dxi-column caption="Identificación" [width]="150" alignment="center" [allowSorting]="false"
+                            [allowFiltering]="false" cellTemplate="ident">
+                        </dxi-column>
+                        <div *dxTemplate="let f of 'ident'">
+                            <button class="btn-violet"  [disabled]="!f?.data?.identificacion"
+                                (click)="f?.data?.identificacion && irAVerDocumento(f.data.identificacion, 'Identificación', f.data)"
+                                aria-label="Ver Identificación">
+                                <i class="fa fa-file-pdf-o btn__icon"></i>
+                            </button>
+                        </div>
+                        <dxi-column caption="Comprobante" [width]="150" alignment="center" [allowSorting]="false"
+                            [allowFiltering]="false" cellTemplate="comp">
+                        </dxi-column>
+                        <div *dxTemplate="let f of 'comp'">
+                            <button class="btn-magenta"  [disabled]="!f?.data?.comprobanteDomicilio"
+                                (click)="f?.data?.comprobanteDomicilio && irAVerDocumento(f.data.comprobanteDomicilio, 'Comprobante de Domicilio', f.data)"
+                                aria-label="Ver Comprobante de Domicilio">
+                                <i class="fa fa-file-pdf-o btn__icon"></i>
+                            </button>
+                        </div>
+                        <dxi-column caption="Antecedentes" [width]="150" alignment="center" [allowSorting]="false"
+                            [allowFiltering]="false" cellTemplate="penales">
+                        </dxi-column>
+                        <div *dxTemplate="let f of 'penales'">
+                            <button class="btn-orange"  [disabled]="!getAntecedentesUrl(f?.data)"
+                                (click)="getAntecedentesUrl(f?.data) && irAVerDocumento(getAntecedentesUrl(f.data)!, 'Antecedentes No Penales', f.data)"
+                                aria-label="Ver Antecedentes No Penales">
+                                <i class="fa fa-file-pdf-o btn__icon"></i>
+                            </button>
+                        </div>
+                        <dxi-column dataField="NombreCompleto" caption="Nombre" alignment="center" dataType="string" [width]="320"></dxi-column>
+                        <dxi-column dataField="numeroLicencia" caption="Número Licencia" alignment="center" dataType="string" [width]="200"></dxi-column>
+                        <dxi-column dataField="userNameUsuario" caption="Correo Electrónico" alignment="center" dataType="string"></dxi-column>
+                        <dxi-column dataField="telefonoUsuario" caption="Teléfono" alignment="center" dataType="string"></dxi-column>
+                        <dxi-column dataField="FechaNacimientoTexto" caption="Fecha de Nacimiento" alignment="center" dataType="string" [width]="150"></dxi-column>
+                        <dxi-column dataField="estatus" caption="Estatus" alignment="center" cellTemplate="est">
+                            <div *dxTemplate="let f of 'est'">
+                                <span
+                                    [ngClass]="f.data.estatus === 1 ? 'badge-status activo' : 'badge-status inactivo'">
+                                    {{ f.data.estatus === 1 ? 'Activo' : 'Inactivo' }}
+                                </span>
+                            </div>
+                        </dxi-column>
+                        <dxi-column dataField="DocumentoIdentificacionTexto" [visible]="false"></dxi-column>
+                        <dxi-column dataField="DocumentoComprobanteTexto" [visible]="false"></dxi-column>
+                        <dxi-column dataField="DocumentoAntecedentesTexto" [visible]="false"></dxi-column>
+                        <div *dxTemplate="let data of 'imagen'"
+                            style="display: flex; align-items: center; justify-content: center;">
+                            <img *ngIf="data.value" style="max-width: 100px;" [src]="data.value" />
+                            <img *ngIf="data.value == null" style="max-width: 70px;" src="https://dashcamsys.s3.us-east-2.amazonaws.com/logos/no-image.jpeg" />
+                        </div>
+                        <dxo-export [enabled]="false" [allowExportSelectedData]="true" [texts]="{ exportAll: 'Exportar todos los datos a Excel', 
+                                exportSelectedRows: 'Exportar filas seleccionadas a Excel' }">
+                        </dxo-export>
+                        <div *dxTemplate="let row of 'Acciones'" class="d-flex gap-3 justify-content-center">
+                            <div>
+                                <button class="btn-edit" (click)="actualizarOperador(row.data.id)">
+                                    <mat-icon class="btn__icon">edit</mat-icon>
+                                </button>
+                            </div>
+                            <div>
+                                <button *ngIf="row.data.estatus === 0" class="btn-active" (click)="activar(row.data)">
+                                    <mat-icon class="btn__icon">check_circle</mat-icon>
+                                </button>
+                                <button *ngIf="row.data.estatus === 1" class="btn-desactive"
+                                    (click)="desactivar(row.data)">
+                                    <mat-icon class="btn__icon">block</mat-icon>
+                                </button>
+                            </div>
+                        </div>
+                    </dx-data-grid>
+                </section>
+            </div>
+        </div>
+    </vex-page-layout-content>
+</vex-page-layout>

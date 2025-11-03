@@ -1,0 +1,42 @@
+// @formatter:off
+body {
+  // Typography
+  --vex-font: theme("fontFamily.sans");
+
+  // Sidenav
+  --vex-sidenav-width: 280px;
+  --vex-sidenav-collapsed-width: 72px;
+
+  // Sidenav Item
+  --vex-sidenav-item-min-height: 48px;
+  --vex-sidenav-item-padding-vertical: theme("space.2");
+  --vex-sidenav-item-padding-horizontal: theme("space.6");
+  --vex-sidenav-item-font-weight: 500;
+  --vex-sidenav-item-icon-gap: theme("space.4");
+  --vex-sidenav-item-icon-size: theme("space.6");
+  --vex-sidenav-item-dropdown-gap: theme("space.3");
+
+  // Toolbar
+  --vex-toolbar-height: 64px;
+
+  // Secondary Toolbar
+  --vex-secondary-toolbar-height: 54px;
+
+  // Navigation
+  --vex-navigation-height: 64px;
+
+  // Footer
+  --vex-footer-height: 56px;
+  --vex-footer-z-index: 100;
+  --vex-footer-elevation: 0 -10px 30px 0 rgba(82, 63, 104, 0.06);
+
+  // Page Layouts
+  --vex-page-layout-header-height: 200px;
+  --vex-page-layout-toolbar-height: 64px;
+
+  // Misc
+  --vex-blink-scrollbar-width: 12px;
+  --vex-default-icon-size: 24px;
+  --vex-border-radius: 0.25rem;
+}
+// @formatter:on

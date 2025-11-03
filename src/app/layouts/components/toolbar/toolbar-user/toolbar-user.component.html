@@ -1,0 +1,15 @@
+<div
+  #originRef
+  (click)="showPopover(originRef)"
+  [class.bg-hover]="dropdownOpen"
+  class="flex items-center rounded cursor-pointer relative transition duration-400 ease-out-swift select-none py-1 pr-1 pl-3 hover:bg-hover"
+  matRipple>
+  <div
+    class="body-1 font-medium leading-snug ltr:mr-3 rtl:ml-3 hidden sm:block">
+    David Smith
+  </div>
+  <div
+    class="rounded-full h-9 w-9 flex items-center justify-center text-primary-600 bg-primary-600/10">
+    <mat-icon svgIcon="mat:person"></mat-icon>
+  </div>
+</div>

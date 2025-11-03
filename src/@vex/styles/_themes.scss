@@ -1,0 +1,226 @@
+@use "@angular/material" as mat;
+@use "generated-themes" as generated-themes;
+@use "sass:map";
+
+// Custom Theming for Angular Material
+// For more information: https://material.angular.io/guide/theming
+
+$typography-config: mat.define-typography-config(
+  $font-family: var(--vex-font),
+  $headline-1: mat.define-typography-level(112px, 112px, 300, $letter-spacing: -0.05em),
+  $headline-2: mat.define-typography-level(56px, 56px, 400, $letter-spacing: -0.02em),
+  $headline-3: mat.define-typography-level(45px, 48px, 400, $letter-spacing: -0.005em),
+  $headline-4: mat.define-typography-level(34px, 40px, 400),
+  $headline-5: mat.define-typography-level(24px, 32px, 400, $letter-spacing: -0.019em),
+  $headline-6: mat.define-typography-level(18px, 26px, 500, $letter-spacing: -0.014em),
+  $subtitle-1: mat.define-typography-level(16px, 28px, 400, $letter-spacing: -0.011em),
+  $subtitle-2: mat.define-typography-level(14px, 24px, 500, $letter-spacing: -0.006em),
+  $body-1: mat.define-typography-level(15px, 24px, 400, $letter-spacing: -0.009em),
+  $body-2: mat.define-typography-level(14px, 20px, 400, $letter-spacing: -0.006em),
+  $caption: mat.define-typography-level(12px, 20px, 400, $letter-spacing: 0),
+  $button: mat.define-typography-level(14px, 14px, 500, $letter-spacing: -0.006em)
+) !default;
+
+/** Include the core styles for Angular Material. */
+@include mat.core();
+
+/** Create a base theme to be extended by all themes. */
+@include mat.all-component-themes(
+    (
+      color: null,
+      density: 0,
+      typography: $typography-config
+    )
+);
+
+@each $name, $theme in generated-themes.$generated-themes {
+  $angularMaterial: map.get($theme, angular-material);
+  $angularMaterialColors: map.get($angularMaterial, colors);
+  $angularMaterialColorsLight: map.get($angularMaterialColors, light);
+
+  $primary: map.merge(
+      map.get($theme, primary),
+      (
+        contrast: (
+          map.get($theme, on-primary)
+        )
+      )
+  );
+
+  $accent: map.merge(
+      map.get($theme, accent),
+      (
+        contrast: (
+          map.get($theme, on-accent)
+        )
+      )
+  );
+  $warn: map.merge(
+      map.get($theme, warn),
+      (
+        contrast: (
+          map.get($theme, on-warn)
+        )
+      )
+  );
+
+  $light-theme: mat.define-light-theme(
+      (
+        color: (
+          primary:
+          mat.define-palette(
+              $primary,
+              map.get($theme, primary-default-shade),
+              map.get($theme, primary-lighter-shade),
+              map.get($theme, primary-darker-shade)
+          ),
+          accent:
+          mat.define-palette(
+              $accent,
+              map.get($theme, accent-default-shade),
+              map.get($theme, accent-lighter-shade),
+              map.get($theme, accent-darker-shade)
+          ),
+          warn:
+          mat.define-palette(
+              $warn,
+              map.get($theme, warn-default-shade),
+              map.get($theme, warn-lighter-shade),
+              map.get($theme, warn-darker-shade)
+          )
+        )
+      )
+  );
+
+  /**
+   * Override the theme foreground/background colors with the Angular Material colors
+   */
+  $light-theme: map.merge(
+      $light-theme,
+      (
+        color:
+        map.merge(
+            map.get($light-theme, color),
+            (
+              foreground: map.get($angularMaterialColorsLight, foreground),
+              background: map.get($angularMaterialColorsLight, background)
+            )
+        )
+      )
+  );
+
+  #{map.get($theme, selector)},
+  #{map.get($theme, selector)}.light,
+  #{map.get($theme, selector)} .light {
+    @include mat.all-component-colors($light-theme);
+  }
+
+  $angularMaterialColorsDark: map.get($angularMaterialColors, dark);
+  $dark-theme: mat.define-dark-theme(
+      (
+        color: (
+          primary: mat.define-palette($primary),
+          accent: mat.define-palette($accent),
+          warn: mat.define-palette($warn),
+          is-dark: true
+        )
+      )
+  );
+
+  /**
+   * Override the theme foreground/background colors with the Angular Material colors
+   */
+  $dark-theme: map.merge(
+      $dark-theme,
+      (
+        color:
+        map.merge(
+            map.get($dark-theme, color),
+            (
+              foreground: map.get($angularMaterialColorsDark, foreground),
+              background: map.get($angularMaterialColorsDark, background)
+            )
+        )
+      )
+  );
+
+  #{map.get($theme, selector)}.dark,
+  #{map.get($theme, selector)} .dark {
+    @include mat.all-component-colors($dark-theme);
+  }
+}
+
+// TODO: Move this somewhere or remove entirely
+/**
+ * Typography
+ */
+.display-3 {
+  @include mat.typography-level($typography-config, headline-2);
+}
+
+.display-2 {
+  @include mat.typography-level($typography-config, headline-3);
+}
+
+.display-1,
+h1 {
+  @include mat.typography-level($typography-config, headline-4);
+}
+
+.headline,
+h2 {
+  @include mat.typography-level($typography-config, headline-5);
+}
+
+.title,
+h3 {
+  @include mat.typography-level($typography-config, headline-6);
+}
+
+.subheading-2,
+h4 {
+  @include mat.typography-level($typography-config, subtitle-1);
+}
+
+.subheading-1,
+h5 {
+  @include mat.typography-level($typography-config, subtitle-2);
+}
+
+.body-2,
+h6 {
+  @include mat.typography-level($typography-config, body-2);
+}
+
+.body-1,
+p {
+  @include mat.typography-level($typography-config, body-1);
+}
+
+.caption {
+  @include mat.typography-level($typography-config, caption);
+}
+
+.text-xs {
+  letter-spacing: 0;
+}
+
+.text-sm {
+  letter-spacing: -0.009em;
+}
+
+.text-base {
+  letter-spacing: -0.011em;
+}
+
+.text-lg {
+  letter-spacing: -0.014em;
+}
+
+.text-2xl {
+  letter-spacing: -0.019em;
+}
+
+.text-3xl {
+  letter-spacing: -0.021em;
+}

@@ -1,0 +1,8 @@
+.config-panel-toggle {
+  z-index: 100;
+  @apply fixed bottom-6 right-6;
+}
+
+::ng-deep [dir="rtl"] .config-panel-toggle {
+  @apply left-6 right-auto;
+}

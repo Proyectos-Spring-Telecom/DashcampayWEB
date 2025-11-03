@@ -1,0 +1,30 @@
+:root {
+  .mat-mdc-button,
+  .mat-mdc-outlined-button,
+  .mat-mdc-unelevated-button,
+  .mat-mdc-raised-button {
+    @apply rounded-button min-w-[6rem];
+  }
+
+  .mat-button-toggle-group:not(.mat-button-toggle-vertical) {
+    @apply rounded-button;
+
+    .mat-button-toggle:first-child .mat-button-toggle-label-content {
+      @apply pl-4;
+    }
+
+    .mat-button-toggle:last-child .mat-button-toggle-label-content {
+      @apply pr-4;
+    }
+  }
+
+  .mat-button-toggle-button {
+    @apply font-medium;
+  }
+
+  .mat-mdc-icon-button {
+    .mat-icon {
+      @apply inline-flex items-center justify-center;
+    }
+  }
+}

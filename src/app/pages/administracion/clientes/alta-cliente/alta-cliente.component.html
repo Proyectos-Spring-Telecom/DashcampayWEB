@@ -1,0 +1,390 @@
+<vex-page-layout @fadeInRight>
+  <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
+    [class.px-6]="layoutCtrl.value === 'fullwidth'">
+
+    <div class="card mt-4">
+      <div class="container-fluid p-4">
+        <!-- Breadcrumb -->
+        <div class="bg-app-bar appbar px-6 h-16 border-b sticky top-0 left-0 flex items-center z-10">
+          <nav class="breadcrumb-simple" aria-label="Ruta de navegación">
+            <a routerLink="/administracion" class="crumb-link">
+              <mat-icon inline>home</mat-icon>
+              Administración
+            </a>
+            <span class="sep">/</span>
+            <span class="crumb-current" aria-current="page">Clientes</span>
+            <span class="sep">/</span>
+            <span class="crumb-current" aria-current="page">Agregar Cliente</span>
+          </nav>
+        </div>
+
+        <!-- Formulario -->
+        <section class="mt-4">
+          <form [formGroup]="clienteForm" class="container-fluid form-skin-lite">
+            <!-- ===== Datos Generales ===== -->
+            <div class="row g-3">
+              <div class="col-12">
+                <div class="section-head">
+                  <h5 class="mb-1">Datos Generales</h5>
+                </div>
+                <div class="section-bar"></div>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-3">
+                <label class="form-label"><i class="fa fa-sitemap"></i><span>Cuenta Padre</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-select formControlName="idPadre" placeholder="Selecciona una cuenta padre">
+                    <!-- opcional: quita esta opción si el campo es obligatorio -->
+                    <mat-option [value]="null">Sin padre</mat-option>
+
+                    <mat-option *ngFor="let c of listaClientes" [value]="c.id">
+                      {{ c.nombre }}
+                    </mat-option>
+                  </mat-select>
+
+                  <mat-error *ngIf="clienteForm.get('idPadre')?.hasError('required')">
+                    Selecciona un cliente padre.
+                  </mat-error>
+                </mat-form-field>
+              </div>
+
+
+              <div class="col-12 col-md-6 col-lg-3">
+                <label class="form-label"><i class="fa fa-id-card"></i><span>RFC</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput placeholder="RFC" formControlName="rfc" maxlength="13"
+                    (input)="sanitizeInput($event)" />
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-3">
+                <label class="form-label"><i class="fa fa-user-tag"></i><span>Tipo Persona</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-select formControlName="tipoPersona" placeholder="Selecciona tipo de persona"
+                    (change)="onTipoPersonaChange($event)">
+                    <mat-option [value]="1">Física</mat-option>
+                    <mat-option [value]="2">Moral</mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="clienteForm.get('tipoPersona')?.hasError('required')">
+                    Selecciona el tipo de persona.
+                  </mat-error>
+                </mat-form-field>
+              </div>
+
+
+              <div class="col-12 col-md-6 col-lg-3">
+                <label class="form-label"><i class="fa fa-user"></i><span>Nombre</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput placeholder="Nombre" formControlName="nombre" />
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-3">
+                <label class="form-label"><i class="fa fa-user-pen"></i><span>Apellido Paterno</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput placeholder="Apellido Paterno" formControlName="apellidoPaterno" />
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-3">
+                <label class="form-label"><i class="fa fa-user"></i><span>Apellido Materno</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput placeholder="Apellido Materno" formControlName="apellidoMaterno" />
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-3">
+                <label class="form-label"><i class="fa fa-phone"></i><span>Teléfono</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput placeholder="Teléfono" formControlName="telefono" maxlength="10"
+                    (keypress)="allowOnlyNumbers($event)" />
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-3">
+                <label class="form-label"><i class="fa fa-envelope"></i><span>Correo</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput type="email" placeholder="correo@dominio.com" formControlName="correo" />
+                </mat-form-field>
+              </div>
+            </div>
+
+            <!-- ===== Dirección ===== -->
+            <div class="row g-3 mt-4">
+              <div class="col-12">
+                <div class="section-head">
+                  <h5 class="mb-1">Dirección</h5>
+                </div>
+                <div class="section-bar"></div>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-3">
+                <label class="form-label"><i class="fa fa-map"></i><span>Estado</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput placeholder="Estado" formControlName="estado" />
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-3">
+                <label class="form-label"><i class="fa fa-location-dot"></i><span>Municipio</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput placeholder="Municipio" formControlName="municipio" />
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-3">
+                <label class="form-label"><i class="fa fa-city"></i><span>Colonia</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput placeholder="Colonia" formControlName="colonia" />
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-3">
+                <label class="form-label"><i class="fa fa-road"></i><span>Calle</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput placeholder="Calle" formControlName="calle" />
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-3">
+                <label class="form-label"><i class="fa fa-arrows-left-right"></i><span>Entre Calles</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput placeholder="Entre Calles" formControlName="entreCalles" />
+                </mat-form-field>
+              </div>
+
+              <div class="col-6 col-md-4 col-lg-3">
+                <label class="form-label"><i class="fa fa-sort-numeric-desc"></i><span>Código Postal</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput placeholder="CP" formControlName="cp" maxlength="5"
+                    (keypress)="allowOnlyNumbers($event)" />
+                </mat-form-field>
+              </div>
+
+              <div class="col-6 col-md-4 col-lg-3">
+                <label class="form-label"><i class="fa fa-door-open"></i><span>Núm. Exterior</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput placeholder="Ext." formControlName="numeroExterior" />
+                </mat-form-field>
+              </div>
+
+              <div class="col-6 col-md-4 col-lg-3">
+                <label class="form-label"><i class="fa fa-door-closed"></i><span>Núm. Interior</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput placeholder="Int." formControlName="numeroInterior" />
+                </mat-form-field>
+              </div>
+            </div>
+
+            <!-- ===== Encargado(a) ===== -->
+            <div class="row g-3 mt-4">
+              <div class="col-12">
+                <div class="section-head">
+                  <h5 class="mb-1">Encargado(a)</h5>
+                </div>
+                <div class="section-bar"></div>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-3">
+                <label class="form-label"><i class="fa fa-id-badge"></i><span>Nombre Encargado</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput placeholder="Nombre Encargado" formControlName="nombreEncargado" />
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-3">
+                <label class="form-label"><i class="fa fa-square-phone"></i><span>Teléfono Encargado</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput placeholder="Teléfono Encargado" formControlName="telefonoEncargado" />
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-3">
+                <label class="form-label"><i class="fa fa-at"></i><span>Correo Encargado</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput type="email" placeholder="correo@dominio.com" formControlName="correoEncargado" />
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-3">
+                <label class="form-label"><i class="fa fa-globe"></i><span>Sitio Web</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput placeholder="https://..." formControlName="sitioWeb" />
+                </mat-form-field>
+              </div>
+            </div>
+
+            <div class="row g-3 uploads-skin mt-4">
+              <div class="col-12">
+                <div class="section-head">
+                  <h5 class="mb-1">Documentación</h5>
+                </div>
+                <div class="section-bar"></div>
+              </div>
+
+              <!-- Logotipo (imagen) -->
+              <div class="col-12 col-md-6 col-lg-3">
+                <label class="form-label"><i class="fa fa-image"></i><span>Logotipo</span></label>
+                <div class="dropzone" [class.dragging]="logoDragging" (click)="openLogoFilePicker()"
+                  (dragover)="onLogoDragOver($event)" (dragleave)="onLogoDragLeave($event)" (drop)="onLogoDrop($event)">
+
+                  <div class="dz-body" *ngIf="!logoPreviewUrl">
+                    <mat-icon class="dz-icon">image</mat-icon>
+                    <div class="dz-title">Arrastra y suelta o haz clic</div>
+                  </div>
+
+                  <div class="dz-preview" *ngIf="logoPreviewUrl">
+                    <img [src]="logoPreviewUrl!" alt="Vista previa" class="img-fluid rounded" />
+                  </div>
+
+                  <button mat-stroked-button type="button" class="dz-action"
+                    (click)="openLogoFilePicker(); $event.stopPropagation()">
+                    <mat-icon>upload</mat-icon> Seleccionar
+                  </button>
+                  <button mat-stroked-button color="warn" type="button" class="dz-clear"
+                    *ngIf="logoPreviewUrl || logoFileName" (click)="clearLogoFile($event); $event.stopPropagation()">
+                    <mat-icon>close</mat-icon> Quitar
+                  </button>
+
+                  <mat-progress-bar *ngIf="uploadingLogo" mode="indeterminate"></mat-progress-bar>
+
+                  <div class="dz-filename" *ngIf="logoFileName">{{ logoFileName }}</div>
+
+                  <input #logoFileInput type="file" class="d-none" accept="image/png,image/jpeg,image/webp"
+                    (change)="onLogoFileSelected($event)">
+                </div>
+
+                <mat-error *ngIf="clienteForm.get('logotipo')?.hasError('invalid')">
+                  Formato no permitido (solo JPG/PNG/WEBP).
+                </mat-error>
+              </div>
+
+              <!-- Constancia de Situación Fiscal (PDF) -->
+              <div class="col-12 col-md-6 col-lg-3">
+                <label class="form-label"><i class="fa fa-file-lines"></i><span>Constancia de Situación
+                    Fiscal</span></label>
+                <div class="dropzone" [class.dragging]="csfDragging" (click)="openCsfFilePicker()"
+                  (dragover)="onCsfDragOver($event)" (dragleave)="onCsfDragLeave($event)" (drop)="onCsfDrop($event)">
+
+                  <div class="dz-body" *ngIf="!csfFileName">
+                    <mat-icon class="dz-icon">description</mat-icon>
+                    <div class="dz-title">Arrastra y suelta o haz clic</div>
+                  </div>
+
+                  <div class="dz-file" *ngIf="csfFileName">
+                    <mat-icon>insert_drive_file</mat-icon>
+                    <span class="ms-1">{{ csfFileName }}</span>
+                  </div>
+
+                  <button mat-stroked-button type="button" class="dz-action"
+                    (click)="openCsfFilePicker(); $event.stopPropagation()">
+                    <mat-icon>upload</mat-icon> Seleccionar
+                  </button>
+                  <button mat-stroked-button color="warn" type="button" class="dz-clear" *ngIf="csfFileName"
+                    (click)="clearCsfFile($event); $event.stopPropagation()">
+                    <mat-icon>close</mat-icon> Quitar
+                  </button>
+
+                  <mat-progress-bar *ngIf="uploadingCsf" mode="indeterminate"></mat-progress-bar>
+
+                  <input #csfFileInput type="file" class="d-none" accept="application/pdf"
+                    (change)="onCsfFileSelected($event)">
+                </div>
+
+                <mat-error *ngIf="clienteForm.get('constanciaSituacionFiscal')?.hasError('invalid')">
+                  Archivo no permitido (solo PDF).
+                </mat-error>
+              </div>
+
+              <!-- Comprobante de Domicilio (PDF) -->
+              <div class="col-12 col-md-6 col-lg-3">
+                <label class="form-label"><i class="fa fa-house-chimney"></i><span>Comprobante de
+                    Domicilio</span></label>
+                <div class="dropzone" [class.dragging]="compDomDragging" (click)="openCompDomFilePicker()"
+                  (dragover)="onCompDomDragOver($event)" (dragleave)="onCompDomDragLeave($event)"
+                  (drop)="onCompDomDrop($event)">
+
+                  <div class="dz-body" *ngIf="!compDomFileName">
+                    <mat-icon class="dz-icon">description</mat-icon>
+                    <div class="dz-title">Arrastra y suelta o haz clic</div>
+                  </div>
+
+                  <div class="dz-file" *ngIf="compDomFileName">
+                    <mat-icon>insert_drive_file</mat-icon>
+                    <span class="ms-1">{{ compDomFileName }}</span>
+                  </div>
+
+                  <button mat-stroked-button type="button" class="dz-action"
+                    (click)="openCompDomFilePicker(); $event.stopPropagation()">
+                    <mat-icon>upload</mat-icon> Seleccionar
+                  </button>
+                  <button mat-stroked-button color="warn" type="button" class="dz-clear" *ngIf="compDomFileName"
+                    (click)="clearCompDomFile($event); $event.stopPropagation()">
+                    <mat-icon>close</mat-icon> Quitar
+                  </button>
+
+                  <mat-progress-bar *ngIf="uploadingCompDom" mode="indeterminate"></mat-progress-bar>
+
+                  <input #compDomFileInput type="file" class="d-none" accept="application/pdf"
+                    (change)="onCompDomFileSelected($event)">
+                </div>
+
+                <mat-error *ngIf="clienteForm.get('comprobanteDomicilio')?.hasError('invalid')">
+                  Archivo no permitido (solo PDF).
+                </mat-error>
+              </div>
+
+              <!-- Acta Constitutiva (PDF) -->
+              <div class="col-12 col-md-6 col-lg-3">
+                <label class="form-label"><i class="fa fa-file-contract"></i><span>Acta Constitutiva</span></label>
+                <div class="dropzone" [class.dragging]="actaDragging" (click)="openActaFilePicker()"
+                  (dragover)="onActaDragOver($event)" (dragleave)="onActaDragLeave($event)" (drop)="onActaDrop($event)">
+
+                  <div class="dz-body" *ngIf="!actaFileName">
+                    <mat-icon class="dz-icon">description</mat-icon>
+                    <div class="dz-title">Arrastra y suelta o haz clic</div>
+                  </div>
+
+                  <div class="dz-file" *ngIf="actaFileName">
+                    <mat-icon>insert_drive_file</mat-icon>
+                    <span class="ms-1">{{ actaFileName }}</span>
+                  </div>
+
+                  <button mat-stroked-button type="button" class="dz-action"
+                    (click)="openActaFilePicker(); $event.stopPropagation()">
+                    <mat-icon>upload</mat-icon> Seleccionar
+                  </button>
+                  <button mat-stroked-button color="warn" type="button" class="dz-clear" *ngIf="actaFileName"
+                    (click)="clearActaFile($event); $event.stopPropagation()">
+                    <mat-icon>close</mat-icon> Quitar
+                  </button>
+
+                  <mat-progress-bar *ngIf="uploadingActa" mode="indeterminate"></mat-progress-bar>
+
+                  <input #actaFileInput type="file" class="d-none" accept="application/pdf"
+                    (change)="onActaFileSelected($event)">
+                </div>
+
+                <mat-error *ngIf="clienteForm.get('actaConstitutiva')?.hasError('invalid')">
+                  Archivo no permitido (solo PDF).
+                </mat-error>
+              </div>
+            </div>
+            <div class="row g-3 mt-3">
+              <div class="col-12 d-flex justify-content-end gap-2 pt-2">
+                <button mat-raised-button color="primary" type="button" (click)="submit()">
+                  <mat-icon>save</mat-icon> Guardar
+                </button>
+                <button mat-raised-button color="warn" type="button" (click)="regresar()">
+                  <mat-icon>close</mat-icon> Cancelar
+                </button>
+              </div>
+            </div>
+
+          </form>
+        </section>
+      </div>
+    </div>
+
+  </vex-page-layout-content>
+</vex-page-layout>

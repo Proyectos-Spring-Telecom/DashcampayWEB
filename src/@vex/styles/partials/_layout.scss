@@ -1,0 +1,104 @@
+.vex-base-layout-container {
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.vex-layout-content {
+  background: var(--vex-background-background);
+  min-height: calc(
+    100% - var(--vex-toolbar-height) - var(--vex-navigation-height)
+  );
+  position: relative;
+  width: 100%;
+}
+
+.vex-layout-footer-enabled .vex-layout-content {
+  min-height: calc(
+    100% - var(--vex-toolbar-height) - var(--vex-navigation-height) - var(--vex-footer-height)
+  );
+}
+
+.vex-layout-scroll-disabled {
+  overflow: hidden;
+
+  .vex-layout-content {
+    height: calc(
+      100% - var(--vex-toolbar-height) - var(--vex-navigation-height)
+    );
+    min-height: unset;
+    overflow: hidden;
+  }
+
+  &.vex-layout-footer-fixed .vex-layout-content,
+  &.vex-layout-footer-enabled .vex-layout-content {
+    height: calc(
+      100% - var(--vex-toolbar-height) - var(--vex-navigation-height) - var(--vex-footer-height)
+    );
+    min-height: unset;
+  }
+}
+
+.vex-layout-sidenav-container {
+  background: var(--vex-background-background);
+  height: 100%;
+  transition: transform 0.5s cubic-bezier(0.2, 1, 0.3, 1);
+}
+
+.vex-layout-sidenav-content {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.vex-layout-search-overlay-open {
+  overflow: hidden;
+  position: fixed;
+
+  .vex-layout-sidenav-container {
+    pointer-events: none;
+    transform: perspective(1000px) translate3d(0, 50vh, 0) rotate3d(1, 0, 0, 30deg);
+    transform-origin: 50vw 50vh;
+    transition: transform 0.5s cubic-bezier(0.2, 1, 0.3, 1);
+    @apply rounded shadow-2xl overflow-visible;
+  }
+}
+
+.vex-layout-toolbar-fixed {
+  .vex-toolbar {
+    position: fixed;
+    width: var(--vex-toolbar-width);
+    z-index: 50;
+  }
+
+  .vex-layout-content {
+    margin-top: var(--vex-toolbar-height);
+
+    @screen lg {
+      margin-top: calc(var(--vex-toolbar-height) + var(--vex-navigation-height));
+    }
+  }
+}
+
+.vex-layout-footer-fixed {
+  .vex-footer {
+    box-shadow: var(--vex-footer-elevation);
+    position: fixed;
+  }
+
+  .vex-layout-content {
+    margin-bottom: var(--vex-footer-height);
+    min-height: calc(
+      100% - var(--vex-toolbar-height) - var(--vex-navigation-height) - var(--vex-footer-height)
+    );
+  }
+
+  &.vex-layout-scroll-disabled .vex-layout-content {
+    height: calc(
+      100% - var(--vex-toolbar-height) - var(--vex-navigation-height) - var(--vex-footer-height)
+    );
+  }
+}

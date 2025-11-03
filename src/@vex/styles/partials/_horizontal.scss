@@ -1,0 +1,55 @@
+.vex-layout-horizontal {
+  // Workaround: CSS calc() functions can't deal with values without a unit (e.g. 0 instead of 0px), when this is 0, SCSS or PostCSS make it a 0 instead of 0px, breaking the layout.
+  --vex-navigation-height: 0.00001px;
+  --vex-toolbar-width: 100%;
+
+  @screen lg {
+    --vex-toolbar-width: calc(100% - var(--vex-sidenav-width));
+
+    &.vex-layout-sidenav-collapsed {
+      --vex-toolbar-width: calc(100% - var(--vex-sidenav-collapsed-width));
+    }
+  }
+
+  .vex-layout-sidenav-container {
+    /* When the sidenav is not fixed, stretch the sidenav container to fill the available space. This
+       causes `<mat-sidenav-content>` to act as our scrolling element for desktop layouts. */
+    flex: 1;
+  }
+
+  &.vex-layout-footer-fixed {
+    &.vex-layout-scroll-disabled .vex-layout-content {
+      height: calc(100% - var(--vex-toolbar-height) - var(--vex-footer-height));
+    }
+  }
+}
+
+@screen lg {
+  body:not([dir="rtl"]) {
+    .vex-layout-horizontal {
+      &.vex-layout-sidenav-collapsed .vex-layout-sidenav-content {
+        margin-left: var(--vex-sidenav-collapsed-width) !important;
+        margin-right: 0 !important;
+      }
+
+      &:not(.vex-layout-sidenav-collapsed) .vex-layout-sidenav-content {
+        margin-left: var(--vex-sidenav-width) !important;
+        margin-right: 0 !important;
+      }
+    }
+  }
+
+  [dir="rtl"] {
+    .vex-layout-horizontal {
+      &.vex-layout-sidenav-collapsed .vex-layout-sidenav-content {
+        margin-right: var(--vex-sidenav-collapsed-width) !important;
+        margin-left: 0 !important;
+      }
+
+      &:not(.vex-layout-sidenav-collapsed) .vex-layout-sidenav-content {
+        margin-right: var(--vex-sidenav-width) !important;
+        margin-left: 0 !important;
+      }
+    }
+  }
+}

@@ -1,0 +1,79 @@
+<a
+  *ngIf="isLink(item) && !isFunction(item.route)"
+  [appHasPermission]="item.permissions || []"
+  [fragment]="item.fragment"
+  [routerLinkActiveOptions]="item.routerLinkActiveOptions || { exact: false }"
+  [routerLink]="item.route"
+  class="vex-sidenav-item"
+  matRipple
+  matRippleColor="var(--vex-sidenav-item-ripple-color)"
+  routerLinkActive="vex-sidenav-item--active">
+  <mat-icon
+    *ngIf="level === 0 && item.icon"
+    [svgIcon]="item.icon"
+    class="vex-sidenav-item__icon"></mat-icon>
+  <span class="vex-sidenav-item__label">{{ item.label }}</span>
+  <span
+    *ngIf="item.badge"
+    [ngClass]="[item.badge.bgClass, item.badge.textClass]"
+    class="vex-sidenav-item__badge">{{ item.badge.value }}</span>
+</a>
+
+<div
+  (click)="item.route()"
+  *ngIf="isLink(item) && isFunction(item.route)"
+  [appHasPermission]="item.permissions || []"
+  class="vex-sidenav-item"
+  matRipple
+  matRippleColor="var(--vex-sidenav-item-ripple-color)"
+  routerLinkActive="vex-sidenav-item--active">
+  <mat-icon
+    *ngIf="level === 0 && item.icon"
+    [svgIcon]="item.icon"
+    class="vex-sidenav-item__icon"></mat-icon>
+  <span class="vex-sidenav-item__label">{{ item.label }}</span>
+  <span
+    *ngIf="item.badge"
+    [ngClass]="[item.badge.bgClass, item.badge.textClass]"
+    class="vex-sidenav-item__badge">{{ item.badge.value }}</span>
+</div>
+
+<ng-container *ngIf="isDropdown(item)">
+  <div
+    (click)="toggleOpen()"
+    [appHasPermission]="item.permissions || []"
+    [class.vex-sidenav-item--active]="isOpen || isActive"
+    [class.vex-sidenav-item--open]="isOpen"
+    class="vex-sidenav-item"
+    matRipple
+    matRippleColor="var(--vex-sidenav-item-ripple-color)">
+    <mat-icon
+      *ngIf="level === 0 && item.icon"
+      [svgIcon]="item.icon"
+      class="vex-sidenav-item__icon"></mat-icon>
+    <span class="vex-sidenav-item__label">{{ item.label }}</span>
+    <span
+      *ngIf="item.badge"
+      [ngClass]="[item.badge.bgClass, item.badge.textClass]"
+      class="vex-sidenav-item__badge">{{ item.badge.value }}</span>
+    <mat-icon
+      class="vex-sidenav-item__dropdown-icon"
+      svgIcon="mat:keyboard_arrow_right"></mat-icon>
+  </div>
+  <div [@dropdown]="isOpen" class="vex-sidenav-item__dropdown">
+    <vex-sidenav-item
+      *ngFor="let subItem of visibleChildren(item)"
+      [item]="subItem"
+      [level]="level + 1"></vex-sidenav-item>
+  </div>
+</ng-container>
+
+<ng-container *ngIf="isSubheading(item)">
+  <div class="vex-sidenav-subheading" [appHasPermission]="item.permissions || []">
+    {{ item.label }}
+  </div>
+  <vex-sidenav-item
+    *ngFor="let subItem of visibleChildren(item)"
+    [item]="subItem"
+    [level]="0"></vex-sidenav-item>
+</ng-container>

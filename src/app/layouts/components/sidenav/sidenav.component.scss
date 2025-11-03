@@ -1,0 +1,326 @@
+:root {
+  --vex-sidenav-background: #0A2E57 !important;
+  --vex-sidenav-toolbar-background: #0A2E57 !important;
+  --vex-sidenav-color: #fff !important;
+  --vex-sidenav-section-divider-color: #fff1f5 !important;
+}
+
+.vex-sidenav {
+  background: var(--vex-sidenav-background);
+  color: var(--vex-sidenav-color);
+  height: 100%;
+  @apply transition-all duration-400 ease-out-swift;
+  width: var(--vex-sidenav-width);
+
+  &.collapsed {
+    width: var(--vex-sidenav-collapsed-width);
+
+    &:not(.open) {
+      .vex-sidenav-toolbar__headline,
+      .vex-sidenav-toolbar__collapse-toggle {
+        opacity: 0;
+        padding-inline-start: var(--vex-sidenav-item-padding-horizontal);
+      }
+
+      ::ng-deep {
+        .vex-sidenav-item__icon {
+          margin-inline-end: var(--vex-sidenav-item-padding-horizontal);
+        }
+
+        .vex-sidenav-subheading,
+        .vex-sidenav-item__badge,
+        .vex-sidenav-item__label,
+        .vex-sidenav-user__title,
+        .vex-sidenav-user__subtitle,
+        .vex-sidenav-user__dropdown-icon,
+        .vex-sidenav-search__placeholder,
+        .vex-sidenav-search__keybind {
+          opacity: 0;
+        }
+
+        .vex-sidenav-user {
+          @apply pr-2.5;
+        }
+
+        .simplebar-track.simplebar-vertical {
+          visibility: hidden !important;
+        }
+      }
+    }
+
+    ::ng-deep {
+      .vex-sidenav-subheading,
+      .vex-sidenav-item__label {
+        @apply transition-all duration-400 ease-out-swift;
+      }
+
+      .vex-sidenav-item__badge {
+        @apply transition-all duration-200 ease-out-swift;
+      }
+    }
+
+    &.open {
+      width: var(--vex-sidenav-width);
+
+      .vex-sidenav-toolbar__collapse-toggle {
+        @apply transition-all duration-400 ease-out-swift;
+      }
+
+      ::ng-deep {
+        .vex-sidenav-item__badge {
+          @apply transition-all duration-400 ease-out-swift;
+        }
+      }
+    }
+  }
+
+  ::ng-deep {
+    .simplebar-track.simplebar-horizontal {
+      visibility: hidden !important;
+    }
+  }
+}
+
+/** SIDENAV TOOLBAR */
+.vex-sidenav-toolbar__container {
+  background: var(--vex-sidenav-background);
+  @apply sticky top-0 z-10;
+}
+
+.sidenav-toolbar {
+  align-items: center;
+  background: var(--vex-sidenav-toolbar-background);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  height: var(--vex-toolbar-height);
+  white-space: nowrap;
+  width: 100%;
+  @apply py-0 px-6;
+}
+
+.vex-sidenav-toolbar__headline {
+  @apply text-2xl font-bold tracking-wide select-none transition-all duration-400 ease-out-swift;
+  padding-inline-start: var(--vex-sidenav-item-icon-gap);
+}
+
+.vex-sidenav-toolbar__collapse-toggle {
+  @apply transition-all duration-200 ease-out-swift;
+}
+
+.vex-sidenav-toolbar__divider {
+  height: 1px;
+  background: var(--vex-sidenav-section-divider-color);
+}
+
+/** VEX SIDENAV USER */
+.vex-sidenav-user__container {
+  background: var(--vex-sidenav-toolbar-background);
+  border-color: var(--vex-sidenav-section-divider-color);
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  @apply border-t px-2 py-3;
+}
+
+.vex-sidenav-user {
+  @apply relative transition-all duration-300 ease-out rounded hover:bg-white/10 select-none cursor-pointer p-1.5 pt-2;
+}
+
+.vex-sidenav-user__image {
+  @apply w-9 h-9 block rounded-full;
+}
+
+.vex-sidenav-user__content {
+  @apply pl-3;
+}
+
+.vex-sidenav-user__title {
+  @apply text-sm font-medium whitespace-nowrap transition duration-300 ease-out;
+}
+
+.vex-sidenav-user__subtitle {
+  @apply text-xs font-medium text-white/50 whitespace-nowrap transition duration-300 ease-out;
+}
+
+.vex-sidenav-user__dropdown-icon {
+  @apply text-white/50 transition duration-300 ease-out;
+}
+
+.vex-sidenav-user--open {
+  @apply bg-white/10;
+}
+
+/** VEX SIDENAV SEARCH */
+.vex-sidenav-search__container {
+  background: var(--vex-sidenav-toolbar-background);
+  @apply px-3 pb-3 z-10;
+}
+
+.vex-sidenav-search {
+  @apply rounded bg-white/10 text-white/30 hover:bg-white/20 hover:text-white/60 cursor-pointer transition duration-300 ease-out flex items-center select-none p-1 pl-3;
+}
+
+.vex-sidenav-search__icon {
+  @apply icon-sm;
+  width: var(--vex-sidenav-item-icon-size);
+}
+
+.vex-sidenav-search__placeholder {
+  @apply text-xs font-medium whitespace-nowrap transition duration-300 ease-out;
+  margin-left: var(--vex-sidenav-item-icon-gap);
+}
+
+.vex-sidenav-search__keybind {
+  @apply bg-white/10 rounded text-2xs px-2 py-1 font-semibold transition duration-300 ease-out;
+}
+
+/* --------- COLORES DEL SIDENAV Y SUBMENÚS --------- */
+
+/* Fondo principal sidebar, user y search */
+:host ::ng-deep .vex-sidenav,
+:host ::ng-deep .vex-sidenav-toolbar__container,
+:host ::ng-deep .vex-sidenav-user__container {
+  background: #0A2E57 !important;
+  color: #fff !important;
+}
+
+/* Divider */
+:host ::ng-deep .vex-sidenav-toolbar__divider {
+  background: #fff1f5 !important;
+}
+
+/* --------- ÍTEMS PRINCIPALES Y SUBMENÚ --------- */
+/* Por default, todos los ítems: fondo rojo vino */
+:host ::ng-deep .vex-sidenav-item {
+  background: #0A2E57 !important;
+  color: #fff !important;
+}
+
+/* Submenú abierto (padre), vino más oscuro */
+:host ::ng-deep .vex-sidenav-item.open,
+:host ::ng-deep .vex-sidenav-item[aria-expanded="true"] {
+  background: #0A2E57 !important;
+  color: #fff !important;
+}
+
+/* Subitems (hijos) normales, rojo vino */
+:host ::ng-deep .vex-sidenav-item.open .vex-sidenav-item__children .vex-sidenav-item,
+:host ::ng-deep .vex-sidenav-item[aria-expanded="true"] .vex-sidenav-item__children .vex-sidenav-item {
+  background: #0A2E57 !important;
+  color: #fff !important;
+}
+
+.img-fluid{
+  width: 60%;
+}
+
+/* Subitem activo (dentro de submenú): negro */
+:host ::ng-deep .vex-sidenav-item__children .vex-sidenav-item.active,
+:host ::ng-deep .vex-sidenav-item__children .vex-sidenav-item--active {
+  background: #1F5AA8 !important;
+  color: #fff !important;
+}
+
+/* Hover en cualquier nivel: negro */
+:host ::ng-deep .vex-sidenav-item:hover,
+:host ::ng-deep .vex-sidenav-item:focus,
+:host ::ng-deep .vex-sidenav-item.open .vex-sidenav-item__children .vex-sidenav-item:hover,
+:host ::ng-deep .vex-sidenav-item.open .vex-sidenav-item__children .vex-sidenav-item:focus,
+:host ::ng-deep .vex-sidenav-item[aria-expanded="true"] .vex-sidenav-item__children .vex-sidenav-item:hover,
+:host ::ng-deep .vex-sidenav-item[aria-expanded="true"] .vex-sidenav-item__children .vex-sidenav-item:focus {
+  background: #1F5AA8 !important;
+  color: #fff !important;
+}
+
+/* Etiquetas e íconos SIEMPRE blancos */
+:host ::ng-deep .vex-sidenav-item__label,
+:host ::ng-deep .vex-sidenav-item__icon {
+  color: #fff !important;
+  fill: #fff !important;
+}
+:host ::ng-deep .vex-sidenav-item:hover .vex-sidenav-item__label,
+:host ::ng-deep .vex-sidenav-item:focus .vex-sidenav-item__label,
+:host ::ng-deep .vex-sidenav-item.active .vex-sidenav-item__label,
+:host ::ng-deep .vex-sidenav-item.open .vex-sidenav-item__label,
+:host ::ng-deep .vex-sidenav-item[aria-expanded="true"] .vex-sidenav-item__label,
+:host ::ng-deep .vex-sidenav-item:hover .vex-sidenav-item__icon,
+:host ::ng-deep .vex-sidenav-item:focus .vex-sidenav-item__icon,
+:host ::ng-deep .vex-sidenav-item.active .vex-sidenav-item__icon,
+:host ::ng-deep .vex-sidenav-item.open .vex-sidenav-item__icon,
+:host ::ng-deep .vex-sidenav-item[aria-expanded="true"] .vex-sidenav-item__icon {
+  color: #fff !important;
+  fill: #fff !important;
+}
+
+/* Badges (circulitos de cantidad) */
+:host ::ng-deep .vex-sidenav-item__badge {
+  background: #fff !important;
+  color: #0A2E57 !important;
+  font-weight: bold !important;
+}
+
+/* Search bar y keybind */
+:host ::ng-deep .vex-sidenav-search__container,
+:host ::ng-deep .vex-sidenav-search {
+  background: #0A2E57 !important;
+  color: #fff !important;
+}
+:host ::ng-deep .vex-sidenav-search__placeholder,
+:host ::ng-deep .vex-sidenav-search__keybind {
+  color: #fff !important;
+}
+
+/* Usuario sticky */
+:host ::ng-deep .vex-sidenav-user__container {
+  background: #0A2E57 !important;
+  border-color: #fff1f5 !important;
+}
+:host ::ng-deep .vex-sidenav-user__title,
+:host ::ng-deep .vex-sidenav-user__subtitle,
+:host ::ng-deep .vex-sidenav-user__dropdown-icon {
+  color: #fff !important;
+}
+:host ::ng-deep .vex-sidenav-user:hover,
+:host ::ng-deep .vex-sidenav-user--open {
+  background: #1976d2 !important;
+  color: white;
+}
+:host ::ng-deep .vex-sidenav-user:hover .vex-sidenav-user__title,
+:host ::ng-deep .vex-sidenav-user:hover .vex-sidenav-user__subtitle,
+:host ::ng-deep .vex-sidenav-user:hover .vex-sidenav-user__dropdown-icon,
+:host ::ng-deep .vex-sidenav-user--open .vex-sidenav-user__title,
+:host ::ng-deep .vex-sidenav-user--open .vex-sidenav-user__subtitle,
+:host ::ng-deep .vex-sidenav-user--open .vex-sidenav-user__dropdown-icon {
+  color: #ffffff !important;
+}
+
+/* Scrollbar oculto (simplebar) */
+:host ::ng-deep .simplebar-track.simplebar-horizontal {
+  visibility: hidden !important;
+}
+
+
+/* Subheading siempre blanco */
+:host ::ng-deep .vex-sidenav-subheading {
+  color: #fff !important;
+  font-weight: bold !important;
+}
+
+/* Todos los mat-icon o flechas dentro del sidenav, blancos */
+:host ::ng-deep .vex-sidenav-item__arrow,
+:host ::ng-deep .vex-sidenav-item__expand,
+:host ::ng-deep .vex-sidenav-item mat-icon,
+:host ::ng-deep .vex-sidenav-item .mat-icon {
+  color: #fff !important;
+  fill: #fff !important;
+  opacity: 1 !important;
+}
+
+/* Si usas feather-icons o íconos svg directos, también */
+:host ::ng-deep .vex-sidenav-item svg {
+  color: #fff !important;
+  fill: #fff !important;
+  opacity: 1 !important;
+}

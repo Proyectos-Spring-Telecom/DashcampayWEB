@@ -1,0 +1,72 @@
+<vex-page-layout @fadeInRight>
+    <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
+        [class.px-6]="layoutCtrl.value === 'fullwidth'">
+
+        <div class="card mt-4">
+            <div class="container-fluid p-4">
+                <!-- Breadcrumb -->
+                <div class="bg-app-bar appbar px-6 h-16 border-b sticky top-0 left-0 flex items-center z-10">
+                    <nav class="breadcrumb-simple" aria-label="Ruta de navegación">
+                        <a routerLink="/administracion" class="crumb-link">
+                            <mat-icon inline>home</mat-icon>
+                            Administración
+                        </a>
+                        <span class="sep">/</span>
+                        <span class="crumb-current" aria-current="page">Módulos</span>
+                        <span class="sep">/</span>
+                        <span class="crumb-current" aria-current="page">Agregar Módulo</span>
+                    </nav>
+                </div>
+
+                <!-- Formulario -->
+                <section class="mt-4">
+                    <!-- Usa tu formGroup real (si lo tienes como 'moduloForm', cámbialo aquí) -->
+                    <form [formGroup]="moduloForm" class="container-fluid form-skin-lite">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="section-head">
+                                    <h5 class="mb-1">Datos Generales</h5>
+                                </div>
+                                <div class="section-bar"></div>
+                            </div>
+
+                            <!-- 1. Nombre -->
+                            <div class="col-12 col-md-6 col-lg-6">
+                                <label class="form-label">
+                                    <i class="fa fa-tag"></i><span>Nombre</span>
+                                </label>
+                                <mat-form-field appearance="fill" class="w-100">
+                                    <!-- Ajusta el control al correcto (ej. formControlName="nombre") -->
+                                    <input matInput placeholder="Nombre del módulo" formControlName="nombre" />
+                                </mat-form-field>
+                            </div>
+
+                            <!-- 2. Descripción -->
+                            <div class="col-12 col-md-6 col-lg-6">
+                                <label class="form-label">
+                                    <i class="fa fa-align-left"></i><span>Descripción</span>
+                                </label>
+                                <mat-form-field appearance="fill" class="w-100">
+                                    <!-- Si prefieres textarea: <textarea matInput rows="3" ...></textarea> -->
+                                    <input matInput placeholder="Descripción del módulo"
+                                        formControlName="descripcion" />
+                                </mat-form-field>
+                            </div>
+
+                            <!-- Acciones -->
+                            <div class="col-12 d-flex justify-content-end gap-2 pt-2">
+                                <button mat-raised-button color="primary" type="button" (click)="submit()">
+                                    <mat-icon>save</mat-icon> Guardar
+                                </button>
+                                <button mat-raised-button color="warn" type="button" (click)="regresar()">
+                                    <mat-icon>close</mat-icon> Cancelar
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </section>
+            </div>
+        </div>
+
+    </vex-page-layout-content>
+</vex-page-layout>

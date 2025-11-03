@@ -1,0 +1,5 @@
+:root {
+  .mat-expansion-panel:not([class*="mat-elevation-z"]) {
+    @apply shadow rounded;
+  }
+}

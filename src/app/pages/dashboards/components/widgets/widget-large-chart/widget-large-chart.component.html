@@ -1,0 +1,17 @@
+<div class="card h-full">
+  <div class="flex-none border-b py-2 px-6 flex items-center">
+    <h2 class="m-0 title flex-auto">User & Session Analytics</h2>
+
+    <button mat-icon-button type="button">
+      <mat-icon class="text-secondary" svgIcon="mat:cloud_download"></mat-icon>
+    </button>
+
+    <button mat-icon-button type="button">
+      <mat-icon class="text-secondary" svgIcon="mat:more_horiz"></mat-icon>
+    </button>
+  </div>
+
+  <div class="flex-1 pt-3 pr-4">
+    <vex-chart [options]="options" [series]="series"></vex-chart>
+  </div>
+</div>

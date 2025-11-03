@@ -1,0 +1,110 @@
+<vex-page-layout @fadeInRight>
+
+  <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
+    [class.px-6]="layoutCtrl.value === 'fullwidth'" class="-mt-6">
+    <div class="card mt-4">
+      <div class="dashboard-lite p-4">
+        <div class="bg-app-bar appbar px-6 h-16 border-b sticky top-0 left-0 flex items-center z-10">
+          <nav class="breadcrumb-simple" aria-label="Ruta de navegación">
+            <a routerLink="/administracion" class="crumb-link">
+              <mat-icon inline>home</mat-icon>
+              Administración
+            </a>
+            <span class="sep">/</span>
+            <span class="crumb-current" aria-current="page">Pasajeros</span>
+            <span class="sep">/</span>
+            <span class="crumb-current" aria-current="page">Agregar Pasajero</span>
+          </nav>
+        </div>
+
+        <section class="mt-5 table-shell">
+          <form [formGroup]="pasajeroForm">
+            <div class="fm-grid">
+              <div class="fm-divider fm-span-3">Datos Generales</div>
+
+              <div class="fm-group">
+                <label id="lbl-nombre">
+                  <i class="fa fa-user doc-icon" aria-hidden="true"></i>
+                  Nombre
+                </label>
+                <mat-form-field appearance="fill">
+                  <input matInput placeholder="Nombre" formControlName="nombre"
+                    [attr.aria-labelledby]="'lbl-nombre'">
+                </mat-form-field>
+              </div>
+
+              <div class="fm-group">
+                <label id="lbl-apellido-paterno">
+                  <i class="fa fa-user-pen doc-icon" aria-hidden="true"></i>
+                  Apellido Paterno
+                </label>
+                <mat-form-field appearance="fill">
+                  <input matInput placeholder="Apellido Paterno" formControlName="apellidoPaterno"
+                    [attr.aria-labelledby]="'lbl-apellido-paterno'">
+                </mat-form-field>
+              </div>
+
+              <div class="fm-group">
+                <label id="lbl-apellido-materno">
+                  <i class="fa fa-user doc-icon" aria-hidden="true"></i>
+                  Apellido Materno
+                </label>
+                <mat-form-field appearance="fill">
+                  <input matInput placeholder="Apellido Materno" formControlName="apellidoMaterno"
+                    [attr.aria-labelledby]="'lbl-apellido-materno'">
+                </mat-form-field>
+              </div>
+
+              <div class="fm-group">
+                <label id="lbl-telefono">
+                  <i class="fa fa-phone doc-icon" aria-hidden="true"></i>
+                  Teléfono
+                </label>
+                <mat-form-field appearance="fill">
+                  <input matInput type="tel" placeholder="Teléfono" formControlName="telefono"
+                    [attr.aria-labelledby]="'lbl-telefono'" maxlength="10" (keypress)="allowOnlyNumbers($event)">
+                </mat-form-field>
+              </div>
+
+              <div class="fm-group">
+                <label id="lbl-correo">
+                  <i class="fa fa-envelope doc-icon" aria-hidden="true"></i>
+                  Correo Electrónico
+                </label>
+                <mat-form-field appearance="fill">
+                  <input matInput type="email" placeholder="Correo Electrónico" formControlName="correo"
+                    [attr.aria-labelledby]="'lbl-correo'">
+                </mat-form-field>
+              </div>
+
+              <div class="fm-group">
+                <label id="lbl-fecha-nacimiento">
+                  <i class="fa fa-calendar-day doc-icon" aria-hidden="true"></i>
+                  Fecha de Nacimiento
+                </label>
+                <mat-form-field appearance="fill">
+                  <input matInput type="date" placeholder="Fecha de Nacimiento" formControlName="fechaNacimiento"
+                    [attr.aria-labelledby]="'lbl-fecha-nacimiento'">
+                </mat-form-field>
+              </div>
+
+              <div class="fm-span-3 fm-actions">
+                <div class="fm-actions-right">
+                  <button mat-raised-button color="primary" type="button" (click)="submit()">
+                    <mat-icon>save</mat-icon>
+                    Guardar
+                  </button>
+                  <button mat-raised-button (click)="regresar()" color="warn" type="button">
+                    <mat-icon>close</mat-icon>
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </form>
+        </section>
+      </div>
+    </div>
+  </vex-page-layout-content>
+</vex-page-layout>

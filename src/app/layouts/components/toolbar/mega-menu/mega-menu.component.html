@@ -1,0 +1,51 @@
+<div class="card overflow-auto flex flex-col md:flex-row sm:mr-6">
+  <div class="bg-primary-600/10 p-6 flex-auto max-w-[300px]">
+    <h2 class="headline mb-4 text-primary-600">Mega Menu</h2>
+
+    <p class="caption">
+      Far far away, behind the word mountains, far from the countries Vokalia
+      and Consonantia, there live the blind texts.
+    </p>
+
+    <p class="caption">
+      Separated they live in Bookmarksgrove right at the coast of the Semantics,
+      a large language ocean.
+    </p>
+
+    <button class="mt-4 w-full" color="primary" mat-flat-button type="button">
+      Learn More
+    </button>
+  </div>
+
+  <div class="p-6 flex-auto max-w-[400px]">
+    <h3 class="body-2 m-0">Features</h3>
+
+    <div class="mt-4 grid grid-cols-3">
+      <a
+        (click)="close()"
+        *ngFor="let feature of features"
+        [routerLink]="feature.route"
+        class="text-dark p-3 text-center hover:bg-primary-600/10 hover:text-primary-600 transition duration-400 ease-out-swift rounded block no-underline">
+        <mat-icon
+          [svgIcon]="feature.icon"
+          class="icon-xl"
+          color="primary"></mat-icon>
+        <div class="body-2 mt-2">{{ feature.label }}</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="p-6 flex-auto max-w-[350px]">
+    <h3 class="body-2 m-0">Pages</h3>
+
+    <div class="mt-6 grid grid-cols-2 gap-x-12 gap-y-4">
+      <a
+        (click)="close()"
+        *ngFor="let page of pages"
+        [routerLink]="page.route"
+        class="text-dark body-1 no-underline hover:text-primary-600 transition duration-400 ease-out-swift"
+      >{{ page.label }}</a
+      >
+    </div>
+  </div>
+</div>

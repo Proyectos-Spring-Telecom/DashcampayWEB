@@ -1,0 +1,397 @@
+/* (Asegúrate de tener Montserrat cargado globalmente)
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,600;0,700;1,700&display=swap" rel="stylesheet">
+*/
+
+:host {
+  --c-azul-oscuro: #0A2E57;
+  --c-azul-medio:  #1F5AA8;
+  --c-verde-limon: #A6CE39;
+  --c-blanco:      #FFFFFF;
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+/* ======================= ZONAS ======================= */
+.zonas-card {
+  overflow: hidden; border-radius: 18px;
+
+  .card-header{
+    background: #0A2E57;
+    border-bottom: 1px solid color-mix(in srgb, var(--c-azul-medio) 35%, transparent);
+    padding: 1rem 1.25rem; gap: .75rem;
+
+    .chip-step{
+      width:36px; height:36px; border-radius:10px; display:grid; place-items:center;
+      font-weight:700; color: var(--c-blanco);
+      background: linear-gradient(140deg, var(--c-azul-medio), var(--c-azul-oscuro));
+      box-shadow: 0 8px 18px color-mix(in srgb, var(--c-azul-oscuro) 28%, transparent),
+                  inset 0 1px 0 rgba(255,255,255,.25);
+    }
+    .titulo-card{
+      font-style: italic; font-weight: 700; letter-spacing:.2px;
+      background: linear-gradient(90deg, var(--c-azul-oscuro), var(--c-azul-medio));
+      -webkit-background-clip:text; background-clip:text; color: white;
+      font-size: clamp(1.125rem, calc(1rem + 1vw), 1.5rem);
+    }
+    .input-search .input-group-text{ background:#fff; border-right:0; color: var(--c-azul-oscuro); }
+    .input-search .form-control{ border-left:0; }
+  }
+
+  .card-body{ padding: 1.25rem; }
+
+  .zona-card{
+    position:relative; border-radius:18px; border:1px solid rgba(0,0,0,.06); padding:1rem;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.95)),
+      radial-gradient(120% 120% at 0% 0%, color-mix(in srgb, var(--c-azul-medio) 10%, transparent), transparent 60%);
+    backdrop-filter: blur(6px);
+    transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; cursor:pointer; outline:none;
+
+    &:hover{ transform: translateY(-2px); box-shadow: 0 12px 28px rgba(10,46,87,.12); }
+    &:focus{ box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-azul-medio) 35%, transparent); }
+
+    &__bg{ position:absolute; inset:0; z-index:0; pointer-events:none; --accent: var(--c-azul-medio);
+      mask: radial-gradient(200px 200px at 95% -10%, rgba(0,0,0,.18), transparent 70%);
+      background:
+        radial-gradient(240px 160px at 110% -10%, color-mix(in srgb, var(--accent) 45%, white), transparent 60%),
+        radial-gradient(180px 220px at -10% 120%, color-mix(in srgb, var(--c-azul-medio) 18%, transparent), transparent 60%);
+      border-radius:inherit;
+    }
+
+    &__head, &__meta { position:relative; z-index:1; }
+
+    .zona-id{
+      width: 40px; height: 40px; border-radius: 12px; display:flex; align-items:center; justify-content:center;
+      font-weight:700; font-style: italic; font-size:.95rem;
+      background: linear-gradient(145deg, var(--c-azul-oscuro), var(--c-azul-medio)); color: var(--c-blanco);
+      box-shadow: 0 4px 10px rgba(10, 46, 87, 0.25);
+    }
+    .zona-title{ font-weight:600; color: var(--c-azul-oscuro); font-size:1.05rem; }
+    .estado{ border-radius:999px; padding:.25rem .7rem; font-size:.75rem;
+      background: color-mix(in srgb, var(--c-verde-limon) 25%, transparent);
+      color: var(--c-azul-oscuro); border: 1px solid color-mix(in srgb, var(--c-verde-limon) 50%, transparent); font-weight:600; }
+
+     &__meta {
+      margin-top: .75rem;
+      display: grid;
+      grid-template-columns: 1fr; /* 👈 antes 1fr 1fr */
+      gap: .5rem;
+
+      .meta-item {
+        background: color-mix(in srgb, var(--c-azul-medio) 12%, white);
+        color: var(--c-azul-oscuro);
+        border-radius: 10px;
+        padding: .45rem .6rem;
+        display: flex;
+        align-items: center;
+        gap: .35rem;
+        font-weight: 600;
+        font-size: .85rem;
+      }
+
+      .meta-item--desc span {
+        white-space: normal; /* por si la descripción es larga */
+      }
+    }
+
+    &--selected{ border-color: var(--c-azul-medio);
+      box-shadow: 0 12px 28px color-mix(in srgb, var(--c-azul-medio) 28%, transparent);
+      .zona-title{ color: var(--c-azul-medio); font-weight:700; } }
+  }
+
+  .card-footer{ background: var(--c-blanco); border-top:1px solid rgba(0,0,0,.06); padding:.9rem 1.25rem;
+    .texto-paso{ color: color-mix(in srgb, var(--c-azul-oscuro) 70%, #4b5563); } }
+
+  .btn.btn-primary{
+    background: linear-gradient(90deg, var(--c-azul-medio), var(--c-azul-oscuro));
+    border-color: var(--c-azul-oscuro); color: var(--c-blanco);
+  }
+  .btn.btn-primary:hover{ filter:brightness(1.05); box-shadow:0 6px 16px color-mix(in srgb, var(--c-azul-oscuro) 28%, transparent); }
+  .btn.btn-primary:focus{ outline:0; box-shadow:0 0 0 .2rem color-mix(in srgb, var(--c-azul-medio) 35%, transparent); }
+  .btn.btn-primary:disabled{
+    opacity:.55;
+    background: linear-gradient(90deg, color-mix(in srgb, var(--c-azul-medio) 60%, #ddd), color-mix(in srgb, var(--c-azul-oscuro) 60%, #bbb));
+    border-color: color-mix(in srgb, var(--c-azul-oscuro) 60%, #bbb);
+  }
+  .btn.btn-outline-secondary{ color: var(--c-azul-oscuro); border-color: var(--c-azul-medio); }
+  .btn.btn-outline-secondary:hover{ color:#fff; background:linear-gradient(90deg, var(--c-azul-medio), var(--c-azul-oscuro)); border-color: var(--c-azul-oscuro); }
+}
+
+/* ======================= RUTAS ======================= */
+.rutas-card{
+  --c-azul-oscuro:#0A2E57; --c-azul-medio:#1F5AA8; --c-verde-limon:#A6CE39; --c-blanco:#fff;
+  border-radius:18px; overflow:hidden; font-family:'Montserrat',sans-serif;
+
+  .card-header{
+    background: #0A2E57;
+    border-bottom:1px solid color-mix(in srgb, var(--c-azul-oscuro) 30%, transparent);
+    padding:1rem 1.25rem; gap:.75rem;
+
+    .chip-step{
+      width:36px; height:36px; border-radius:10px; display:grid; place-items:center;
+      font-weight:700; color:var(--c-blanco);
+      background: linear-gradient(140deg, var(--c-azul-medio), var(--c-azul-oscuro));
+      box-shadow:0 8px 18px color-mix(in srgb, var(--c-azul-oscuro) 28%, transparent);
+    }
+    .titulo-card{
+      font-style:italic; font-weight:700;
+      background:linear-gradient(90deg,var(--c-azul-oscuro),var(--c-azul-medio));
+      -webkit-background-clip:text; background-clip:text; color:white;
+      font-size: clamp(1.125rem, calc(1rem + 1vw), 1.5rem);
+    }
+    .zona-pill{ color:var(--c-azul-medio); font-weight:600; }
+    .input-search .input-group-text{ background:#fff; border-right:0; color:var(--c-azul-oscuro); }
+    .input-search .form-control{ border-left:0; }
+  }
+
+  .card-body{ padding:1.25rem; }
+
+  .ruta-card{
+    position:relative; border-radius:16px; border:1px solid rgba(0,0,0,.06);
+    padding:.85rem; /* MÁS PEQUEÑA */
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.97)),
+      radial-gradient(120% 120% at 0% 0%, color-mix(in srgb, var(--c-azul-oscuro) 8%, transparent), transparent 60%);
+    transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease; cursor:pointer; outline:none;
+
+    &:hover{ transform:translateY(-2px); box-shadow:0 12px 28px rgba(10,46,87,.10); }
+    &:focus{ box-shadow:0 0 0 3px color-mix(in srgb, var(--c-azul-medio) 35%, transparent); }
+
+    &__bg{ position:absolute; inset:0; z-index:0; pointer-events:none; border-radius:inherit;
+      mask: radial-gradient(220px 220px at 110% -10%, rgba(0,0,0,.12), transparent 70%);
+      background:
+        radial-gradient(260px 160px at 110% -10%, color-mix(in srgb, var(--c-azul-medio) 32%, white), transparent 60%),
+        radial-gradient(200px 240px at -10% 120%, color-mix(in srgb, var(--c-azul-oscuro) 10%, transparent), transparent 60%);
+    }
+
+    &__head, &__meta, &__footer{ position:relative; z-index:1; }
+
+    .ruta-id{
+      min-width:44px; height:32px; border-radius:10px; display:flex; align-items:center; justify-content:center;
+      font-weight:700; font-style:italic; background:linear-gradient(145deg,var(--c-azul-oscuro),var(--c-azul-medio));
+      color:var(--c-blanco); box-shadow:0 3px 8px rgba(10,46,87,.22); font-size:.85rem;
+    }
+    .ruta-title{ font-weight:600; color:var(--c-azul-oscuro); font-size:.95rem; }
+
+    .estado{ border-radius:999px; padding:.2rem .6rem; font-size:.72rem;
+      background: color-mix(in srgb, var(--c-verde-limon) 24%, transparent);
+      color: var(--c-azul-oscuro); border:1px solid color-mix(in srgb, var(--c-verde-limon) 45%, transparent); font-weight:600; }
+
+    /* MÁS ESPACIO entre título y tarjetas de info */
+    &__meta{ margin-top:1.1rem; }
+
+    .meta-item{
+      display:flex; align-items:center; gap:.35rem; padding:.45rem .55rem; border-radius:10px;
+      background:color-mix(in srgb, var(--c-azul-medio) 10%, white);
+      color: color-mix(in srgb, var(--c-azul-oscuro) 85%, black);
+      font-weight:600; font-size:.8rem;  /* más compacto */
+    }
+
+    &__footer{ margin-top:.6rem; display:flex; justify-content:flex-end;
+      .mini-pill{ font-size:.75rem; padding:.25rem .6rem; border-radius:999px;
+        background: color-mix(in srgb, var(--c-azul-medio) 10%, white); color:var(--c-azul-oscuro);
+        border:1px solid color-mix(in srgb, var(--c-azul-oscuro) 20%, transparent); }
+    }
+
+    &--selected{ border-color:var(--c-azul-medio);
+      box-shadow:0 12px 28px color-mix(in srgb, var(--c-azul-medio) 26%, transparent);
+      .ruta-title{ color:var(--c-azul-medio); font-weight:700; } }
+  }
+
+  .card-footer{ background:#fff; border-top:1px solid rgba(0,0,0,.06); padding:.9rem 1.25rem;
+    .texto-paso{ color: color-mix(in srgb, var(--c-azul-oscuro) 70%, #4b5563); } }
+
+  .btn.btn-primary{
+    background: linear-gradient(90deg, var(--c-azul-medio), var(--c-azul-oscuro));
+    border-color: var(--c-azul-oscuro); color:#fff;
+  }
+  .btn.btn-primary:hover{ filter:brightness(1.05); box-shadow:0 6px 16px color-mix(in srgb, var(--c-azul-oscuro) 28%, transparent); }
+  .btn.btn-primary:focus{ box-shadow:0 0 0 .2rem color-mix(in srgb, var(--c-azul-medio) 35%, transparent); }
+  .btn.btn-outline-secondary{ color:var(--c-azul-oscuro); border-color:var(--c-azul-medio); }
+  .btn.btn-outline-secondary:hover{ color:#fff; background:linear-gradient(90deg,var(--c-azul-medio),var(--c-azul-oscuro)); border-color:var(--c-azul-oscuro); }
+}
+
+/* Ajustes móviles */
+@media (max-width:575.98px){
+  .zonas-card .card-header{ padding:.9rem; }
+  .zonas-card .card-body{ padding:.9rem; }
+  .rutas-card .card-header{ padding:.9rem; }
+  .rutas-card .card-body{ padding:.9rem; }
+}
+
+
+/* ====== VARIANTES (MAPA) ====== */
+.variantes-card{
+  --c-azul-oscuro:#0A2E57; --c-azul-medio:#1F5AA8; --c-verde-limon:#A6CE39; --c-blanco:#fff;
+  border-radius:18px; overflow:hidden; font-family:'Montserrat',sans-serif;
+  .variantes-card #map {
+  width: 100%;
+  height: 60vh;
+  min-height: 360px;
+  border: 1px solid rgba(0,0,0,.06);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+
+  .card-header{
+    background: #0A2E57;
+    border-bottom:1px solid color-mix(in srgb, var(--c-azul-oscuro) 30%, transparent);
+    padding:1rem 1.25rem; gap:.75rem;
+
+    .chip-step{
+      width:36px; height:36px; border-radius:10px; display:grid; place-items:center;
+      font-weight:700; color:var(--c-blanco);
+      background: linear-gradient(140deg, var(--c-azul-medio), var(--c-azul-oscuro));
+      box-shadow:0 8px 18px color-mix(in srgb, var(--c-azul-oscuro) 28%, transparent);
+    }
+    .titulo-card{
+      font-style:italic; font-weight:700;
+      background:linear-gradient(90deg,var(--c-azul-oscuro),var(--c-azul-medio));
+      -webkit-background-clip:text; background-clip:text; color:white;
+      font-size: clamp(1.125rem, calc(1rem + 1vw), 1.5rem);
+    }
+    .zona-pill{ color:var(--c-azul-medio); font-weight:600; }
+  }
+
+  .card-body{ padding:1.25rem; }
+
+  .map-wrapper{
+    width:100%;
+    height:50vh;              /* altura cómoda en desktop */
+    min-height:360px;         /* evita mapas muy pequeños */
+    border-radius:16px;
+    border:1px solid rgba(0,0,0,.06);
+    overflow:hidden;
+  }
+
+  .meta-item{
+    margin-top:.75rem;
+    display:flex; align-items:center; gap:.4rem;
+    padding:.5rem .6rem; border-radius:10px;
+    background:color-mix(in srgb, var(--c-azul-medio) 10%, white);
+    color: color-mix(in srgb, var(--c-azul-oscuro) 85%, black);
+    font-weight:600; font-size:.85rem;
+  }
+
+  .card-footer{
+    background:#fff; border-top:1px solid rgba(0,0,0,.06); padding:.9rem 1.25rem;
+    .texto-paso{ color: color-mix(in srgb, var(--c-azul-oscuro) 70%, #4b5563); }
+  }
+}
+
+@media (max-width:575.98px){
+  .variantes-card .card-header{ padding:.9rem; }
+  .variantes-card .card-body{ padding:.9rem; }
+  .variantes-card .map-wrapper{ height:45vh; min-height:280px; }
+}
+
+
+
+
+
+
+/* Botón primario visible siempre (paso 3 y paso 4 por si acaso) */
+.variantes-card .btn.btn-primary,
+.tarifa-card    .btn.btn-primary {
+  background: linear-gradient(90deg, var(--c-azul-medio), var(--c-azul-oscuro)) !important;
+  border-color: var(--c-azul-oscuro) !important;
+  color: #fff !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+/* Hover/Focus coherentes */
+.variantes-card .btn.btn-primary:hover,
+.tarifa-card    .btn.btn-primary:hover {
+  filter: brightness(1.05) !important;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--c-azul-oscuro) 28%, transparent);
+}
+
+.variantes-card .btn.btn-primary:focus,
+.tarifa-card    .btn.btn-primary:focus,
+.variantes-card .btn.btn-primary:active,
+.tarifa-card    .btn.btn-primary:active {
+  color: #fff !important;
+  box-shadow: 0 0 0 .2rem color-mix(in srgb, var(--c-azul-medio) 35%, transparent);
+}
+
+
+/* Tipografía corporativa */
+.tarifa-card {
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+/* Label con icono al estilo de tu ejemplo */
+.form-label{
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.1rem;
+    font-family: "Montserrat", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    font-weight: 400;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.00em;
+    color: #000000;
+}
+.doc-icon {
+  color: var(--c-verde-limon, #A6CE39);
+  font-size: 1rem;
+}
+
+/* Mat Form Field (appearance=fill) estilo claro, foco azul corporativo */
+:host ::ng-deep .tarifa-card .mat-mdc-form-field {
+  width: 100%;
+}
+:host ::ng-deep .tarifa-card .mdc-text-field--filled {
+  background-color: #f3f4f6;             /* gris claro como tu captura */
+  border-radius: 10px;
+}
+:host ::ng-deep .tarifa-card .mdc-text-field__input {
+  color: #111827;
+  font-weight: 500;
+}
+:host ::ng-deep .tarifa-card .mdc-text-field__input::placeholder {
+  color: #9CA3AF;
+}
+:host ::ng-deep .tarifa-card .mdc-line-ripple {
+  background-color: var(--c-azul-medio, #1F5AA8) !important;
+}
+:host ::ng-deep .tarifa-card .mdc-text-field--focused .mdc-line-ripple {
+  background-color: var(--c-azul-oscuro, #0A2E57) !important;
+}
+
+/* Header/footer coherentes con tus cards anteriores */
+.tarifa-card .card-header{
+  background: #0A2E57;
+  border-bottom: 1px solid color-mix(in srgb, var(--c-azul-oscuro,#0A2E57) 30%, transparent);
+  padding: 1rem 1.25rem;
+  .chip-step{
+    width:36px;height:36px;border-radius:10px;display:grid;place-items:center;
+    font-weight:700;color:#fff;
+    background: linear-gradient(140deg, var(--c-azul-medio,#1F5AA8), var(--c-azul-oscuro,#0A2E57));
+    box-shadow:0 8px 18px color-mix(in srgb, var(--c-azul-oscuro,#0A2E57) 28%, transparent);
+  }
+  .titulo-card{
+    font-style: italic; font-weight: 700;
+    background: linear-gradient(90deg, var(--c-azul-oscuro,#0A2E57), var(--c-azul-medio,#1F5AA8));
+    -webkit-background-clip:text; background-clip:text; color:white;
+    font-size: clamp(1.125rem, calc(1rem + 1vw), 1.5rem);
+  }
+}
+.tarifa-card .card-body{ padding: 1.25rem; }
+.tarifa-card .card-footer{
+  background:#fff; border-top:1px solid rgba(0,0,0,.06); padding:.9rem 1.25rem;
+  .texto-paso{ color: color-mix(in srgb, var(--c-azul-oscuro,#0A2E57) 70%, #4b5563); }
+}
+
+/* Botón primario consistente */
+.tarifa-card .btn.btn-primary{
+  background: linear-gradient(90deg, var(--c-azul-medio,#1F5AA8), var(--c-azul-oscuro,#0A2E57));
+  border-color: var(--c-azul-oscuro,#0A2E57);
+  color:#fff;
+}
+.tarifa-card .btn.btn-primary:hover{
+  filter: brightness(1.05);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--c-azul-oscuro,#0A2E57) 28%, transparent);
+}

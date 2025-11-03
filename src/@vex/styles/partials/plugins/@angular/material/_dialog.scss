@@ -1,0 +1,15 @@
+:root {
+  .mat-mdc-dialog-container .mdc-dialog__surface {
+    @apply rounded-lg;
+  }
+
+  .mat-mdc-dialog-title {
+    @apply pt-3;
+  }
+
+  /** Reset default height placeholder */
+  .mdc-dialog__title::before {
+    content: none;
+    height: auto;
+  }
+}

@@ -1,0 +1,313 @@
+<vex-page-layout @fadeInRight>
+  <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
+    [class.px-6]="layoutCtrl.value === 'fullwidth'">
+    <div class="card mt-4">
+      <div class="container-fluid p-4">
+        <!-- Breadcrumb -->
+        <div class="bg-app-bar appbar px-6 h-16 border-b sticky top-0 left-0 flex items-center z-10">
+          <nav class="breadcrumb-simple" aria-label="Ruta de navegación">
+            <a routerLink="/administracion" class="crumb-link">
+              <mat-icon inline>home</mat-icon>
+              Administración
+            </a>
+            <span class="sep">/</span>
+            <span class="crumb-current" aria-current="page">Vehículos</span>
+            <span class="sep">/</span>
+            <span class="crumb-current" aria-current="page">Agregar Vehículo</span>
+          </nav>
+        </div>
+
+        <!-- Formulario -->
+        <section class="mt-4">
+          <form [formGroup]="vehiculosForm" class="form-skin-lite">
+            <div class="row g-3">
+              <div class="col-12">
+                <div class="section-head">
+                  <h5 class="mb-1">Datos Generales</h5>
+                </div>
+                <div class="section-bar"></div>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label"><i class="fa fa-industry"></i><span>Marca</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput placeholder="Marca" formControlName="marca" />
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label"><i class="fa fa-cogs"></i><span>Modelo</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput placeholder="Modelo" formControlName="modelo" />
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label"><i class="fa fa-calendar-alt"></i><span>Año</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput placeholder="Año" formControlName="ano" maxlength="4" (keypress)="allowOnlyNumbers($event)" />
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label"><i class="fa fa-id-card"></i><span>Placa</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput placeholder="Placa" formControlName="placa" />
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label"><i class="fa fa-hashtag"></i><span>Número Económico</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput placeholder="Número Económico" formControlName="numeroEconomico" />
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-user-tie"></i>
+                  <span>Cliente</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-select
+                    placeholder="Cliente"
+                    formControlName="idCliente">
+                    <mat-option [value]="null">— Seleccione —</mat-option>
+                    <mat-option *ngFor="let c of listaClientes" [value]="c.id">
+                      {{ c.nombre }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <div class="row g-3 uploads-skin mt-2">
+                <div class="col-12">
+                  <div class="section-head">
+                    <h5 class="mb-1">Archivos e Imágenes</h5>
+                  </div>
+                  <div class="section-bar"></div>
+                </div>
+
+                <!-- Foto del vehículo (solo imagen con preview) -->
+                <div class="col-12 col-md-6 col-lg-4">
+                  <label class="form-label"><i class="fa fa-camera"></i><span>Foto del Vehículo</span></label>
+
+                  <div class="dropzone" [class.dragging]="fotoDragging" (click)="openFotoFilePicker()"
+                    (dragover)="onFotoDragOver($event)" (dragleave)="onFotoDragLeave($event)"
+                    (drop)="onFotoDrop($event)">
+
+                    <div class="dz-body" *ngIf="!fotoPreviewUrl">
+                      <mat-icon class="dz-icon">image</mat-icon>
+                      <div class="dz-title">Arrastra y suelta o haz clic</div>
+                    </div>
+
+                    <div class="dz-preview" *ngIf="fotoPreviewUrl">
+                      <img [src]="fotoPreviewUrl!" alt="Vista previa" class="img-fluid rounded" />
+                    </div>
+
+                    <button mat-stroked-button type="button" class="dz-action" (click)="openFotoFilePicker()">
+                      <mat-icon>upload</mat-icon> Seleccionar
+                    </button>
+
+                    <button mat-stroked-button color="warn" type="button" class="dz-clear"
+                      *ngIf="fotoPreviewUrl || fotoFileName" (click)="clearFotoFile($event)">
+                      <mat-icon>close</mat-icon> Quitar
+                    </button>
+
+                    <mat-progress-bar *ngIf="uploadingFoto" mode="indeterminate"></mat-progress-bar>
+
+                    <div class="dz-filename" *ngIf="fotoFileName">{{ fotoFileName }}</div>
+                    <input #fotoFileInput type="file" class="d-none" accept="image/png,image/jpeg,image/webp"
+                      (change)="onFotoFileSelected($event)">
+                  </div>
+
+                  <mat-error *ngIf="vehiculosForm.get('foto')?.hasError('invalid')">
+                    Formato/size no permitido.
+                  </mat-error>
+                  <mat-error *ngIf="showRequiredMsgs && vehiculosForm.get('foto')?.hasError('required')">
+                    La foto es obligatoria.
+                  </mat-error>
+                </div>
+
+                <!-- Tarjeta de circulación (PDF) -->
+                <div class="col-12 col-md-6 col-lg-4">
+                  <label class="form-label"><i class="fa fa-id-card"></i><span>Tarjeta de Circulación</span></label>
+
+                  <div class="dropzone" [class.dragging]="tcDragging" (click)="openTcFilePicker()"
+                    (dragover)="onTcDragOver($event)" (dragleave)="onTcDragLeave($event)" (drop)="onTcDrop($event)">
+
+                    <div class="dz-body" *ngIf="!tcFileName">
+                      <mat-icon class="dz-icon">description</mat-icon>
+                      <div class="dz-title">Arrastra y suelta o haz clic</div>
+                    </div>
+
+                    <div class="dz-file" *ngIf="tcFileName">
+                      <mat-icon>insert_drive_file</mat-icon>
+                      <span class="ms-1">{{ tcFileName }}</span>
+                    </div>
+
+                    <button mat-stroked-button type="button" class="dz-action" (click)="openTcFilePicker()">
+                      <mat-icon>upload</mat-icon> Seleccionar
+                    </button>
+
+                    <button mat-stroked-button color="warn" type="button" class="dz-clear" *ngIf="tcFileName"
+                      (click)="clearTcFile($event)">
+                      <mat-icon>close</mat-icon> Quitar
+                    </button>
+
+                    <mat-progress-bar *ngIf="uploadingTc" mode="indeterminate"></mat-progress-bar>
+
+                    <input #tcFileInput type="file" class="d-none" accept="application/pdf"
+                      (change)="onTcFileSelected($event)">
+                  </div>
+
+                  <mat-error *ngIf="vehiculosForm.get('tarjetaCirculacion')?.hasError('invalid')">
+                    Archivo no permitido.
+                  </mat-error>
+                  <mat-error *ngIf="showRequiredMsgs && vehiculosForm.get('tarjetaCirculacion')?.hasError('required')">
+                    Documento requerido.
+                  </mat-error>
+                </div>
+
+                <!-- Póliza de seguro (PDF) -->
+                <div class="col-12 col-md-6 col-lg-4">
+                  <label class="form-label"><i class="fa fa-file-shield"></i><span>Póliza de Seguro</span></label>
+
+                  <div class="dropzone" [class.dragging]="polizaDragging" (click)="openPolizaFilePicker()"
+                    (dragover)="onPolizaDragOver($event)" (dragleave)="onPolizaDragLeave($event)"
+                    (drop)="onPolizaDrop($event)">
+
+                    <div class="dz-body" *ngIf="!polizaFileName">
+                      <mat-icon class="dz-icon">description</mat-icon>
+                      <div class="dz-title">Arrastra y suelta o haz clic</div>
+                    </div>
+
+                    <div class="dz-file" *ngIf="polizaFileName">
+                      <mat-icon>insert_drive_file</mat-icon>
+                      <span class="ms-1">{{ polizaFileName }}</span>
+                    </div>
+
+                    <button mat-stroked-button type="button" class="dz-action" (click)="openPolizaFilePicker()">
+                      <mat-icon>upload</mat-icon> Seleccionar
+                    </button>
+
+                    <button mat-stroked-button color="warn" type="button" class="dz-clear" *ngIf="polizaFileName"
+                      (click)="clearPolizaFile($event)">
+                      <mat-icon>close</mat-icon> Quitar
+                    </button>
+
+                    <mat-progress-bar *ngIf="uploadingPoliza" mode="indeterminate"></mat-progress-bar>
+
+                    <input #polizaFileInput type="file" class="d-none" accept="application/pdf"
+                      (change)="onPolizaFileSelected($event)">
+                  </div>
+
+                  <mat-error *ngIf="vehiculosForm.get('polizaSeguro')?.hasError('invalid')">
+                    Archivo no permitido.
+                  </mat-error>
+                  <mat-error *ngIf="showRequiredMsgs && vehiculosForm.get('polizaSeguro')?.hasError('required')">
+                    Documento requerido.
+                  </mat-error>
+                </div>
+
+                <!-- Permiso de concesión (PDF) -->
+                <div class="col-12 col-md-6 col-lg-4">
+                  <label class="form-label"><i class="fa fa-file-contract"></i><span>Permiso de Concesión</span></label>
+
+                  <div class="dropzone" [class.dragging]="permisoDragging" (click)="openPermisoFilePicker()"
+                    (dragover)="onPermisoDragOver($event)" (dragleave)="onPermisoDragLeave($event)"
+                    (drop)="onPermisoDrop($event)">
+
+                    <div class="dz-body" *ngIf="!permisoFileName">
+                      <mat-icon class="dz-icon">description</mat-icon>
+                      <div class="dz-title">Arrastra y suelta o haz clic</div>
+                    </div>
+
+                    <div class="dz-file" *ngIf="permisoFileName">
+                      <mat-icon>insert_drive_file</mat-icon>
+                      <span class="ms-1">{{ permisoFileName }}</span>
+                    </div>
+
+                    <button mat-stroked-button type="button" class="dz-action" (click)="openPermisoFilePicker()">
+                      <mat-icon>upload</mat-icon> Seleccionar
+                    </button>
+
+                    <button mat-stroked-button color="warn" type="button" class="dz-clear" *ngIf="permisoFileName"
+                      (click)="clearPermisoFile($event)">
+                      <mat-icon>close</mat-icon> Quitar
+                    </button>
+
+                    <mat-progress-bar *ngIf="uploadingPermiso" mode="indeterminate"></mat-progress-bar>
+
+                    <input #permisoFileInput type="file" class="d-none" accept="application/pdf"
+                      (change)="onPermisoFileSelected($event)">
+                  </div>
+
+                  <mat-error *ngIf="vehiculosForm.get('permisoConcesion')?.hasError('invalid')">
+                    Archivo no permitido.
+                  </mat-error>
+                  <mat-error *ngIf="showRequiredMsgs && vehiculosForm.get('permisoConcesion')?.hasError('required')">
+                    Documento requerido.
+                  </mat-error>
+                </div>
+
+                <!-- Inspección mecánica (PDF) -->
+                <div class="col-12 col-md-6 col-lg-4">
+                  <label class="form-label"><i class="fa fa-screwdriver-wrench"></i><span>Inspección
+                      Mecánica</span></label>
+
+                  <div class="dropzone" [class.dragging]="inspeccionDragging" (click)="openInspeccionFilePicker()"
+                    (dragover)="onInspeccionDragOver($event)" (dragleave)="onInspeccionDragLeave($event)"
+                    (drop)="onInspeccionDrop($event)">
+
+                    <div class="dz-body" *ngIf="!inspeccionFileName">
+                      <mat-icon class="dz-icon">description</mat-icon>
+                      <div class="dz-title">Arrastra y suelta o haz clic</div>
+                    </div>
+
+                    <div class="dz-file" *ngIf="inspeccionFileName">
+                      <mat-icon>insert_drive_file</mat-icon>
+                      <span class="ms-1">{{ inspeccionFileName }}</span>
+                    </div>
+
+                    <button mat-stroked-button type="button" class="dz-action" (click)="openInspeccionFilePicker()">
+                      <mat-icon>upload</mat-icon> Seleccionar
+                    </button>
+
+                    <button mat-stroked-button color="warn" type="button" class="dz-clear" *ngIf="inspeccionFileName"
+                      (click)="clearInspeccionFile($event)">
+                      <mat-icon>close</mat-icon> Quitar
+                    </button>
+
+                    <mat-progress-bar *ngIf="uploadingInspeccion" mode="indeterminate"></mat-progress-bar>
+
+                    <input #inspeccionFileInput type="file" class="d-none" accept="application/pdf"
+                      (change)="onInspeccionFileSelected($event)">
+                  </div>
+
+                  <mat-error *ngIf="vehiculosForm.get('inspeccionMecanica')?.hasError('invalid')">
+                    Archivo no permitido.
+                  </mat-error>
+                  <mat-error *ngIf="showRequiredMsgs && vehiculosForm.get('inspeccionMecanica')?.hasError('required')">
+                    Documento requerido.
+                  </mat-error>
+                </div>
+
+              </div>
+
+              <div class="col-12 d-flex justify-content-end gap-2 pt-2">
+                <button mat-raised-button color="primary" type="submit" (click)="submit()">
+                  <mat-icon>save</mat-icon> Guardar
+                </button>
+                <button mat-raised-button color="warn" type="button" (click)="regresar()">
+                  <mat-icon>close</mat-icon> Cancelar
+                </button>
+              </div>
+
+            </div>
+          </form>
+        </section>
+      </div>
+    </div>
+  </vex-page-layout-content>
+</vex-page-layout>

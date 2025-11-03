@@ -1,0 +1,154 @@
+<vex-page-layout @fadeInRight>
+
+  <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
+    [class.px-6]="layoutCtrl.value === 'fullwidth'" class="-mt-6">
+    <div class="card mt-4">
+      <div class="dashboard-lite p-4">
+        <div class="bg-app-bar appbar px-6 h-16 border-b sticky top-0 left-0 flex items-center z-10">
+          <nav class="breadcrumb-simple" aria-label="Ruta de navegación">
+            <a routerLink="/administracion" class="crumb-link">
+              <mat-icon inline>home</mat-icon>
+              Administración
+            </a>
+            <span class="sep">/</span>
+            <span class="crumb-current" aria-current="page">Monederos</span>
+          </nav>
+
+          <div class="flex-grow"></div>
+
+          <div class="flex gap-3 actions-bar">
+            <button mat-raised-button color="primary" type="button" class="btn-soft textGenerico"
+              (click)="toggleExpandGroups()" matTooltip="Expandir / Contraer grupos">
+              <mat-icon svgIcon="mat:compare_arrows"></mat-icon>
+              <span class="btn-text">{{ autoExpandAllGroups ? 'Contraer' : 'Expandir' }}</span>
+            </button>
+
+            <button mat-raised-button color="accent" type="button" class="btn-soft textGenerico"
+              (click)="limpiarCampos()" matTooltip="Limpiar filtros">
+              <mat-icon svgIcon="mat:restore"></mat-icon>
+              <span class="btn-text">Limpiar</span>
+            </button>
+
+            <button (click)="agregarMonedero()" mat-raised-button color="warn" type="button"
+              class="btn-soft textGenerico" matTooltip="Agregar usuario">
+              <mat-icon>add</mat-icon>
+              <span class="btn-text">Agregar</span>
+            </button>
+          </div>
+        </div>
+
+        <section class="mt-5 table-shell">
+          <dx-data-grid #gridContainer id="gridContainer" [columnHidingEnabled]="true" [showBorders]="true"
+            [showColumnLines]="true" [showRowLines]="true" [rowAlternationEnabled]="true" [dataSource]="listaMonederos"
+            [keyExpr]="'id'" [width]="'100%'" [remoteOperations]="{ paging: true }" [paging]="{ pageSize: pageSize }"
+            [pager]="{ 
+                                showPageSizeSelector: true, 
+                                allowedPageSizes: [50], 
+                                showInfo: true,
+                                infoText: 'Página {0} de {1}', 
+                                visible: true 
+                            }" (onPageIndexChanged)=" onPageIndexChanged($event)"
+            (onOptionChanged)="onGridOptionChanged($event)">
+            <dxo-search-panel [visible]="true" [width]="200" placeholder="Buscar..."></dxo-search-panel>
+            <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[20]" [showInfo]="true"></dxo-pager>
+            <dxo-group-panel [emptyPanelText]="mensajeAgrupar" [visible]="true"></dxo-group-panel>
+            <dxo-filter-row [visible]="showFilterRow"></dxo-filter-row>
+            <dxo-header-filter [visible]="showHeaderFilter"></dxo-header-filter>
+            <dxo-grouping [autoExpandAll]="true"></dxo-grouping>
+            <dxi-column caption="Acciones" cellTemplate="Acciones" alignment="center" [width]="250"></dxi-column>
+            <dxi-column dataField="numeroSerie" caption="NumeroSerie" alignment="center"></dxi-column>
+            <dxi-column dataField="fechaActivacion" caption="Fecha Activación" alignment="center"
+              cellTemplate="fecActi">
+              <div *dxTemplate="let a of 'fecActi'">
+                {{ a.data.fechaActivacion | date: 'dd/MM/yyyy' : '+0000' }}
+              </div>
+            </dxi-column>
+            <dxi-column dataField="saldo" caption="Saldo" alignment="center" dataType="string" cellTemplate="sald">
+              <div *dxTemplate="let f of 'sald' ">
+                {{f.data.saldo | currency: '$'}}
+              </div>
+            </dxi-column>
+            <dxi-column caption="Pasajero" alignment="center" cellTemplate="psaj">
+              <div *dxTemplate="let f of 'psaj' ">
+                <ng-container
+                  *ngIf="f?.nombrePasajero || f?.apellidoPaternoPasajero || f?.apellidoMaternoPasajero; else sinRegistro">
+                  {{ f?.nombrePasajero || '' }} {{ f?.apellidoPaternoPasajero || '' }} {{ f?.apellidoMaternoPasajero ||
+                  '' }}
+                </ng-container>
+                <ng-template #sinRegistro>sin registro</ng-template>
+              </div>
+            </dxi-column>
+            <div *dxTemplate="let monedero of 'Acciones'" class="d-flex gap-3 justify-content-center">
+              <!-- <div *appHasPermission="'79'">
+                                    <button valueExpr="id" id="actualizarButton" class="btnAcciones"
+                                        (click)="actualizarMonederos(monedero.data.id)">
+                                        <i class="fa fa-edit"></i>
+                                    </button>
+                                </div> -->
+              <div>
+                <button class="btn-active" (click)="abrirModal('recarga', monedero.data)">
+                  + Recarga
+                </button>
+              </div>
+              <div style="margin-left: 5px;">
+                <button class="btn-desactive" (click)="abrirModal('debito', monedero.data)">
+                  - Debito
+                </button>
+              </div>
+            </div>
+            <dxo-export [enabled]="false" [allowExportSelectedData]="true"
+              [texts]="{ exportAll: 'Exportar todos los datos a Excel', exportSelectedRows: 'Exportar filas seleccionadas a Excel' }">
+            </dxo-export>
+          </dx-data-grid>
+        </section>
+      </div>
+    </div>
+  </vex-page-layout-content>
+</vex-page-layout>
+
+<div *ngIf="modalOpen" class="am-backdrop" [class.am-fade-out]="modalClosing || modalAnim === 'out'"
+  (click)="onBackdrop()">
+  <div class="am-modal" [class.am-in]="modalAnim === 'in'" [class.am-out]="modalAnim === 'out'"
+    (click)="$event.stopPropagation()">
+    <div class="am-header" [ngClass]="{
+      'am-header--recarga': tipoOperacion === 'recarga',
+      'am-header--debito': tipoOperacion === 'debito' }">
+      <div class="am-icon" aria-hidden="true">
+        <i [ngClass]="tipoOperacion === 'recarga' ? 'fa fa-plus' : 'fa fa-minus'"></i>
+      </div>
+      <h2 class="am-title">
+        {{ tipoOperacion === 'recarga' ? 'Realizar Recarga:' : 'Realizar Débito:' }}
+        <span class="am-id">{{ selectedTransaccion?.id }}</span>
+      </h2>
+      <button class="am-close" type="button" aria-label="Cerrar" (click)="cerrarModal()">
+        <span>×</span>
+      </button>
+    </div>
+    <form [formGroup]="tipoOperacion === 'recarga' ? recargaForm : debitoForm" (ngSubmit)="confirmarOperacion()">
+      <div class="am-body">
+        <div class="am-grid">
+          <div class="am-item">
+            <div class="am-label">Monto Actual</div>
+            <div class="am-value">{{ selectedTransaccion?.saldo | currency: "$" }}</div>
+          </div>
+          <div class="am-item">
+            <div class="am-label">Número Serie</div>
+            <div class="am-value am-value--accent">{{ selectedTransaccion?.numSerie }}</div>
+          </div>
+        </div>
+        <div class="am-item">
+          <div class="am-label">Monto</div>
+          <input type="number" class="am-input" placeholder="Ingrese el monto" formControlName="monto" />
+        </div>
+        <div class="am-actions">
+          <button class="am-btn am-btn--primary" type="submit" [disabled]="loading">
+            {{ loading ? 'Cargando...' : submitButton || 'Confirmar' }}
+          </button>
+          <button class="am-btn am-btn--secondary" type="button" aria-label="Cerrar" (click)="cerrarModal()">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>

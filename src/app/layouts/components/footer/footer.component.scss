@@ -1,0 +1,9 @@
+:host {
+  @apply bg-foreground dark:bg-base border-t text-default flex w-full bottom-0 relative;
+  height: var(--vex-footer-height);
+  z-index: var(--vex-footer-z-index);
+}
+
+.ml-l{
+  margin-left: 1%;
+}

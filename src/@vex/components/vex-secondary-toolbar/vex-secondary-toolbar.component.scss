@@ -1,0 +1,26 @@
+.secondary-toolbar {
+  @apply backdrop-blur border-b shadow-b;
+  background: var(--vex-secondary-toolbar-background);
+  height: var(--vex-secondary-toolbar-height);
+  margin-top: calc(var(--vex-secondary-toolbar-height) * -1);
+
+  &.fixed {
+    width: var(--vex-toolbar-width);
+  }
+}
+
+.secondary-toolbar-placeholder {
+  height: var(--vex-secondary-toolbar-height);
+}
+
+::ng-deep {
+  vex-breadcrumbs {
+    @apply hidden;
+  }
+
+  @screen sm {
+    vex-breadcrumbs {
+      @apply block;
+    }
+  }
+}

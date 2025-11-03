@@ -1,0 +1,15 @@
+.vex-layout-vertical {
+  --vex-toolbar-width: 100%;
+
+  vex-secondary-toolbar {
+    .fixed {
+      @apply top-0 relative pt-3 -mb-4 bg-none border-t-0 shadow-none;
+    }
+  }
+
+  &.vex-layout-footer-fixed {
+    &.vex-layout-scroll-disabled .vex-layout-content {
+      height: calc(100% - var(--vex-toolbar-height) - var(--vex-footer-height));
+    }
+  }
+}

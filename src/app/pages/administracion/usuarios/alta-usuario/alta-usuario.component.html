@@ -1,0 +1,215 @@
+<vex-page-layout @fadeInRight>
+  <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
+    [class.px-6]="layoutCtrl.value === 'fullwidth'">
+    <div class="card mt-4">
+      <div class="container-fluid p-4">
+        <div class="bg-app-bar appbar px-6 h-16 border-b sticky top-0 left-0 flex items-center z-10">
+          <nav class="breadcrumb-simple" aria-label="Ruta de navegación">
+            <a routerLink="/administracion" class="crumb-link">
+              <mat-icon inline>home</mat-icon>
+              Administración
+            </a>
+            <span class="sep">/</span>
+            <span class="crumb-current" aria-current="page">Usuarios</span>
+            <span class="sep">/</span>
+            <span class="crumb-current" aria-current="page">Agregar Usuario</span>
+          </nav>
+        </div>
+        <section class="mt-4">
+          <form [formGroup]="usuarioForm" class="form-skin-lite">
+            <div class="row g-3">
+              <div class="col-12">
+                <div class="section-head">
+                  <h5 class="mb-1">Datos Generales</h5>
+                </div>
+                <div class="section-bar"></div>
+              </div>
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label"><i class="fa fa-user"></i><span>Nombre</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput placeholder="Nombre" formControlName="nombre" />
+                </mat-form-field>
+              </div>
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label"><i class="fa fa-user-pen"></i><span>Apellido Paterno</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput placeholder="Apellido Paterno" formControlName="apellidoPaterno" />
+                </mat-form-field>
+              </div>
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label"><i class="fa fa-user"></i><span>Apellido Materno</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput placeholder="Apellido Materno" formControlName="apellidoMaterno" />
+                </mat-form-field>
+              </div>
+              <div class="col-12 col-md-6 col-lg-4" *ngIf="inputContrasena">
+                <label class="form-label"><i class="fa fa-envelope"></i><span>Correo Electrónico</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput type="email" placeholder="correo@dominio.com" formControlName="userName" />
+                </mat-form-field>
+              </div>
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label"><i class="fa fa-phone"></i><span>Teléfono</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput placeholder="Teléfono" formControlName="telefono" maxlength="10" (keypress)="allowOnlyNumbers($event)" />
+                </mat-form-field>
+              </div>
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-user-shield"></i><span>Rol</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-select placeholder="Selecciona un rol" formControlName="idRol" (selectionChange)="onRolChanged($event.value)">
+                    <mat-option *ngFor="let r of listaRoles" [value]="r.id">
+                      {{ r.nombre }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-building"></i><span>Cliente</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-select placeholder="Selecciona un cliente" formControlName="idCliente">
+                    <mat-option *ngFor="let c of listaClientes" [value]="c.id">
+                      {{ c.nombre }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              <div class="col-12 col-md-6 col-lg-4" *ngIf="inputContrasena">
+                <label class="form-label"><i class="fa fa-lock"></i><span>Contraseña</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput [type]="hidePass ? 'password' : 'text'" placeholder="Contraseña"
+                    formControlName="passwordHash" autocomplete="new-password" name="new-password" autocapitalize="off"
+                    spellcheck="false" (focus)="onPwdFocus()" (blur)="onPwdBlur()" (input)="onPwdInput($event)" />
+                  <button mat-icon-button matSuffix type="button" (mousedown)="$event.preventDefault()"
+                    (click)="hidePass = !hidePass"
+                    [attr.aria-label]="hidePass ? 'Mostrar contraseña' : 'Ocultar contraseña'">
+                    <mat-icon>{{ hidePass ? 'visibility' : 'visibility_off' }}</mat-icon>
+                  </button>
+                </mat-form-field>
+                <div class="mt-0" *ngIf="showPwdHints">
+                  <ng-container [ngSwitch]="currentRuleKey">
+                    <p *ngSwitchCase="'case'" class="pwd-hint text-danger" [@fadeIn]><i
+                        class="fa fa-exclamation-circle"></i><span class="ms-2">Al menos una mayúscula y
+                        minúsculas.</span></p>
+                    <p *ngSwitchCase="'special'" class="pwd-hint text-danger" [@fadeIn]><i
+                        class="fa fa-exclamation-circle"></i><span class="ms-2">Un caracter no alfanumérico (ejemplo:
+                        #?!&).</span></p>
+                    <p *ngSwitchCase="'number'" class="pwd-hint text-danger" [@fadeIn]><i
+                        class="fa fa-exclamation-circle"></i><span class="ms-2">Un número.</span></p>
+                    <p *ngSwitchCase="'length'" class="pwd-hint text-danger" [@fadeIn]><i
+                        class="fa fa-exclamation-circle"></i><span class="ms-2">La contraseña debe tener más de 6
+                        caracteres y menos de 16.</span></p>
+                    <p *ngSwitchCase="'ok'" class="pwd-hint text-success" [@fadeIn]><i
+                        class="fa fa-check-circle"></i><span class="ms-2">Contraseña válida y segura.</span></p>
+                  </ng-container>
+                </div>
+              </div>
+              <div class="col-12 col-md-6 col-lg-4" *ngIf="inputContrasena">
+                <label class="form-label"><i class="fa fa-lock"></i><span>Confirmar Contraseña</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput [type]="hideConfirm ? 'password' : 'text'" placeholder="Confirma tu contraseña"
+                    formControlName="confirmPassword" [attr.name]="confirmName" autocomplete="new-password"
+                    autocapitalize="off" spellcheck="false" (input)="onConfirmInput($event)" (blur)="onConfirmBlur()" />
+                  <button mat-icon-button matSuffix type="button" (mousedown)="$event.preventDefault()"
+                    (click)="hideConfirm = !hideConfirm"
+                    [attr.aria-label]="hideConfirm ? 'Mostrar contraseña' : 'Ocultar contraseña'">
+                    <mat-icon>{{ hideConfirm ? 'visibility' : 'visibility_off' }}</mat-icon>
+                  </button>
+                </mat-form-field>
+                <div class="mt-0" *ngIf="confirmHintVisible">
+                  <p class="pwd-hint" [ngClass]="confirmMatch ? 'text-success' : 'text-danger'" [@fadeIn]>
+                    <i class="fa" [ngClass]="confirmMatch ? 'fa-check-circle' : 'fa-exclamation-circle'"></i>
+                    <span class="ms-2">{{ confirmMatch ? 'Las contraseñas son iguales.' : 'Las contraseñas no coinciden.' }}</span>
+                  </p>
+                </div>
+              </div>
+              <div class="row g-3 mt-3 form-skin-lite">
+                <div class="col-12">
+                  <div class="section-head">
+                    <h5 class="mb-1">Permisos</h5>
+                  </div>
+                  <div class="section-bar"></div>
+                </div>
+                <div class="perm-grid-scroll">
+                  <div class="row g-3">
+                    <div class="col-12 col-md-6 col-xl-3" *ngFor="let m of listaModulos; trackBy: trackModulo">
+                      <div class="perm-card h-100">
+                        <div class="perm-card__head d-flex align-items-center justify-content-between">
+                          <div class="d-flex align-items-center gap-2">
+                            <mat-icon>apps</mat-icon>
+                            <h6 class="m-0">{{ m?.nombre || m?.Nombre || m?.NombreModulo }}</h6>
+                          </div>
+                        </div>
+                        <div class="perm-card__body scroll-inner">
+                          <div class="perm-item d-flex align-items-center justify-content-between"
+                            *ngFor="let p of (m?.permisos || []); trackBy: trackPermiso">
+                            <div class="perm-item__text">
+                              <div class="perm-item__desc">
+                                {{ p?.descripcion || p?.Descripcion || (p?.nombre || p?.Nombre) }}
+                              </div>
+                            </div>
+                            <mat-slide-toggle class="brand-switch" color="primary"
+                              [checked]="isPermisoAsignado(p?.id || p?.Id)" (change)="onToggle(p, $event.checked)">
+                            </mat-slide-toggle>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="row g-3 mt-5 uploads-skin form-skin-lite">
+                <div class="col-12">
+                  <div class="section-head">
+                    <h5 class="mb-1">Documentación</h5>
+                  </div>
+                  <div class="section-bar"></div>
+                </div>
+                <div class="col-12 col-md-6 col-lg-4">
+                  <label class="form-label"><i class="fa fa-camera"></i><span>Imagen del Usuario</span></label>
+                  <div class="dropzone" [class.dragging]="fotoDragging" (click)="openFotoFilePicker()"
+                    (dragover)="onFotoDragOver($event)" (dragleave)="onFotoDragLeave($event)"
+                    (drop)="onFotoDrop($event)">
+                    <div class="dz-body" *ngIf="!fotoPreviewUrl">
+                      <mat-icon class="dz-icon">image</mat-icon>
+                      <div class="dz-title">Arrastra y suelta o haz clic</div>
+                    </div>
+                    <div class="dz-preview" *ngIf="fotoPreviewUrl">
+                      <img [src]="fotoPreviewUrl!" alt="Vista previa" class="img-fluid rounded" />
+                    </div>
+                    <button mat-stroked-button type="button" class="dz-action" (click)="openFotoFilePicker()">
+                      <mat-icon>upload</mat-icon> Seleccionar
+                    </button>
+                    <button mat-stroked-button color="warn" type="button" class="dz-clear"
+                      *ngIf="fotoPreviewUrl || fotoFileName" (click)="clearFotoFile($event)">
+                      <mat-icon>close</mat-icon> Quitar
+                    </button>
+                    <mat-progress-bar *ngIf="uploadingFoto" mode="indeterminate"></mat-progress-bar>
+                    <div class="dz-filename" *ngIf="fotoFileName">{{ fotoFileName }}</div>
+                    <input #fotoFileInput type="file" class="d-none" accept="image/png,image/jpeg,image/webp"
+                      (change)="onFotoFileSelected($event)">
+                  </div>
+                  <mat-error *ngIf="usuarioForm.get('fotoPerfil')?.hasError('invalid')">
+                    Formato o tamaño no permitido (solo JPG/PNG/WEBP).
+                  </mat-error>
+                </div>
+              </div>
+              <div class="col-12 d-flex justify-content-end gap-2 pt-2">
+                <button mat-raised-button color="primary" (click)="submit()">
+                  <mat-icon>save</mat-icon> Guardar
+                </button>
+                <button mat-raised-button color="warn" type="button" (click)="regresar()">
+                  <mat-icon>close</mat-icon> Cancelar
+                </button>
+              </div>
+            </div>
+          </form>
+        </section>
+      </div>
+    </div>
+  </vex-page-layout-content>
+</vex-page-layout>

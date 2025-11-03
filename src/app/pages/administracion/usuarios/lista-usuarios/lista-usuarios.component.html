@@ -1,0 +1,107 @@
+<vex-page-layout @fadeInRight>
+
+  <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
+    [class.px-6]="layoutCtrl.value === 'fullwidth'" class="-mt-6">
+    <div class="card mt-4">
+      <div class="dashboard-lite p-4">
+        <div class="bg-app-bar appbar px-6 h-16 border-b sticky top-0 left-0 flex items-center z-10">
+          <nav class="breadcrumb-simple" aria-label="Ruta de navegación">
+            <a routerLink="/administracion" class="crumb-link">
+              <mat-icon inline>home</mat-icon>
+              Administración
+            </a>
+            <span class="sep">/</span>
+            <span class="crumb-current" aria-current="page">Usuarios</span>
+          </nav>
+
+          <div class="flex-grow"></div>
+
+          <div class="flex gap-3 actions-bar">
+            <button mat-raised-button color="primary" type="button" class="btn-soft textGenerico"
+              (click)="toggleExpandGroups()" matTooltip="Expandir / Contraer grupos">
+              <mat-icon svgIcon="mat:compare_arrows"></mat-icon>
+              <span class="btn-text">{{ autoExpandAllGroups ? 'Contraer' : 'Expandir' }}</span>
+            </button>
+
+            <button mat-raised-button color="accent" type="button" class="btn-soft textGenerico"
+              (click)="limpiarCampos()" matTooltip="Limpiar filtros">
+              <mat-icon svgIcon="mat:restore"></mat-icon>
+              <span class="btn-text">Limpiar</span>
+            </button>
+
+            <button mat-raised-button color="warn" type="button" class="btn-soft textGenerico"
+              (click)="agregarUsuario()" matTooltip="Agregar usuario">
+              <mat-icon>add</mat-icon>
+              <span class="btn-text">Agregar</span>
+            </button>
+          </div>
+        </div>
+
+        <section class="mt-5 table-shell">
+          <dx-data-grid id="gridContainer" [columnHidingEnabled]="true" [showBorders]="true" [showColumnLines]="true"
+            [showRowLines]="true" [rowAlternationEnabled]="true" [dataSource]="listaUsuarios" [keyExpr]="'Id'"
+            [remoteOperations]="{ paging: true }" [width]="'100%'" [paging]="{ pageSize: pageSize }" [pager]="{ 
+                                showPageSizeSelector: true, 
+                                allowedPageSizes: [50], 
+                                showInfo: true,
+                                infoText: 'Página {0} de {1}', 
+                                visible: true 
+                            }" (onPageIndexChanged)=" onPageIndexChanged($event)"
+            (onOptionChanged)="onGridOptionChanged($event)">
+            <dxo-search-panel [visible]="true" [width]="200" placeholder="Buscar..."></dxo-search-panel>
+            <dxo-group-panel [emptyPanelText]="mensajeAgrupar" [visible]="true"></dxo-group-panel>
+            <dxo-filter-row [visible]="showFilterRow"></dxo-filter-row>
+            <dxo-header-filter [visible]="showHeaderFilter"></dxo-header-filter>
+            <dxo-grouping [autoExpandAll]="true"></dxo-grouping>
+            <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[20]" [showInfo]="true"></dxo-pager>
+            <!-- <dxi-column dataField="Logotipo" caption="Logotipo" alignment="center" cellTemplate="cellTemplate">
+                                <ng-template *dxTemplate="let d of 'cellTemplate'">
+                                    <img [src]="d.data.Logotipo" alt="Logo" width="50">
+                                </ng-template>
+                            </dxi-column> -->
+            <dxi-column caption="Acciones" cellTemplate="Acciones" alignment="center" [width]="180"></dxi-column>
+            <dxi-column dataField="FotoPerfil" caption="Imagen" cellTemplate="imagen" [width]="200" alignment="center">
+              <dxo-header-filter [allowSearch]="true"></dxo-header-filter>
+            </dxi-column>
+            <dxi-column dataField="NombreCompleto" caption="Nombre" alignment="center" dataType="string"></dxi-column>
+            <dxi-column dataField="Telefono" caption="Teléfono" alignment="center" dataType="string"></dxi-column>
+            <dxi-column dataField="UserName" caption="Correo Electrónico" alignment="center"
+              dataType="string"></dxi-column>
+            <dxi-column dataField="RolNombre" caption="Rol" alignment="center" dataType="string"></dxi-column>
+            <div *dxTemplate="let data of 'imagen'"
+              style="display: flex; align-items: center; justify-content: center;">
+              <img *ngIf="data.value" style="max-width: 100px;" [src]="data.value" />
+              <img *ngIf="data.value == null" style="max-width: 100px;"
+                src="https://izzimoviles.s3.us-east-1.amazonaws.com/Imagenes/user.jpeg" />
+            </div>
+            <dxi-column dataField="estatus" caption="Estatus" alignment="center" cellTemplate="est">
+              <div *dxTemplate="let f of 'est'">
+                <span [ngClass]="f.data.estatus === 1 ? 'badge-status activo' : 'badge-status inactivo'">
+                  {{ f.data.estatus === 1 ? 'Activo' : 'Inactivo' }}
+                </span>
+              </div>
+            </dxi-column>
+            <dxo-export [enabled]="false" [allowExportSelectedData]="true"
+              [texts]="{ exportAll: 'Exportar todos los datos a Excel', exportSelectedRows: 'Exportar filas seleccionadas a Excel' }">
+            </dxo-export>
+            <div *dxTemplate="let row of 'Acciones'" class="d-flex gap-3 justify-content-center">
+              <div>
+                <button class="btn-edit" (click)="actualizarUsuario(row.data.id)">
+                  <mat-icon class="btn__icon">edit</mat-icon>
+                </button>
+              </div>
+              <div>
+                <button *ngIf="row.data.estatus === 0" class="btn-active" (click)="activar(row.data)">
+                  <mat-icon class="btn__icon">check_circle</mat-icon>
+                </button>
+                <button *ngIf="row.data.estatus === 1" class="btn-desactive" (click)="desactivar(row.data)">
+                  <mat-icon class="btn__icon">block</mat-icon>
+                </button>
+              </div>
+            </div>
+          </dx-data-grid>
+        </section>
+      </div>
+    </div>
+  </vex-page-layout-content>
+</vex-page-layout>

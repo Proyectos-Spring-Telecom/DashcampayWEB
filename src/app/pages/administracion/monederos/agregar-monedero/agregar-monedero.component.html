@@ -1,0 +1,98 @@
+<vex-page-layout @fadeInRight>
+    <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
+        [class.px-6]="layoutCtrl.value === 'fullwidth'">
+
+        <div class="card mt-4">
+            <div class="container-fluid p-4">
+                <!-- Breadcrumb -->
+                <div class="bg-app-bar appbar px-6 h-16 border-b sticky top-0 left-0 flex items-center z-10">
+                    <nav class="breadcrumb-simple" aria-label="Ruta de navegación">
+                        <a routerLink="/administracion" class="crumb-link">
+                            <mat-icon inline>home</mat-icon>
+                            Administración
+                        </a>
+                        <span class="sep">/</span>
+                        <span class="crumb-current" aria-current="page">Monederos</span>
+                        <span class="sep">/</span>
+                        <span class="crumb-current" aria-current="page">Agregar Monedero</span>
+                    </nav>
+                </div>
+
+                <!-- Formulario (sin archivos) -->
+                <section class="mt-4">
+                    <form [formGroup]="monederoForm" class="form-skin-lite">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="section-head">
+                                    <h5 class="mb-1">Datos Generales</h5>
+                                </div>
+                                <div class="section-bar"></div>
+                            </div>
+
+                            <div class="col-12 col-md-6 col-lg-3">
+                                <label class="form-label">
+                                    <i class="fa fa-id-card"></i><span>Número de Serie</span>
+                                </label>
+                                <mat-form-field appearance="fill" class="w-100">
+                                    <input matInput placeholder="Número de Serie" formControlName="numeroSerie" />
+                                </mat-form-field>
+                            </div>
+
+                            <div class="col-12 col-md-6 col-lg-3">
+                                <label class="form-label">
+                                    <i class="fa fa-wallet"></i><span>Saldo</span>
+                                </label>
+                                <mat-form-field appearance="fill" class="w-100">
+                                    <input matInput placeholder="Saldo" formControlName="saldo" inputmode="decimal"
+                                        (keydown)="moneyKeydown($event)" (input)="moneyInput($event)"
+                                        (paste)="moneyPaste($event)" (blur)="moneyBlur($event)" />
+                                </mat-form-field>
+                            </div>
+
+                            <!-- Pasajero (de input -> select) -->
+                            <div class="col-12 col-md-6 col-lg-3">
+                                <label class="form-label">
+                                    <i class="fa fa-users"></i><span>Pasajero</span>
+                                </label>
+                                <mat-form-field appearance="fill" class="w-100">
+                                    <mat-select placeholder="Pasajero" formControlName="idPasajero">
+                                        <mat-option *ngFor="let p of listaPasajeros" [value]="p.id">
+                                            {{ p?.nombre || '' }} {{ p?.apellidoPaterno || '' }} {{ p?.apellidoMaterno
+                                            || '' }}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                            </div>
+
+                            <!-- Cliente (de input -> select) -->
+                            <div class="col-12 col-md-6 col-lg-3">
+                                <label class="form-label">
+                                    <i class="fa fa-user-tie"></i><span>Cliente</span>
+                                </label>
+                                <mat-form-field appearance="fill" class="w-100">
+                                    <mat-select placeholder="Cliente" formControlName="idCliente">
+                                        <mat-option *ngFor="let c of listaClientes" [value]="c.id">
+                                            {{ c?.nombre || '' }} {{ c?.apellidoPaterno || '' }} {{ c?.apellidoMaterno
+                                            || '' }}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                            </div>
+
+
+                            <div class="col-12 d-flex justify-content-end gap-2 pt-2">
+                                <button mat-raised-button color="primary" type="submit" (click)="submit()">
+                                    <mat-icon>save</mat-icon> Guardar
+                                </button>
+                                <button mat-raised-button color="warn" type="button" (click)="regresar()">
+                                    <mat-icon>close</mat-icon> Cancelar
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </section>
+            </div>
+        </div>
+
+    </vex-page-layout-content>
+</vex-page-layout>

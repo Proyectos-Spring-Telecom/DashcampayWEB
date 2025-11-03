@@ -1,0 +1,216 @@
+<vex-page-layout>
+  <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
+    [class.px-6]="layoutCtrl.value === 'fullwidth'" class="-mt-6">
+    <div class="card mt-4">
+      <div class="dashboard-lite p-4">
+        <section class="mt-2 table-shell">
+
+          <!-- PASO 1: Rutas (antes era Paso 2) -->
+          <div *ngIf="step === 1" @fadeInRight class="card rutas-card shadow-sm border-0">
+            <div class="card-header d-flex flex-wrap align-items-center gap-2 justify-content-between">
+              <div class="d-flex align-items-center gap-2">
+                <div class="chip-step"><i class="fa fa-map-signs" aria-hidden="true"></i></div>
+                <h2 class="m-0 titulo-card">Selecciona una Ruta</h2>
+              </div>
+              <div class="col-12 col-md-auto">
+                <div class="input-group input-search">
+                  <span class="input-group-text"><mat-icon inline>search</mat-icon></span>
+                  <input type="text" class="form-control" placeholder="Buscar ruta (nombre, origen, destino)…"
+                    [(ngModel)]="searchRuta" (ngModelChange)="filtrarRutas()" />
+                </div>
+              </div>
+            </div>
+
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-12 col-md-6 col-xl-4" *ngFor="let r of rutasFiltradas; trackBy: trackByRuta">
+                  <article class="ruta-card" [class.ruta-card--selected]="r.id===selectedRuta?.id"
+                    (click)="selectRuta(r)" tabindex="0" (keyup.enter)="selectRuta(r)" role="button"
+                    [attr.aria-pressed]="r.id===selectedRuta?.id">
+                    <div class="ruta-card__bg"></div>
+                    <div class="ruta-card__head d-flex align-items-center justify-content-between">
+                      <div class="d-flex align-items-center gap-2">
+                        <div class="ruta-id">{{ r.id }}</div>
+                        <h3 class="ruta-title m-0">{{ r.nombre }}</h3>
+                      </div>
+                      <span class="badge estado estado--activa">Activa</span>
+                    </div>
+                    <div class="ruta-card__meta row g-2">
+                      <div class="col-6">
+                        <div class="meta-item"><span><strong>Inicio:</strong> {{ r.origen }}</span></div>
+                      </div>
+                      <div class="col-6">
+                        <div class="meta-item"><span><strong>Fin:</strong> {{ r.destino }}</span></div>
+                      </div>
+                      <div class="col-6">
+                        <div class="meta-item"><span><strong>Kilómetros:</strong> {{ r.distanciaKm | number:'1.0-1' }}
+                            km</span></div>
+                      </div>
+                      <div class="col-6">
+                        <div class="meta-item">
+                          <span><strong>Creada:</strong> {{ r.fechaCreacion | date:'dd/MM/yy' }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                </div>
+
+                <div class="col-12" *ngIf="rutasFiltradas?.length===0">
+                  <div class="empty-state text-center">
+                    <mat-icon inline>travel_explore</mat-icon>
+                    <p class="m-0">No hay rutas que coincidan con tu búsqueda.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-footer d-flex flex-wrap gap-2 justify-content-between align-items-center">
+              <div class="texto-paso">Paso 1 de 3 — <strong>Ruta</strong> → Variante → Tarifa</div>
+              <div class="col-12 d-flex justify-content-end gap-2 pt-2">
+                <button mat-raised-button color="warn" type="button" (click)="regresar()">
+                  Cancelar
+                </button>
+                <button mat-raised-button color="primary" type="button" [disabled]="!selectedRuta" (click)="goStep2()">
+                  Continuar a Variante
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- PASO 2: VARIANTE (MAPA) -->
+          <div *ngIf="step === 2" @fadeInRight class="card variantes-card shadow-sm border-0">
+            <div class="card-header d-flex flex-wrap align-items-center gap-2 justify-content-between">
+              <div class="d-flex align-items-center gap-2">
+                <div class="chip-step"><i class="fa fa-map" aria-hidden="true"></i></div>
+                <h2 class="m-0 titulo-card">Ubica la Variante en el Mapa</h2>
+              </div>
+              <div class="col-12 col-md-auto">
+                <div class="info-ruta-seleccionada" style="color: white;">
+                  <span class="zona-pill" style="color: white;">Ruta: #{{selectedRuta?.id}} · {{selectedRuta?.nombre}}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-12">
+                  <div id="map" class="map-wrapper" role="region" aria-label="Mapa de variante"></div>
+                </div>
+                <div class="col-12 col-md-6">
+                  <div class="meta-item">
+                    <mat-icon inline>trip_origin</mat-icon>
+                    <span><strong>Inicio:</strong> {{ selectedRuta?.origen }} ({{ selectedRuta?.inicio?.lat }}, {{
+                      selectedRuta?.inicio?.lng }})</span>
+                  </div>
+                </div>
+                <div class="col-12 col-md-6">
+                  <div class="meta-item">
+                    <mat-icon inline>flag</mat-icon>
+                    <span><strong>Fin:</strong> {{ selectedRuta?.destino }} ({{ selectedRuta?.fin?.lat }}, {{
+                      selectedRuta?.fin?.lng }})</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-footer d-flex flex-wrap gap-2 justify-content-between align-items-center">
+              <div class="texto-paso">Paso 2 de 3 — Ruta → <strong>Variante</strong> → Tarifa</div>
+              <div class="d-flex gap-2">
+                <button type="button" mat-raised-button color="warn" (click)="goStep1()">Volver a Rutas</button>
+                <button *ngIf="!isRouteFinalized" mat-raised-button type="button" [disabled]="!canFinalize"
+                  (click)="finalizarTrayecto()">
+                  Finalizar trayecto
+                </button>
+                <button *ngIf="isRouteFinalized" mat-raised-button color="primary" type="button"
+                  (click)="agregarVariante()">
+                  Continuar a Tarifa
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- PASO 3: TARIFA -->
+          <div *ngIf="step === 3" @fadeInRight class="card tarifa-card shadow-sm border-0">
+            <div class="card-header d-flex flex-wrap align-items-center gap-2 justify-content-between">
+              <div class="d-flex align-items-center gap-2">
+                <div class="chip-step"><i class="fa fa-money" aria-hidden="true"></i></div>
+                <h2 class="m-0 titulo-card">Configura la Tarifa</h2>
+              </div>
+            </div>
+
+            <div class="card-body">
+              <form [formGroup]="tarifaForm" autocomplete="off" novalidate>
+                <div class="row g-3">
+                  <div class="col-12 col-md-6">
+                    <label id="lbl-tarifa-base" class="form-label d-flex align-items-center gap-2">
+                      <i class="fa fa-money-bill-alt doc-icon" aria-hidden="true"></i>
+                      Tarifa Base
+                    </label>
+                    <mat-form-field appearance="fill" class="w-100">
+                      <input matInput type="number" step="0.01" min="0" placeholder="Ej: 100.00"
+                        formControlName="tarifaBase" inputmode="decimal" [attr.aria-labelledby]="'lbl-tarifa-base'"
+                        (keydown)="moneyKeydown($event)" (input)="moneyInput($event)" (paste)="moneyPaste($event)"
+                        (blur)="moneyBlur($event)">
+                    </mat-form-field>
+                  </div>
+
+                  <div class="col-12 col-md-6">
+                    <label id="lbl-distancia" class="form-label d-flex align-items-center gap-2">
+                      <i class="fa fa-ruler doc-icon" aria-hidden="true"></i>
+                      <span>Distancia Base Km</span>
+                    </label>
+                    <mat-form-field appearance="fill" class="w-100">
+                      <input matInput type="number" step="0.1" min="0" placeholder="Ej: 120.5"
+                        formControlName="distanciaBaseKm" inputmode="decimal" [attr.aria-labelledby]="'lbl-distancia'"
+                        (keydown)="distanciaKeydown($event)" (input)="distanciaInput($event)"
+                        (paste)="distanciaPaste($event)">
+                    </mat-form-field>
+                  </div>
+
+                  <div class="col-12 col-md-6">
+                    <label id="lbl-incremento" class="form-label d-flex align-items-center gap-2">
+                      <i class="fa fa-chart-line doc-icon" aria-hidden="true"></i>
+                      <span>Incremento Por Metro</span>
+                    </label>
+                    <mat-form-field appearance="fill" class="w-100">
+                      <input matInput type="number" step="0.01" min="0" placeholder="Ej: 10.25"
+                        formControlName="incrementoCadaMetros" [attr.aria-labelledby]="'lbl-incremento'"
+                        inputmode="decimal" (keydown)="incrementoKeydown($event)" (input)="incrementoInput($event)"
+                        (paste)="incrementoPaste($event)">
+                    </mat-form-field>
+                  </div>
+
+                  <div class="col-12 col-md-6">
+                    <label id="lbl-costo-adicional" class="form-label d-flex align-items-center gap-2">
+                      <i class="fa fa-circle-plus doc-icon" aria-hidden="true"></i>
+                      <span>Costo Adicional</span>
+                    </label>
+                    <mat-form-field appearance="fill" class="w-100">
+                      <input matInput type="number" step="0.01" min="0" placeholder="Ej: 50.00"
+                        formControlName="costoAdicional" [attr.aria-labelledby]="'lbl-costo-adicional'"
+                        inputmode="decimal" (keydown)="costoKeydown($event)" (input)="costoInput($event)"
+                        (paste)="costoPaste($event)" (blur)="costoBlur($event)">
+                    </mat-form-field>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            <div class="card-footer d-flex flex-wrap gap-2 justify-content-between align-items-center">
+              <div class="texto-paso">Paso 3 de 3 — Ruta → Variante → <strong>Tarifa</strong></div>
+              <div class="col-12 d-flex justify-content-end gap-2 pt-2">
+                <button mat-raised-button color="warn" type="button" (click)="goStep2()">
+                  <mat-icon>close</mat-icon>Volver a Variante
+                </button>
+                <button mat-raised-button color="primary" type="button" [disabled]="!isTarifaValida()"
+                  (click)="agregarTarifa()">
+                  <mat-icon>save</mat-icon> Guardar
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </vex-page-layout-content>
+</vex-page-layout>

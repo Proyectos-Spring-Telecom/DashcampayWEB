@@ -1,0 +1,19 @@
+.mat-icon {
+  @apply text-primary-600;
+}
+
+.search {
+  margin-top: 22px;
+  opacity: 0;
+  overflow: hidden;
+  visibility: hidden;
+  width: 0;
+  @apply transition-all duration-400 ease-out-swift;
+
+  &.search-open {
+    opacity: 1;
+    visibility: visible;
+    width: 250px;
+    @apply mx-2;
+  }
+}

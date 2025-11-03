@@ -1,0 +1,51 @@
+<vex-page-layout @fadeInRight>
+  <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
+    [class.px-6]="layoutCtrl.value === 'fullwidth'">
+    <div class="card mt-4">
+      <div class="container-fluid p-4">
+        <div class="bg-app-bar appbar px-6 h-16 border-b sticky top-0 left-0 flex items-center z-10">
+          <nav class="breadcrumb-simple" aria-label="Ruta de navegación">
+            <a routerLink="/administracion" class="crumb-link">
+              <mat-icon inline>home</mat-icon>
+              Administración
+            </a>
+            <span class="sep">/</span>
+            <span class="crumb-current" aria-current="page">Vehículos</span>
+            <span class="sep">/</span>
+            <span class="crumb-current" aria-current="page">Ver Documento</span>
+          </nav>
+        </div>
+
+        <section class="mt-4">
+          <div class="viewer-toolbar">
+            <button mat-raised-button color="warn" type="submit" routerLink="../">← Regresar</button>
+            <div class="title">{{ titulo }}</div>
+            <button mat-raised-button color="primary" type="button" *ngIf="url" (click)="abrirNuevaPestana()">Descargar / Abrir</button>
+          </div>
+
+          <div class="viewer-body" [class.image-mode]="esImagen" *ngIf="urlSanitizada || urlImgSanitizada; else sinDoc">
+            <ng-container *ngIf="esImagen; else pdfView">
+              <div class="img-stage">
+                <img [src]="urlImgSanitizada" alt="Documento" />
+              </div>
+            </ng-container>
+
+            <ng-template #pdfView>
+              <object [data]="urlSanitizada" type="application/pdf" width="100%" height="100%">
+                <iframe [src]="urlSanitizada" width="100%" height="100%" frameborder="0"></iframe>
+                <div class="pdf-fallback">
+                  No se puede mostrar el PDF aquí.
+                  <a *ngIf="url" [href]="url" target="_blank" rel="noopener">Abrir en nueva pestaña</a>
+                </div>
+              </object>
+            </ng-template>
+          </div>
+
+          <ng-template #sinDoc>
+            <div class="empty-state">No llegó ninguna URL de documento.</div>
+          </ng-template>
+        </section>
+      </div>
+    </div>
+  </vex-page-layout-content>
+</vex-page-layout>

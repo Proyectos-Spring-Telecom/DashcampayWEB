@@ -1,0 +1,13 @@
+:root {
+  .mat-drawer-container {
+    color: inherit;
+  }
+
+  .mat-drawer-side {
+    @apply border-r-0;
+  }
+
+  .dark .mat-drawer-side {
+    @apply border-r;
+  }
+}

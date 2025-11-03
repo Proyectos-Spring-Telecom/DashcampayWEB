@@ -1,0 +1,32 @@
+.vex-layout-hermes {
+  --vex-toolbar-height: 100px;
+  --vex-secondary-toolbar-background: var(--vex-background-background);
+  --vex-secondary-toolbar-height: 64px;
+
+  &.vex-style-light {
+    --vex-toolbar-background: var(--vex-background-background);
+  }
+
+  &.vex-style-default {
+    // TODO: CHeck this again
+    //--vex-navigation-background: #{$sidenav-background};
+    //--vex-toolbar-background: #{lighten($sidenav-background, 5)};
+    //--vex-navigation-color: white;
+  }
+
+  &.vex-style-dark {
+    --vex-toolbar-background: var(--vex-background-background);
+  }
+
+  // Hide sidenav on vertical layout:
+  // Global Search displays it, even when it's out of the view
+  @screen lg {
+    .vex-sidenav {
+      @apply hidden;
+    }
+  }
+
+  vex-secondary-toolbar .secondary-toolbar {
+    @apply shadow-none -mb-6 border-t-0 border-b-0;
+  }
+}

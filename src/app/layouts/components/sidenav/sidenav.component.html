@@ -1,0 +1,34 @@
+<div (mouseenter)="collapseOpenSidenav()" (mouseleave)="collapseCloseSidenav()" [class.collapsed]="collapsed"
+  [class.open]="collapsed && (collapsedOpen$ | async)" class="vex-sidenav flex flex-col">
+  <div class="vex-sidenav-toolbar__container">
+    <div class="sidenav-toolbar flex-none flex items-center" style="background-color: white;">
+      <img style="width: 60%;" src="../../../../assets/img/logo/DashCamPay_trasparente_large.png" alt="Logo" class="select-none flex-none" />
+      <button style="color: black;" (click)="toggleCollapse()" *ngIf="showCollapsePin$ | async"
+        class="ml-auto vex-sidenav-toolbar__collapse-toggle -mr-4 leading-none flex-none hidden lg:block"
+        mat-icon-button type="button">
+        <mat-icon *ngIf="collapsed" class="icon-xs" svgIcon="mat:menu"></mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <vex-scrollbar class="flex-1 flex flex-col">
+    <div class="pt-6 flex-1">
+      <vex-sidenav-item *ngFor="let item of items$ | async; trackBy: trackByRoute" [item]="item"
+        [level]="0"></vex-sidenav-item>
+    </div>
+  </vex-scrollbar>
+
+  <div *ngIf="userVisible$ | async" class="vex-sidenav-user__container flex-none">
+    <div #userProfileMenuOriginRef (click)="openProfileMenu(userProfileMenuOriginRef)"
+      [class.vex-sidenav-user--open]="userMenuOpen$ | async" class="vex-sidenav-user flex items-center" matRipple
+      matRippleColor="var(--vex-sidenav-item-ripple-color)">
+      <img alt="User Avatar" class="vex-sidenav-user__image flex-none"
+        [src]="showImage || 'https://www.citypng.com/public/uploads/preview/hd-man-user-illustration-icon-transparent-png-701751694974843ybexneueic.png'" />
+      <div class="vex-sidenav-user__content flex-auto">
+        <div class="vex-sidenav-user__title textPrincipal"> {{showNombre}} {{showApellidoPaterno}} {{showApellidoMaterno}} </div>
+        <div class="vex-sidenav-user__subtitle textSub">{{showRol}}</div>
+      </div>
+      <mat-icon class="vex-sidenav-user__dropdown-icon flex-none" svgIcon="mat:arrow_drop_down"></mat-icon>
+    </div>
+  </div>
+</div>

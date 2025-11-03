@@ -1,0 +1,20 @@
+.navigation-item {
+  @apply rounded cursor-pointer text-sm font-medium px-4 py-2 relative select-none no-underline block me-2;
+  @apply transition-all duration-400 ease-out-swift;
+}
+
+.navigation-color {
+  color: var(--vex-navigation-color);
+}
+
+.navigation-menu-item {
+  @apply transition-all duration-400 ease-out-swift;
+
+  &:hover {
+    @apply text-primary-600;
+
+    .mat-icon {
+      @apply text-primary-600;
+    }
+  }
+}

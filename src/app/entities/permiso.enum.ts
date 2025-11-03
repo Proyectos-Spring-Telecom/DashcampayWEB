@@ -1,0 +1,176 @@
+export enum Permiso {
+  /* #region Clientes */
+  Listado_Cliente = "1",
+  Crear_Clientes = "2",
+  Actualizar_Clientes = "3",
+  CambiarEstatus_Cliente = "4",
+  /* #endregion */
+
+  /* #region Usuarios */
+  Listado_Usuarios = "5",
+  Crear_Usuarios = "6",
+  Actualizar_Usuarios = "7",
+  CambiarEstatus_Usuarios = "8",
+  /* #endregion */
+
+  /* #region Roles */
+  Listado_Roles = "9",
+  Crear_Roles = "10",
+  Actualizar_Roles = "11",
+  CambiarEstatus_Roles = "12",
+  /* #endregion */
+
+  /* #region Permisos */
+  Listado_Permisos = "13",
+  Crear_Permisos = "14",
+  Actualizar_Permisos = "15",
+  CambiarEstatus_Permisos = "16",
+  /* #endregion */
+
+  /* #region Módulos */
+  Listado_Modulos = "17",
+  Crear_Modulos = "18",
+  Actualizar_Modulos = "19",
+  CambiarEstatus_Modulos = "20",
+  /* #endregion */
+
+  /* #region UsuariosPermisos */
+  Listado_UsuariosPermisos = "21",
+  Crear_UsuariosPermisos = "22",
+  Actualizar_UsuariosPermisos = "23",
+  CambiarEstatus_UsuariosPermisos = "24",
+  /* #endregion */
+
+  /* #region UsuariosRegiones */
+  Listado_UsuariosRegiones = "25",
+  Crear_UsuariosRegiones = "26",
+  Actualizar_UsuariosRegiones = "27",
+  CambiarEstatus_UsuariosRegiones = "28",
+  /* #endregion */
+
+  /* #region UsuariosInstalaciones */
+  Listado_UsuariosInstalaciones = "29",
+  Crear_UsuariosInstalaciones = "30",
+  Actualizar_UsuariosInstalaciones = "31",
+  CambiarEstatus_UsuariosInstalaciones = "32",
+  /* #endregion */
+
+  /* #region Operadores */
+  Listado_Operadores = "33",
+  Crear_Operadores = "34",
+  Actualizar_Operadores = "35",
+  CambiarEstatus_Operadores = "36",
+  /* #endregion */
+
+  /* #region Vehículos */
+  Listado_Vehiculos = "37",
+  Crear_Vehiculos = "38",
+  Actualizar_Vehiculos = "39",
+  CambiarEstatus_Vehiculos = "40",
+  /* #endregion */
+
+  /* #region Validador */
+  Listado_Validador = "41",
+  Crear_Validador = "42",
+  Actualizar_Validador = "43",
+  CambiarEstatus_Validador = "44",
+  /* #endregion */
+
+  /* #region Contadora */
+  Listado_Contadora = "45",
+  Crear_Contadora = "46",
+  Actualizar_Contadora = "47",
+  CambiarEstatus_Contadora = "48",
+  /* #endregion */
+
+  /* #region Instalaciones (Vehículos en módulo 13) */
+  Listado_Instalaciones = "49",
+  Crear_Instalaciones = "50",
+  Actualizar_Instalaciones = "51",
+  CambiarEstatus_Instalaciones = "52",
+  /* #endregion */
+
+  /* #region Turnos */
+  Listado_Turnos = "53",
+  Crear_Turnos = "54",
+  Actualizar_Turnos = "55",
+  CambiarEstatus_Turnos = "56",
+  /* #endregion */
+
+  /* #region Viajes */
+  Listado_Viajes = "57",
+  Crear_Viajes = "58",
+  Actualizar_Viajes = "59",
+  CambiarEstatus_Viajes = "60",
+  /* #endregion */
+
+  /* #region Zonas */
+  Listado_Zonas = "61",
+  Crear_Zonas = "62",
+  Actualizar_Zonas = "63",
+  CambiarEstatus_Zonas = "64",
+  /* #endregion */
+
+  /* #region Rutas */
+  Listado_Rutas = "65",
+  Crear_Rutas = "66",
+  Actualizar_Rutas = "67",
+  CambiarEstatus_Rutas = "68",
+  /* #endregion */
+
+  /* #region Variantes */
+  Listado_Variantes = "69",
+  Crear_Variantes = "70",
+  Actualizar_Variantes = "71",
+  CambiarEstatus_Variantes = "72",
+  /* #endregion */
+
+  /* #region Tarifas */
+  Listado_Tarifas = "73",
+  Crear_Tarifas = "74",
+  Actualizar_Tarifas = "75",
+  CambiarEstatus_Tarifas = "76",
+  /* #endregion */
+
+  /* #region Monederos */
+  Listado_Monederos = "77",
+  Crear_Monederos = "78",
+  Actualizar_Monederos = "79",
+  CambiarEstatus_Monederos = "80",
+  /* #endregion */
+
+  /* #region Pasajeros */
+  Listado_Pasajeros = "81",
+  Crear_Pasajeros = "82",
+  Actualizar_Pasajeros = "83",
+  CambiarEstatus_Pasajeros = "84",
+  /* #endregion */
+
+  /* #region Bitácora */
+  Listado_Bitacora = "85",
+  /* #endregion */
+
+  /* #region ConteoPasajeros */
+  Listado_ConteoPasajeros = "86",
+  Crear_ConteoPasajeros = "87",
+  /* #endregion */
+
+  /* #region Posiciones */
+  Crear_Posiciones = "89",
+  /* #endregion */
+
+  /* #region Transacciones */
+  Listado_Transacciones = "90",
+  Crear_Transacciones = "91",
+  Punto_Venta = "99",
+  /* #endregion */
+
+  /* #region Extras / Pruebas */
+  Consultar_Dashboard = "100",
+  /* #endregion */
+
+  /* #region Extras / Pruebas */
+  Consultar_Monitoreo = "101",
+  Prueba_Modulos = "101",
+  /* #endregion */
+}

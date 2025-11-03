@@ -1,0 +1,137 @@
+<vex-page-layout @fadeInRight>
+    <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
+        [class.px-6]="layoutCtrl.value === 'fullwidth'" class="-mt-6">
+        <div class="card mt-4">
+            <div class="dashboard-lite p-4">
+                <div class="bg-app-bar appbar px-6 h-16 border-b sticky top-0 left-0 flex items-center z-10">
+                    <nav class="breadcrumb-simple" aria-label="Ruta de navegación">
+                        <a routerLink="/administracion" class="crumb-link">
+                            <mat-icon inline>home</mat-icon>
+                            Administración
+                        </a>
+                        <span class="sep">/</span>
+                        <span class="crumb-current" aria-current="page">Transacciones</span>
+                        <span class="sep">/</span>
+                        <span class="crumb-current" aria-current="page">Agregar Transacción</span>
+                    </nav>
+                </div>
+                <section class="mt-5">
+                    <form [formGroup]="transaccionForm" class="form-skin-lite">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="section-head">
+                                    <h5 class="mb-1">Datos Generales</h5>
+                                </div>
+                                <div class="section-bar"></div>
+                            </div>
+                            <div class="col-12 col-md-6 col-lg-3">
+                                <label class="form-label" id="lbl-transaccion">
+                                    <i class="fa fa-user doc-icon" aria-hidden="true"></i>
+                                    <span>Transacción</span>
+                                </label>
+                                <mat-form-field appearance="fill" class="w-100">
+                                    <mat-select placeholder="Tipo de Transacción" formControlName="tipoTransaccion"
+                                        [attr.aria-labelledby]="'lbl-transaccion'">
+                                        <mat-option [value]="'RECARGA'">Recarga</mat-option>
+                                        <mat-option [value]="'DEBITO'">Débito</mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                            </div>
+                            <div class="col-12 col-md-6 col-lg-3">
+                                <label class="form-label" id="lbl-monto">
+                                    <i class="fa fa-user-pen doc-icon" aria-hidden="true"></i>
+                                    <span>Monto</span>
+                                </label>
+                                <mat-form-field appearance="fill" class="w-100">
+                                    <input matInput placeholder="Monto" formControlName="monto"
+                                        [attr.aria-labelledby]="'lbl-monto'" inputmode="decimal"
+                                        (keydown)="moneyKeydown($event)" (input)="moneyInput($event)"
+                                        (paste)="moneyPaste($event)" (blur)="moneyBlur($event)">
+                                </mat-form-field>
+                            </div>
+                            <div class="col-12 col-md-6 col-lg-3">
+                                <label class="form-label" id="lbl-monedero">
+                                    <i class="fa fa-phone doc-icon" aria-hidden="true"></i>
+                                    <span>Número de Monedero</span>
+                                </label>
+                                <mat-form-field appearance="fill" class="w-100">
+                                    <mat-select placeholder="Número de Monedero" formControlName="numeroSerieMonedero"
+                                        [attr.aria-labelledby]="'lbl-monedero'">
+                                        <mat-option *ngFor="let m of listaMonederos"
+                                            [value]="m?.numeroSerie || m?.NumeroSerie || m?.numSerie">
+                                            {{ m?.numeroSerie || m?.NumeroSerie || m?.numSerie }}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                            </div>
+                            <div class="col-12 col-md-6 col-lg-3">
+                                <label class="form-label" id="lbl-validador">
+                                    <i class="fa fa-envelope doc-icon" aria-hidden="true"></i>
+                                    <span>Número de Serie de Validador</span>
+                                </label>
+                                <mat-form-field appearance="fill" class="w-100">
+                                    <mat-select placeholder="Número de Serie de Validador"
+                                        formControlName="numeroSerieValidador"
+                                        [attr.aria-labelledby]="'lbl-validador'">
+                                        <mat-option *ngFor="let d of listaDispositivos" [value]="d.numeroSerie">
+                                            {{ d.numeroSerie }}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                            </div>
+                            <div class="col-12 d-flex justify-content-end gap-2 pt-2">
+                                <button mat-raised-button color="primary" type="button" (click)="submit()">
+                                    <mat-icon>save</mat-icon>
+                                    {{submitButton}}
+                                </button>
+                                <button mat-raised-button color="warn" type="button" (click)="regresar()">
+                                    <mat-icon>close</mat-icon>
+                                    Cancelar
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </section>
+            </div>
+        </div>
+    </vex-page-layout-content>
+</vex-page-layout>
+
+<!-- transaccion-modal.component.html -->
+<div *ngIf="modalOpen"
+     class="custom-modal-backdrop"
+     [class.fade-out]="modalClosing || modalAnim === 'out'"
+     (click)="onBackdrop()">
+
+  <div class="custom-modal-content"
+       [class.animate-in]="modalAnim === 'in'"
+       [class.animate-out]="modalAnim === 'out'"
+       (click)="$event.stopPropagation()">
+
+    <div class="custom-modal-header">
+      <div class="custom-modal-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 1a4 4 0 0 1 4 4v1h2.5A2.5 2.5 0 0 1 21 8.5v10A2.5 2.5 0 0 1 18.5 21h-13A2.5 2.5 0 0 1 3 18.5v-10A2.5 2.5 0 0 1 5.5 6H8V5a4 4 0 0 1 4-4Zm0 2a2 2 0 0 0-2 2v1h4V5a2 2 0 0 0-2-2Z"/>
+        </svg>
+      </div>
+      <h2>Puedes seleccionar una ubicación para la transacción (opcional)</h2>
+
+      <button class="custom-modal-close" (click)="cerrarModal()"><span>×</span></button>
+    </div>
+
+    <div class="custom-modal-body">
+      <!-- si hay mapa, lo muestra; si no, muestra placeholder -->
+      <div id="map" class="trx-map" *ngIf="modalOpen; else noMapTpl"></div>
+
+      <ng-template #noMapTpl>
+        <div class="trx-map-empty">No hay ubicación de esta transacción.</div>
+      </ng-template>
+
+      <div class="accion-centrada">
+        <button class="btn-success" (click)="confirmarUbicacionYEnviar()">
+          Confirmar ubicación
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

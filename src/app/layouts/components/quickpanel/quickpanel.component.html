@@ -1,0 +1,73 @@
+<div class="body-2 p-6 bg-primary-600 text-on-primary-600">
+  <p>Today</p>
+  <div class="display-1">{{ dayName }}</div>
+  <div class="display-1">{{ date }}</div>
+</div>
+
+<mat-divider></mat-divider>
+
+<mat-nav-list>
+  <h3 matSubheader>UPCOMING EVENTS</h3>
+  <a [routerLink]="[]" mat-list-item>
+    <h4 matListItemTitle>Business Meeting</h4>
+    <p matListItemLine>In 16 Minutes, Meeting Room</p>
+  </a>
+  <a [routerLink]="[]" mat-list-item>
+    <h4 matListItemTitle>Ask for Vacation</h4>
+    <p matListItemLine>12:00 PM</p>
+  </a>
+  <a [routerLink]="[]" mat-list-item>
+    <h4 matListItemTitle>Dinner with Sophie</h4>
+    <p matListItemLine>18:30 PM</p>
+  </a>
+  <a [routerLink]="[]" mat-list-item>
+    <h4 matListItemTitle>Deadline for Project X</h4>
+    <p matListItemLine>21:00 PM</p>
+  </a>
+  <mat-divider></mat-divider>
+  <h3 matSubheader>TODO-LIST</h3>
+  <a [routerLink]="[]" mat-list-item>
+    <h4 matListItemTitle>Invite Jack to play golf</h4>
+    <p matListItemLine>Added: 6 hours ago</p>
+  </a>
+  <a [routerLink]="[]" mat-list-item>
+    <h4 matListItemTitle>Get to know Angular more</h4>
+    <p matListItemLine>Added: 2 days ago</p>
+  </a>
+  <a [routerLink]="[]" mat-list-item>
+    <h4 matListItemTitle>Configure that new router</h4>
+    <p matListItemLine>Added: 5 days ago</p>
+  </a>
+  <mat-divider></mat-divider>
+  <h3 matSubheader>SERVER STATISTICS</h3>
+</mat-nav-list>
+
+<div class="vex-list-item" matRipple>
+  <p>CPU Load (71% / 100%)</p>
+  <p class="progress-bar">
+    <mat-progress-bar
+      [value]="71"
+      color="primary"
+      mode="determinate"></mat-progress-bar>
+  </p>
+</div>
+
+<div class="vex-list-item" matRipple>
+  <p>RAM Usage (6,175 MB / 16,384 MB)</p>
+  <p class="progress-bar">
+    <mat-progress-bar
+      [value]="34"
+      color="accent"
+      mode="determinate"></mat-progress-bar>
+  </p>
+</div>
+
+<div class="vex-list-item" matRipple>
+  <p>CPU Temp (43° / 80°)</p>
+  <p class="progress-bar">
+    <mat-progress-bar
+      [value]="54"
+      color="warn"
+      mode="determinate"></mat-progress-bar>
+  </p>
+</div>
