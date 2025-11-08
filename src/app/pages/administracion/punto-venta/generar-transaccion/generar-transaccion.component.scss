@@ -111,13 +111,19 @@
     input { all: unset; width:100%; font-size: 28px; font-weight: 700; color:#0F172A; }
   }
 
-  .monto-chips { display:flex; flex-wrap: wrap; gap: 8px; }
+  .monto-chips { display:flex; flex-wrap: wrap; gap: 8px; font-size: 22px; 
+    button{
+      // background-color: #0A2E57;
+      font-size: 25px;
+    } 
+}
 
   .keypad {
     display:grid; gap:10px; grid-template-columns: repeat(3, 1fr);
     button {
       height: 52px; border-radius: 12px; border: 1px solid #E5E7EB;
-      background: #F8FAFC; /* slate-50 */
+      background: #7eabd963; /* slate-50 */
+      font-size: 35px;
       cursor: pointer; font-weight: 700; color:#0F172A;
       transition: transform .05s ease, background .2s, border-color .2s;
     }

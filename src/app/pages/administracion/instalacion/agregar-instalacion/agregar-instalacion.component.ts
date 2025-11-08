@@ -76,9 +76,51 @@ export class AgregarInstalacionComponent implements OnInit {
   initialDispositivoId?: number | null;
   initialBlueVoxId?: number | null;
 
-  estatusDispositivoAnterior?: number | null;
-  estatusBluevoxsAnterior?: number | null;
-  comentarios?: string | null;
+  // --- campos para payload de actualización (valores de esta sesión) ---
+  estatusValidadorAnterior: number | null = null;
+  estatusContadorAnterior: number | null = null;
+  comentariosValidador: string | null = null;
+  comentariosContador: string | null = null;
+
+  // --- buffer persistente de lo ÚLTIMO ENVIADO (para reusar si no cambias uno de los dos) ---
+  private lastSubmittedMeta: {
+    estatusValidadorAnterior: number | null;
+    comentariosValidador: string | null;
+    estatusContadorAnterior: number | null;
+    comentariosContador: string | null;
+  } = {
+    estatusValidadorAnterior: null,
+    comentariosValidador: null,
+    estatusContadorAnterior: null,
+    comentariosContador: null
+  };
+
+  // --- estado de modales ---
+  // Validador
+  modalValidadorOpen = false;
+  modalValidadorClosing = false;
+  modalValidadorAnim: 'in' | 'out' = 'in';
+  estadoValidadorSel: number | null = null;
+  comentarioValidadorText = '';
+  private pendingNuevoValidadorId: number | null = null;
+
+  // Contador
+  modalContadorOpen = false;
+  modalContadorClosing = false;
+  modalContadorAnim: 'in' | 'out' = 'in';
+  estadoContadorSel: number | null = null;
+  comentarioContadorText = '';
+  private pendingNuevoContadorId: number | null = null;
+
+  // opciones de estado para los selects del modal
+  estadoEntries = [
+    { value: EstadoComponente.INACTIVO, label: 'INACTIVO' },
+    { value: EstadoComponente.DISPONIBLE, label: 'DISPONIBLE' },
+    { value: EstadoComponente.ASIGNADO, label: 'ASIGNADO' },
+    { value: EstadoComponente.EN_MANTENIMIENTO, label: 'EN_MANTENIMIENTO' },
+    { value: EstadoComponente.DANADO, label: 'DAÑADO' },
+    { value: EstadoComponente.RETIRADO, label: 'RETIRADO' }
+  ];
 
   constructor(
     private fb: FormBuilder,
@@ -215,90 +257,171 @@ export class AgregarInstalacionComponent implements OnInit {
 
   private suscribirCambioEquipos(): void {
     // Validador
-    this.instalacionesForm.get('idValidador')?.valueChanges.subscribe((nuevo: any) => {
+    this.instalacionesForm.get('idValidador')?.valueChanges.subscribe(async (nuevo: any) => {
       if (this.bootstrapping || !this.idInstalacion) return; // solo en edición
-      // Actualiza el id actual sin pedir estado ni comentarios
-      this.initialDispositivoId = this.toNumOrNull(nuevo);
-      this.estatusDispositivoAnterior = null; // ya no se usa, por si quedó algo previo
-      // this.comentarios = null; // opcional, si no quieres arrastrar comentarios viejos
+
+      const nuevoId = this.toNumOrNull(nuevo);
+      const anteriorId = this.initialDispositivoId ?? null;
+
+      if (nuevoId === anteriorId) return;
+
+      // Validar que el nuevo validador pertenezca al cliente seleccionado
+      const pertenece = this.listaValidadores.some(v => Number(v?.id) === Number(nuevoId));
+      if (!pertenece) {
+        await this.alerts.open({
+          type: 'error',
+          title: '¡Ops!',
+          message: 'El validador seleccionado no pertenece al cliente actual.',
+          confirmText: 'Entendido',
+          backdropClose: false
+        });
+        this.instalacionesForm.get('idValidador')?.setValue(anteriorId, { emitEvent: false });
+        return;
+      }
+
+      // Abrir modal y guardar "pendiente"
+      this.pendingNuevoValidadorId = nuevoId;
+      this.estadoValidadorSel = null;
+      this.comentarioValidadorText = '';
+      this.abrirModalValidador();
     });
 
     // Contador (BlueVox)
-    this.instalacionesForm.get('idContador')?.valueChanges.subscribe((nuevo: any) => {
+    this.instalacionesForm.get('idContador')?.valueChanges.subscribe(async (nuevo: any) => {
       if (this.bootstrapping || !this.idInstalacion) return; // solo en edición
-      // Actualiza el id actual sin pedir estado ni comentarios
-      this.initialBlueVoxId = this.toNumOrNull(nuevo);
-      this.estatusBluevoxsAnterior = null; // ya no se usa
-      // this.comentarios = null; // opcional
+
+      const nuevoId = this.toNumOrNull(nuevo);
+      const anteriorId = this.initialBlueVoxId ?? null;
+
+      if (nuevoId === anteriorId) return;
+
+      const pertenece = this.listaContadores.some(c => Number(c?.id) === Number(nuevoId));
+      if (!pertenece) {
+        await this.alerts.open({
+          type: 'error',
+          title: '¡Ops!',
+          message: 'La contadora seleccionada no pertenece al cliente actual.',
+          confirmText: 'Entendido',
+          backdropClose: false
+        });
+        this.instalacionesForm.get('idContador')?.setValue(anteriorId, { emitEvent: false });
+        return;
+      }
+
+      // Abrir modal y guardar "pendiente"
+      this.pendingNuevoContadorId = nuevoId;
+      this.estadoContadorSel = null;
+      this.comentarioContadorText = '';
+      this.abrirModalContador();
     });
   }
 
-
-  private estadoInputOptions(): Record<string, string> {
-    return {
-      [EstadoComponente.INACTIVO]: 'INACTIVO',
-      [EstadoComponente.DISPONIBLE]: 'DISPONIBLE',
-      [EstadoComponente.ASIGNADO]: 'ASIGNADO',
-      [EstadoComponente.EN_MANTENIMIENTO]: 'EN_MANTENIMIENTO',
-      [EstadoComponente.DANADO]: 'DAÑADO',
-      [EstadoComponente.RETIRADO]: 'RETIRADO'
-    };
+  // ---------- Helpers visuales select options ----------
+  toSelectValue(v: number | null): string {
+    return v === null || v === undefined ? '' : String(v);
+  }
+  parseSelect(value: any): number | null {
+    const s = String(value ?? '');
+    if (!s.length) return null;
+    const n = Number(s);
+    return Number.isNaN(n) ? null : n;
   }
 
-  private async solicitarEstadoYComentarios(
-    titulo: string
-  ): Promise<{ estado: number; comentarios: string | null } | null> {
-    const html = `
-      <div style="text-align:left">
-        <label style="display:block;margin:12px 0 6px;font-size:12.5px;font-weight:600;color:#9fb0c3;">
-          Selecciona el estado
-        </label>
-        <select id="estado-select" style="width:100%;background:#0b121b;color:#e9eef5;border:1px solid #213041;border-radius:10px;padding:10px 12px;height:44px;">
-          <option value="">-- Selecciona --</option>
-          ${Object.entries(this.estadoInputOptions())
-        .map(([v, l]) => `<option value="${v}">${l}</option>`)
-        .join('')}
-        </select>
-        <label style="display:block;margin:12px 0 6px;font-size:12.5px;font-weight:600;color:#9fb0c3;">Comentarios (opcional)</label>
-        <input id="comentarios-input" placeholder="Escribe comentarios"
-          style="width:72%;max-width:420px;min-width:240px;margin:0 auto;display:block;background:#0b121b;color:#e9eef5;border:1px solid #213041;border-radius:10px;padding:10px 12px;height:44px;" />
-      </div>
-    `;
+  // ---------- Modal Validador ----------
+  abrirModalValidador(): void {
+    this.modalValidadorAnim = 'in';
+    this.modalValidadorClosing = false;
+    this.modalValidadorOpen = true;
+  }
+  async cerrarModalValidador(cancelar: boolean): Promise<void> {
+    this.modalValidadorClosing = true;
+    this.modalValidadorAnim = 'out';
+    setTimeout(() => {
+      this.modalValidadorOpen = false;
+      this.modalValidadorClosing = false;
 
-    const res = await this.alerts.open({
-      type: 'info',
-      title: titulo,
-      message: html,
-      confirmText: 'Aceptar',
-      cancelText: 'Cancelar',
-      backdropClose: false
-    });
-
-    if (res !== 'confirm') return null;
-
-    const estadoEl = document.getElementById(
-      'estado-select'
-    ) as HTMLSelectElement | null;
-    const comentariosEl = document.getElementById(
-      'comentarios-input'
-    ) as HTMLInputElement | null;
-
-    const estadoStr = estadoEl?.value ?? '';
-    if (!estadoStr) {
-      await this.alerts.open({
-        type: 'error',
-        title: '¡Ops!',
-        message: 'Selecciona un estado',
+      if (cancelar) {
+        // Revertir selección
+        this.instalacionesForm.get('idValidador')
+          ?.setValue(this.initialDispositivoId ?? null, { emitEvent: false });
+        // limpiar temporales
+        this.pendingNuevoValidadorId = null;
+        this.estadoValidadorSel = null;
+        this.comentarioValidadorText = '';
+        this.cdr.detectChanges();
+      }
+    }, 240);
+  }
+  onBackdropValidador(): void {
+    this.cerrarModalValidador(true);
+  }
+  confirmarModalValidador(): void {
+    if (this.estadoValidadorSel == null) {
+      this.alerts.open({
+        type: 'warning',
+        title: 'Falta estado',
+        message: 'Selecciona un estado para continuar.',
         confirmText: 'Entendido',
         backdropClose: false
       });
-      return null;
+      return;
     }
+    // Asignar datos de ESTA sesión
+    this.estatusValidadorAnterior = this.estadoValidadorSel;
+    this.comentariosValidador = this.comentarioValidadorText?.trim() || null;
 
-    return {
-      estado: Number(estadoStr),
-      comentarios: (comentariosEl?.value ?? '').trim() || null
-    };
+    // Aceptar cambio como "inicial"
+    this.initialDispositivoId = this.pendingNuevoValidadorId ?? this.initialDispositivoId;
+
+    // Cerrar modal sin revertir
+    this.cerrarModalValidador(false);
+  }
+
+  // ---------- Modal Contador ----------
+  abrirModalContador(): void {
+    this.modalContadorAnim = 'in';
+    this.modalContadorClosing = false;
+    this.modalContadorOpen = true;
+  }
+  async cerrarModalContador(cancelar: boolean): Promise<void> {
+    this.modalContadorClosing = true;
+    this.modalContadorAnim = 'out';
+    setTimeout(() => {
+      this.modalContadorOpen = false;
+      this.modalContadorClosing = false;
+
+      if (cancelar) {
+        // Revertir selección
+        this.instalacionesForm.get('idContador')
+          ?.setValue(this.initialBlueVoxId ?? null, { emitEvent: false });
+        // limpiar temporales
+        this.pendingNuevoContadorId = null;
+        this.estadoContadorSel = null;
+        this.comentarioContadorText = '';
+        this.cdr.detectChanges();
+      }
+    }, 240);
+  }
+  onBackdropContador(): void {
+    this.cerrarModalContador(true);
+  }
+  confirmarModalContador(): void {
+    if (this.estadoContadorSel == null) {
+      this.alerts.open({
+        type: 'warning',
+        title: 'Falta estado',
+        message: 'Selecciona un estado para continuar.',
+        confirmText: 'Entendido',
+        backdropClose: false
+      });
+      return;
+    }
+    this.estatusContadorAnterior = this.estadoContadorSel;
+    this.comentariosContador = this.comentarioContadorText?.trim() || null;
+
+    this.initialBlueVoxId = this.pendingNuevoContadorId ?? this.initialBlueVoxId;
+
+    this.cerrarModalContador(false);
   }
 
   // ---------- Carga dependientes por cliente ----------
@@ -342,7 +465,7 @@ export class AgregarInstalacionComponent implements OnInit {
         next: async (resp: any) => {
           const errores: string[] = [];
 
-          // Normalizadores a llaves de la vista
+          // Normalizadores
           const mapValidador = (x: any) => ({
             ...x,
             id: Number(
@@ -601,7 +724,7 @@ export class AgregarInstalacionComponent implements OnInit {
           { emitEvent: false }
         );
 
-        // Placeholders para mostrar inmediatamente (usando llaves en plural correctas)
+        // Placeholders inmediatos
         const placeholderValidador = idValidador
           ? [{
             id: idValidador,
@@ -660,7 +783,6 @@ export class AgregarInstalacionComponent implements OnInit {
           }]
           : [];
 
-        // Pinta placeholders de inmediato
         this.listaValidadores = placeholderValidador;
         this.listaContadores = placeholderContador;
         this.listaVehiculos = placeholderVehiculo;
@@ -671,7 +793,7 @@ export class AgregarInstalacionComponent implements OnInit {
         this.instalacionesForm.get('idValidador')?.enable(opts);
         this.instalacionesForm.get('idContador')?.enable(opts);
 
-        // SIEMPRE pedir equipos por cliente en modo edición y fusionar sin duplicar
+        // Pedir listas reales y fusionar
         const idClienteParaServicios =
           this.toNumOrNull(this.instalacionesForm.get('idCliente')?.value) ?? idCliente;
 
@@ -737,17 +859,14 @@ export class AgregarInstalacionComponent implements OnInit {
           next: async (resp: any) => {
             const errores: string[] = [];
 
-            // Validadores
             if (esError(resp.dispositivos)) {
               errores.push(await this.getErrorMessage(resp.dispositivos.__error));
             } else {
               const devsRaw = this.ensureArray(resp?.dispositivos ?? resp?.data?.dispositivos ?? resp?.data);
               const devs = devsRaw.map(mapValidador);
-              // fusiona por id (prefiere objeto con marca/modelo llenos) y evita duplicados
               this.listaValidadores = this.mergeUniqueByIdPreferFilled(devs, placeholderValidador);
             }
 
-            // Contadores
             if (esError(resp.bluevox)) {
               errores.push(await this.getErrorMessage(resp.bluevox.__error));
             } else {
@@ -756,7 +875,6 @@ export class AgregarInstalacionComponent implements OnInit {
               this.listaContadores = this.mergeUniqueByIdPreferFilled(bvx, placeholderContador);
             }
 
-            // Mantener habilitados
             this.instalacionesForm.get('idValidador')?.enable({ emitEvent: false });
             this.instalacionesForm.get('idContador')?.enable({ emitEvent: false });
             this.cdr.detectChanges();
@@ -788,7 +906,6 @@ export class AgregarInstalacionComponent implements OnInit {
       }
     });
   }
-
 
   // ---------- Clientes / Submit ----------
   obtenerClientes(): void {
@@ -913,13 +1030,27 @@ export class AgregarInstalacionComponent implements OnInit {
     const requeridos = ['idValidador', 'idContador', 'idVehiculo', 'idCliente'];
     const raw = this.instalacionesForm.getRawValue();
 
+    // COALESCE: usa lo actual, o lo ÚLTIMO ENVIADO si esta vez no cambiaste ese lado
+    const _estatusValAnt =
+      this.estatusValidadorAnterior ?? this.lastSubmittedMeta.estatusValidadorAnterior;
+    const _comentVal =
+      (this.comentariosValidador ?? this.lastSubmittedMeta.comentariosValidador) ?? null;
+
+    const _estatusConAnt =
+      this.estatusContadorAnterior ?? this.lastSubmittedMeta.estatusContadorAnterior;
+    const _comentCon =
+      (this.comentariosContador ?? this.lastSubmittedMeta.comentariosContador) ?? null;
+
     const payload = {
       idValidador: this.toNumOrNull(raw.idValidador),
-      estatusDispositivoAnterior: this.estatusDispositivoAnterior ?? null,
       idContador: this.toNumOrNull(raw.idContador),
-      estatusBluevoxsAnterior: this.estatusBluevoxsAnterior ?? null,
+      idVehiculo: this.toNumOrNull(raw.idVehiculo),
       idCliente: this.toNumOrNull(raw.idCliente) ?? this.idClienteUser,
-      comentarios: this.comentarios ?? null
+      estatus: this.toNumOrNull(raw.estatus) ?? 1,
+      estatusValidadorAnterior: _estatusValAnt ?? null,
+      estatusContadorAnterior: _estatusConAnt ?? null,
+      comentariosValidador: _comentVal,
+      comentariosContador: _comentCon
     };
 
     const camposFaltantes: string[] = requeridos
@@ -956,6 +1087,22 @@ export class AgregarInstalacionComponent implements OnInit {
         () => {
           this.submitButton = 'Actualizar';
           this.loading = false;
+
+          // Actualizar "lo último enviado" para futuras actualizaciones parciales
+          this.lastSubmittedMeta = {
+            estatusValidadorAnterior: payload.estatusValidadorAnterior,
+            comentariosValidador: payload.comentariosValidador,
+            estatusContadorAnterior: payload.estatusContadorAnterior,
+            comentariosContador: payload.comentariosContador
+          };
+
+          // Una vez enviado, puedes limpiar los "de esta sesión" si quieres:
+          // (así forzamos a que si no modificas de nuevo, se use el lastSubmittedMeta)
+          this.estatusValidadorAnterior = null;
+          this.comentariosValidador = null;
+          this.estatusContadorAnterior = null;
+          this.comentariosContador = null;
+
           this.alerts.open({
             type: 'success',
             title: '¡Operación Exitosa!',
@@ -1133,7 +1280,6 @@ export class AgregarInstalacionComponent implements OnInit {
           ).map(mapContador);
         }
 
-        // En edición deben poder cambiarse
         const opts = { emitEvent: false };
         this.instalacionesForm.get('idValidador')?.enable(opts);
         this.instalacionesForm.get('idContador')?.enable(opts);
@@ -1149,8 +1295,7 @@ export class AgregarInstalacionComponent implements OnInit {
     });
   }
 
-  // Fusiona listas por id y mantiene UN SOLO elemento por id.
-  // Prefiere el que tenga más campos "llenos" (numeroSerie, marca, modelo).
+  // Fusiona listas por id
   private mergeUniqueByIdPreferFilled(
     primary: any[] = [],
     secondary: any[] = [],
@@ -1176,5 +1321,4 @@ export class AgregarInstalacionComponent implements OnInit {
     secondary.forEach(put);
     return Array.from(map.values());
   }
-
 }

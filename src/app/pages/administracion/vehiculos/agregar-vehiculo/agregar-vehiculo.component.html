@@ -101,16 +101,16 @@
                       <div class="dz-title">Arrastra y suelta o haz clic</div>
                     </div>
 
-                    <div class="dz-preview" *ngIf="fotoPreviewUrl">
+                    <div class="dz-preview" *ngIf="fotoPreviewUrl" (click)="$event.stopPropagation()">
                       <img [src]="fotoPreviewUrl!" alt="Vista previa" class="img-fluid rounded" />
                     </div>
 
-                    <button mat-stroked-button type="button" class="dz-action" (click)="openFotoFilePicker()">
+                    <button mat-stroked-button type="button" class="dz-action" (click)="$event.stopPropagation(); openFotoFilePicker()">
                       <mat-icon>upload</mat-icon> Seleccionar
                     </button>
 
                     <button mat-stroked-button color="warn" type="button" class="dz-clear"
-                      *ngIf="fotoPreviewUrl || fotoFileName" (click)="clearFotoFile($event)">
+                      *ngIf="fotoPreviewUrl || fotoFileName" (click)="$event.stopPropagation(); clearFotoFile($event)">
                       <mat-icon>close</mat-icon> Quitar
                     </button>
 
@@ -141,17 +141,17 @@
                       <div class="dz-title">Arrastra y suelta o haz clic</div>
                     </div>
 
-                    <div class="dz-file" *ngIf="tcFileName">
+                    <div class="dz-file" *ngIf="tcFileName" (click)="$event.stopPropagation()">
                       <mat-icon>insert_drive_file</mat-icon>
                       <span class="ms-1">{{ tcFileName }}</span>
                     </div>
 
-                    <button mat-stroked-button type="button" class="dz-action" (click)="openTcFilePicker()">
+                    <button mat-stroked-button type="button" class="dz-action" (click)="$event.stopPropagation(); openTcFilePicker()">
                       <mat-icon>upload</mat-icon> Seleccionar
                     </button>
 
                     <button mat-stroked-button color="warn" type="button" class="dz-clear" *ngIf="tcFileName"
-                      (click)="clearTcFile($event)">
+                      (click)="$event.stopPropagation(); clearTcFile($event)">
                       <mat-icon>close</mat-icon> Quitar
                     </button>
 
@@ -182,17 +182,17 @@
                       <div class="dz-title">Arrastra y suelta o haz clic</div>
                     </div>
 
-                    <div class="dz-file" *ngIf="polizaFileName">
+                    <div class="dz-file" *ngIf="polizaFileName" (click)="$event.stopPropagation()">
                       <mat-icon>insert_drive_file</mat-icon>
                       <span class="ms-1">{{ polizaFileName }}</span>
                     </div>
 
-                    <button mat-stroked-button type="button" class="dz-action" (click)="openPolizaFilePicker()">
+                    <button mat-stroked-button type="button" class="dz-action" (click)="$event.stopPropagation(); openPolizaFilePicker()">
                       <mat-icon>upload</mat-icon> Seleccionar
                     </button>
 
                     <button mat-stroked-button color="warn" type="button" class="dz-clear" *ngIf="polizaFileName"
-                      (click)="clearPolizaFile($event)">
+                      (click)="$event.stopPropagation(); clearPolizaFile($event)">
                       <mat-icon>close</mat-icon> Quitar
                     </button>
 
@@ -223,17 +223,17 @@
                       <div class="dz-title">Arrastra y suelta o haz clic</div>
                     </div>
 
-                    <div class="dz-file" *ngIf="permisoFileName">
+                    <div class="dz-file" *ngIf="permisoFileName" (click)="$event.stopPropagation()">
                       <mat-icon>insert_drive_file</mat-icon>
                       <span class="ms-1">{{ permisoFileName }}</span>
                     </div>
 
-                    <button mat-stroked-button type="button" class="dz-action" (click)="openPermisoFilePicker()">
+                    <button mat-stroked-button type="button" class="dz-action" (click)="$event.stopPropagation(); openPermisoFilePicker()">
                       <mat-icon>upload</mat-icon> Seleccionar
                     </button>
 
                     <button mat-stroked-button color="warn" type="button" class="dz-clear" *ngIf="permisoFileName"
-                      (click)="clearPermisoFile($event)">
+                      (click)="$event.stopPropagation(); clearPermisoFile($event)">
                       <mat-icon>close</mat-icon> Quitar
                     </button>
 
@@ -265,17 +265,17 @@
                       <div class="dz-title">Arrastra y suelta o haz clic</div>
                     </div>
 
-                    <div class="dz-file" *ngIf="inspeccionFileName">
+                    <div class="dz-file" *ngIf="inspeccionFileName" (click)="$event.stopPropagation()">
                       <mat-icon>insert_drive_file</mat-icon>
                       <span class="ms-1">{{ inspeccionFileName }}</span>
                     </div>
 
-                    <button mat-stroked-button type="button" class="dz-action" (click)="openInspeccionFilePicker()">
+                    <button mat-stroked-button type="button" class="dz-action" (click)="$event.stopPropagation(); openInspeccionFilePicker()">
                       <mat-icon>upload</mat-icon> Seleccionar
                     </button>
 
                     <button mat-stroked-button color="warn" type="button" class="dz-clear" *ngIf="inspeccionFileName"
-                      (click)="clearInspeccionFile($event)">
+                      (click)="$event.stopPropagation(); clearInspeccionFile($event)">
                       <mat-icon>close</mat-icon> Quitar
                     </button>
 

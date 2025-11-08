@@ -76,3 +76,47 @@
   font-style: normal;
   font-weight: 400 !important;
 }
+
+/* base — igual estilo de la etiqueta que mandaste */
+.badge-estado {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  color: #fff;        /* texto blanco siempre */
+  border: 1px solid transparent;
+}
+
+/* Colores sólidos tipo “pill” como tu etiqueta verde */
+.ea-disponible {     /* Disponible */
+  background: #198754;  /* verde “success” */
+  border-color: #157347;
+}
+
+.ea-asignado {       /* Asignado */
+  background: #0d6efd;  /* azul “primary” */
+  border-color: #0b5ed7;
+}
+
+.ea-mantenimiento {  /* En mantenimiento */
+  background: #fd7e14;  /* naranja “warning” fuerte pero con texto blanco */
+  border-color: #e0690b;
+}
+
+.ea-danado {         /* Dañado */
+  background: #dc3545;  /* rojo “danger” */
+  border-color: #bb2d3b;
+}
+
+.ea-retirado {       /* Retirado */
+  background: #d1a71c;  /* gris “secondary” */
+  border-color: #d1a71c;
+}
+
+.ea-inactivo {       /* Inactivo */
+  background: #495057;  /* gris oscuro para diferenciar de Retirado */
+  border-color: #3f464c;
+}

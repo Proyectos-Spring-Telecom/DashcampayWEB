@@ -34,7 +34,8 @@ export class AltaUsuarioComponent {
   public listaModulos: any[] = [];
   public listaRoles: any;
   public listaClientes: any;
-
+  readonly DEFAULT_FOTO_URL =
+    'https://dashcamsys.s3.us-east-2.amazonaws.com/imagenes/2c369ac0-c489-4384-8d35-3ba482f7ccaa.jpeg';
   type = 'password';
   typeConfirm: string = 'password';
   public permisosIds: number[] = [];
@@ -128,7 +129,7 @@ export class AltaUsuarioComponent {
         nombre: ['', [Validators.required]],
         apellidoPaterno: ['', [Validators.required]],
         apellidoMaterno: [null],
-        fotoPerfil: [null],
+        fotoPerfil: [this.DEFAULT_FOTO_URL],
         idRol: [null],
         emailConfirmado: [0],
         estatus: [1],
@@ -172,12 +173,41 @@ export class AltaUsuarioComponent {
     });
   }
 
+  private wasSASelection = false;
+  // AJUSTE: comportamiento según rol seleccionado
   onRolChanged(value: any) {
     const idRol = Number(value);
-    if (idRol === 1) this.selectAllPerms();
+
+    if (idRol === 1) {
+      // SA => seleccionar todos y marcar que fue automático por SA
+      this.selectAllPerms();
+      this.wasSASelection = true;
+    } else {
+      // Otro rol: solo limpiar si veníamos de SA (no tocar si ya estaba en otro rol)
+      if (this.wasSASelection) {
+        this.clearAllPerms();
+        this.wasSASelection = false;
+      }
+      // si no veníamos de SA, no hacemos nada
+    }
   }
 
-  /** Marca todos los permisos de todos los módulos y sincroniza el formulario */
+
+  // NUEVO: limpia todos los permisos (UI + form)
+  private clearAllPerms(): void {
+    this.permisosIds = [];
+    // apaga visualmente los switches
+    this.listaModulos = (this.listaModulos || []).map(m => ({
+      ...m,
+      permisos: (m.permisos || []).map((p: any) => ({ ...p, estatus: 0 }))
+    }));
+    // sincroniza el form
+    this.usuarioForm.patchValue({ permisosIds: [] });
+    // si usas este helper para reflejar por ids, también puedes llamarlo
+    this.applyAssignedPermsToModules?.();
+  }
+
+
   private selectAllPerms(): void {
     const allIds: number[] = [];
 
@@ -383,15 +413,10 @@ export class AltaUsuarioComponent {
         mensajes.push('Las contraseñas no coinciden');
       }
 
-      const lista = mensajes
-        .map(
-          (campo, index) => `
-        <div style="padding:8px 12px;border-left:4px solid #d9534f;
-                    background:#caa8a8;text-align:center;margin-bottom:8px;border-radius:4px;">
-          <strong style="color:#b02a37;">${index + 1}. ${campo}</strong>
-        </div>`
-        )
-        .join('');
+      const lista = mensajes.map((campo, index) => `
+      <div style="padding:8px 12px;border-left:4px solid #d9534f;background:#caa8a8;text-align:center;margin-bottom:8px;border-radius:4px;">
+        <strong style="color:#b02a37;">${index + 1}. ${campo}</strong>
+      </div>`).join('');
 
       this.submitButton = 'Guardar';
       this.loading = false;
@@ -409,6 +434,13 @@ export class AltaUsuarioComponent {
         backdropClose: false,
       });
       return;
+    }
+
+    // Foto por defecto si no hay foto subida
+    const fotoCtrl = this.usuarioForm.get('fotoPerfil');
+    const fotoVal = fotoCtrl?.value;
+    if (!fotoVal || (typeof File !== 'undefined' && fotoVal instanceof File)) {
+      fotoCtrl?.setValue('https://dashcamsys.s3.us-east-2.amazonaws.com/imagenes/2c369ac0-c489-4384-8d35-3ba482f7ccaa.jpeg');
     }
 
     const { confirmPassword, idCliente, idRol, permisosIds, ...rest } = this.usuarioForm.value;
@@ -429,8 +461,7 @@ export class AltaUsuarioComponent {
         title: '¡Faltan permisos!',
         message: `
         <div style="max-height:350px;overflow-y:auto;">
-          <div style="padding:8px 12px;border-left:4px solid #d9534f;
-                      background:#caa8a8;text-align:center;margin-bottom:8px;border-radius:4px;">
+          <div style="padding:8px 12px;border-left:4px solid #d9534f;background:#caa8a8;text-align:center;margin-bottom:8px;border-radius:4px;">
             <strong style="color:#b02a37;">Debes asignar los permisos correspondientes al usuario.</strong>
           </div>
         </div>
@@ -456,7 +487,7 @@ export class AltaUsuarioComponent {
       },
       error: (err: any) => {
         this.loading = false;
-        this.submitButton = 'Confirmar';
+        this.submitButton = 'Guardar';
         this.getErrorMessage(err).then((msg) => {
           setTimeout(() => {
             this.alerts.open({
@@ -472,54 +503,12 @@ export class AltaUsuarioComponent {
     });
   }
 
-    private async getErrorMessage(err: any): Promise<string> {
-    if (err?.status === 0 && !err?.error) {
-      return 'No hay conexión con el servidor (status 0). Verifica tu red.';
-    }
-    if (err?.error instanceof Blob) {
-      try {
-        const txt = await err.error.text();
-        if (txt) return txt;
-      } catch {
-      }
-    }
-    if (typeof err?.error === 'string' && err.error.trim()) {
-      return err.error;
-    }
-    if (typeof err?.message === 'string' && err.message.trim()) {
-      return err.message;
-    }
-    if (err?.error?.message) {
-      return String(err.error.message);
-    }
-    if (err?.error?.errors) {
-      const e = err.error.errors;
-      if (Array.isArray(e)) {
-        return e.filter(Boolean).join('\n');
-      }
-      if (typeof e === 'object') {
-        const lines: string[] = [];
-        for (const k of Object.keys(e)) {
-          const val = e[k];
-          if (Array.isArray(val)) lines.push(`${k}: ${val.join(', ')}`);
-          else if (val) lines.push(`${k}: ${val}`);
-        }
-        if (lines.length) return lines.join('\n');
-      }
-    }
-    const statusLine = err?.status
-      ? `HTTP ${err.status}${err.statusText ? ' ' + err.statusText : ''}`
-      : '';
-    return statusLine;
-  }
-
   async actualizar() {
     if (this.loading) return;
 
     this.submitButton = 'Cargando...';
     this.loading = true;
 
-    // si no se editará contraseña, quita validadores
     if (!this.inputContrasena) {
       const passCtrl = this.usuarioForm.get('passwordHash');
       const confirmCtrl = this.usuarioForm.get('confirmPassword');
@@ -567,20 +556,23 @@ export class AltaUsuarioComponent {
           Los siguientes <strong>campos</strong> requieren atención:
         </p>
         <div style="max-height:350px;overflow-y:auto;">
-          ${listaMensajes
-            .map(
-              (msg, idx) => `
+          ${listaMensajes.map((msg, idx) => `
             <div style="padding:8px 12px;border-left:4px solid #d9534f;background:#caa8a8;text-align:center;margin-bottom:8px;border-radius:4px;">
               <strong style="color:#b02a37;">${idx + 1}. ${msg}</strong>
-            </div>`
-            )
-            .join('')}
+            </div>`).join('')}
         </div>
       `,
         confirmText: 'Entendido',
         backdropClose: false,
       });
       return;
+    }
+
+    // Foto por defecto si no hay foto subida
+    const fotoCtrl = this.usuarioForm.get('fotoPerfil');
+    const fotoVal = fotoCtrl?.value;
+    if (!fotoVal || (typeof File !== 'undefined' && fotoVal instanceof File)) {
+      fotoCtrl?.setValue('https://dashcamsys.s3.us-east-2.amazonaws.com/imagenes/2c369ac0-c489-4384-8d35-3ba482f7ccaa.jpeg');
     }
 
     const {
@@ -608,8 +600,7 @@ export class AltaUsuarioComponent {
         title: '¡Faltan permisos!',
         message: `
         <div style="max-height:350px;overflow-y:auto;">
-          <div style="padding:8px 12px;border-left:4px solid #d9534f;
-                      background:#caa8a8;text-align:center;margin-bottom:8px;border-radius:4px;">
+          <div style="padding:8px 12px;border-left:4px solid #d9534f;background:#caa8a8;text-align:center;margin-bottom:8px;border-radius:4px;">
             <strong style="color:#b02a37;">Debes asignar los permisos correspondientes al usuario.</strong>
           </div>
         </div>
@@ -639,7 +630,7 @@ export class AltaUsuarioComponent {
       },
       error: (err: any) => {
         this.loading = false;
-        this.submitButton = 'Confirmar';
+        this.submitButton = 'Actualizar';
         this.getErrorMessage(err).then((msg) => {
           setTimeout(() => {
             this.alerts.open({
@@ -656,7 +647,47 @@ export class AltaUsuarioComponent {
   }
 
 
-  // Reemplazo de mostrarAlertaPermisos()
+  private async getErrorMessage(err: any): Promise<string> {
+    if (err?.status === 0 && !err?.error) {
+      return 'No hay conexión con el servidor (status 0). Verifica tu red.';
+    }
+    if (err?.error instanceof Blob) {
+      try {
+        const txt = await err.error.text();
+        if (txt) return txt;
+      } catch {
+      }
+    }
+    if (typeof err?.error === 'string' && err.error.trim()) {
+      return err.error;
+    }
+    if (typeof err?.message === 'string' && err.message.trim()) {
+      return err.message;
+    }
+    if (err?.error?.message) {
+      return String(err.error.message);
+    }
+    if (err?.error?.errors) {
+      const e = err.error.errors;
+      if (Array.isArray(e)) {
+        return e.filter(Boolean).join('\n');
+      }
+      if (typeof e === 'object') {
+        const lines: string[] = [];
+        for (const k of Object.keys(e)) {
+          const val = e[k];
+          if (Array.isArray(val)) lines.push(`${k}: ${val.join(', ')}`);
+          else if (val) lines.push(`${k}: ${val}`);
+        }
+        if (lines.length) return lines.join('\n');
+      }
+    }
+    const statusLine = err?.status
+      ? `HTTP ${err.status}${err.statusText ? ' ' + err.statusText : ''}`
+      : '';
+    return statusLine;
+  }
+
   private async mostrarAlertaPermisos(): Promise<void> {
     await this.alerts.open({
       type: 'warning',
@@ -726,9 +757,10 @@ export class AltaUsuarioComponent {
     this.fotoPreviewUrl = null;
     this.fotoFileName = null;
     if (this.fotoFileInput) this.fotoFileInput.nativeElement.value = '';
-    this.usuarioForm.patchValue({ fotoPerfil: null });
-    // Si quieres marcar requerido en otro lado, aquí solo quitamos valor
+    // ⬇⬇⬇ default en vez de null
+    this.usuarioForm.patchValue({ fotoPerfil: this.DEFAULT_FOTO_URL });
   }
+
 
   // === Core ===
   private handleFotoFile(file: File) {
@@ -751,28 +783,40 @@ export class AltaUsuarioComponent {
     const fd = new FormData();
     fd.append('file', file, file.name);
     fd.append('folder', 'usuarios');
-    fd.append('idModule', '2'); // ajusta si tu backend usa otro módulo
+    fd.append('idModule', '2');
 
     this.usuaService.uploadFile(fd).pipe(
-      finalize(() => this.uploadingFoto = false) // apaga barra sí o sí
+      finalize(() => this.uploadingFoto = false)
     ).subscribe({
       next: (res: any) => {
         const url = this.extractFileUrl(res);
         if (url) {
-          // Guarda la URL final en el form
           this.usuarioForm.patchValue({ fotoPerfil: url });
-          // Conserva la vista previa en UI
           this.fotoFileName = file.name;
+        } else {
+          // ⬇⬇⬇ si el backend no devuelve URL, usamos default
+          this.usuarioForm.patchValue({ fotoPerfil: this.DEFAULT_FOTO_URL });
         }
       },
       error: (err: any) => {
         console.error('[UPLOAD][fotoPerfil]', err);
-        // Si quieres limpiar en error:
-        // this.usuarioForm.patchValue({ fotoPerfil: null });
-        // this.fotoPreviewUrl = null; this.fotoFileName = null;
+        // ⬇⬇⬇ fallback seguro
+        this.usuarioForm.patchValue({ fotoPerfil: this.DEFAULT_FOTO_URL });
+        this.fotoPreviewUrl = null;
+        this.fotoFileName = null;
       }
     });
   }
+
+
+  private ensureDefaultFoto(): void {
+    const val = this.usuarioForm.get('fotoPerfil')?.value;
+    // si está vacío o quedó como File local (aún no subido), forzamos default
+    if (!val || val instanceof File) {
+      this.usuarioForm.patchValue({ fotoPerfil: this.DEFAULT_FOTO_URL });
+    }
+  }
+
 
 
 }

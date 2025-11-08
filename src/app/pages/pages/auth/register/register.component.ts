@@ -387,41 +387,43 @@ export class RegisterComponent implements OnInit, OnDestroy {
   }
 
   Verify() {
-    this.submitButton = 'Cargando...';
-    this.loading = true;
+  this.submitButton = 'Cargando...';
+  this.loading = true;
 
-    const codigo = (this.verifyForm.get('codigo')!.value || '').toString().trim();
-    this.pasajService.verificarPasajero(codigo).subscribe({
-      next: () => {
-        this.submitButton = 'Guardar';
-        this.loading = false;
-        this.pasajService.clearVerificationToken();
-        this.alerts.open({
-          type: 'success',
-          title: '¡Operación Exitosa!',
-          message: 'Tu cuenta de pasajero quedó activada. Ahora puedes iniciar sesión y empezar a usar tu monedero.',
-          confirmText: 'Ir a iniciar sesión',
-          backdropClose: false
-        }).then((res: any) => {
-          const result = typeof res === 'string' ? res : res?.result;
-          if (result === 'confirm') {
-            this.router.navigate(['/login']);
-          }
-        });
-      },
-      error: () => {
-        this.submitButton = 'Guardar';
-        this.loading = false;
-        this.alerts.open({
-          type: 'error',
-          title: '¡Ops!',
-          message: 'Código inválido o expirado. Verifica el código de activación y vuelve a intentarlo. Si el problema continúa, solicita uno nuevo o contáctanos.',
-          confirmText: 'Entendido',
-          backdropClose: false
-        });
-      }
-    });
-  }
+  const codigo = (this.verifyForm.get('codigo')!.value || '').toString().trim();
+  this.pasajService.verificarPasajero(codigo).subscribe({
+    next: () => {
+      this.submitButton = 'Guardar';
+      this.loading = false;
+      this.pasajService.clearVerificationToken();
+      this.alerts.open({
+        type: 'success',
+        title: '¡Operación Exitosa!',
+        message: 'Tu cuenta de pasajero quedó activada. Ahora puedes iniciar sesión y empezar a usar tu monedero.',
+        confirmText: 'Ir a iniciar sesión',
+        backdropClose: false
+      }).then((res: any) => {
+        const result = typeof res === 'string' ? res : res?.result;
+        if (result === 'confirm') {
+          this.router.navigate(['/login']);
+        }
+      });
+    },
+    error: async (err) => {
+      const msg = await this.getErrorMessage(err);
+      this.submitButton = 'Guardar';
+      this.loading = false;
+      this.alerts.open({
+        type: 'error',
+        title: '¡Ops!',
+        message: msg || 'Código inválido o expirado. Verifica el código de activación y vuelve a intentarlo.',
+        confirmText: 'Entendido',
+        backdropClose: false
+      });
+    }
+  });
+}
+
 
   openOtpModal(): void {
     // Reinicia el hash para forzar :target incluso si ya estaba abierto
@@ -435,6 +437,46 @@ export class RegisterComponent implements OnInit, OnDestroy {
         first?.select();
       }, 0);
     }, 0);
+  }
+
+  private async getErrorMessage(err: any): Promise<string> {
+    if (err?.status === 0 && !err?.error) {
+      return 'No hay conexión con el servidor (status 0). Verifica tu red.';
+    }
+    if (err?.error instanceof Blob) {
+      try {
+        const txt = await err.error.text();
+        if (txt) return txt;
+      } catch { }
+    }
+    if (typeof err?.error === 'string' && err.error.trim()) {
+      return err.error;
+    }
+    if (typeof err?.message === 'string' && err.message.trim()) {
+      return err.message;
+    }
+    if (err?.error?.message) {
+      return String(err.error.message);
+    }
+    if (err?.error?.errors) {
+      const e = err.error.errors;
+      if (Array.isArray(e)) {
+        return e.filter(Boolean).join('\n');
+      }
+      if (typeof e === 'object') {
+        const lines: string[] = [];
+        for (const k of Object.keys(e)) {
+          const val = e[k];
+          if (Array.isArray(val)) lines.push(`${k}: ${val.join(', ')}`);
+          else if (val) lines.push(`${k}: ${val}`);
+        }
+        if (lines.length) return lines.join('\n');
+      }
+    }
+    const statusLine = err?.status
+      ? `HTTP ${err.status}${err.statusText ? ' ' + err.statusText : ''}`
+      : '';
+    return statusLine;
   }
 
   closeOtpModal(): void {

@@ -139,4 +139,26 @@ export class AuthenticationService extends BaseServicesService {
     return this.http.post<User>(environment.API_SECURITY + "/login", body)
       .pipe(catchError(this.handleError));
   }
+
+  // auth.service.ts
+  recuperarAcceso(data: { userName: string }) {
+    // Devuelve texto plano: "Se ha enviado un correo..."
+    return this.http.post<string>(
+      environment.API_SECURITY + '/login/recuperar/confirmacion',
+      data,
+      { responseType: 'text' as 'json' } // evita "Http failure during parsing"
+    );
+  }
+
+  // si la verificación (4 dígitos) también retorna texto, haz lo mismo:
+  reenviarCodigo(payload: { codigo: string }) {
+    return this.http.patch<string>(
+      environment.API_SECURITY + '/login/verify',
+      payload,
+      { responseType: 'text' as 'json' }
+    );
+  }
+
+
+
 }

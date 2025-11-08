@@ -73,20 +73,25 @@
 
 
               <div class="col-12 col-md-6 col-lg-3">
-                <label class="form-label"><i class="fa fa-user"></i><span>Nombre</span></label>
+                <label class="form-label">
+                  <i class="fa fa-user"></i>
+                  <span>{{ esMoral ? 'Razón Social' : 'Nombre' }}</span>
+                </label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput placeholder="Nombre" formControlName="nombre" />
+                  <input matInput [placeholder]="esMoral ? 'Razón Social' : 'Nombre'" formControlName="nombre" />
                 </mat-form-field>
               </div>
 
-              <div class="col-12 col-md-6 col-lg-3">
+
+              <div class="col-12 col-md-6 col-lg-3" *ngIf="esFisica">
                 <label class="form-label"><i class="fa fa-user-pen"></i><span>Apellido Paterno</span></label>
                 <mat-form-field appearance="fill" class="w-100">
                   <input matInput placeholder="Apellido Paterno" formControlName="apellidoPaterno" />
                 </mat-form-field>
               </div>
 
-              <div class="col-12 col-md-6 col-lg-3">
+
+              <div class="col-12 col-md-6 col-lg-3" *ngIf="esFisica">
                 <label class="form-label"><i class="fa fa-user"></i><span>Apellido Materno</span></label>
                 <mat-form-field appearance="fill" class="w-100">
                   <input matInput placeholder="Apellido Materno" formControlName="apellidoMaterno" />
@@ -195,7 +200,8 @@
               <div class="col-12 col-md-6 col-lg-3">
                 <label class="form-label"><i class="fa fa-square-phone"></i><span>Teléfono Encargado</span></label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput placeholder="Teléfono Encargado" formControlName="telefonoEncargado" />
+                  <input matInput placeholder="Teléfono Encargado" formControlName="telefonoEncargado"  maxlength="10"
+                    (keypress)="allowOnlyNumbers($event)"/>
                 </mat-form-field>
               </div>
 

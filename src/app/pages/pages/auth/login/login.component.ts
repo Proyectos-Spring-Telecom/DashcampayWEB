@@ -1,27 +1,17 @@
-import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  NgZone,
-  OnInit
-} from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, UntypedFormGroup, Validators } from '@angular/forms';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnDestroy, OnInit, QueryList, ViewChildren } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators, FormGroup } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { fadeInUp400ms } from '@vex/animations/fade-in-up.animation';
-import { MatCheckboxModule } from '@angular/material/checkbox';
+import { NgIf } from '@angular/common';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatButtonModule } from '@angular/material/button';
-import { NgIf } from '@angular/common';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { Credentials } from 'src/app/entities/Credentials';
-import { AuthenticationService } from 'src/app/core/services/auth.service';
-import { catchError, throwError } from 'rxjs';
-import { User } from 'src/app/entities/User';
 import { fadeInRight400ms } from '@vex/animations/fade-in-right.animation';
+import { AuthenticationService } from 'src/app/core/services/auth.service';
 import { AlertsService } from '../../modal/alerts.service';
+import { User } from 'src/app/entities/User';
+import { Location } from '@angular/common';
 
 @Component({
   selector: 'vex-login',
@@ -34,169 +24,362 @@ import { AlertsService } from '../../modal/alerts.service';
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
-    NgIf,
     MatButtonModule,
-    MatTooltipModule,
     MatIconModule,
-    MatCheckboxModule,
+    MatTooltipModule,
     RouterLink,
-    MatSnackBarModule
+    NgIf
   ]
 })
-
-export class LoginComponent implements OnInit {
-  form = this.fb.group({
-    email: ['', Validators.required],
-    password: ['', Validators.required]
-  });
-
+export class LoginComponent implements OnInit, OnDestroy {
   inputType = 'password';
   visible = false;
-  public textLogin: string = 'Iniciar Sesión';
-  public loading: boolean = false;
-  public loginForm: UntypedFormGroup;
-  public credentials: Credentials;
-  modalOpen = false;
-  modalClosing = false;
+  textLogin = 'Iniciar Sesión';
+  loading = false;
+  otpOpen = false;
+  loginForm: FormGroup = this.fb.group({
+    userName: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required]]
+  });
+  emailForm: FormGroup = this.fb.group({
+    userName: ['', [Validators.required, Validators.email]]
+  });
+  verifyForm: FormGroup = this.fb.group({
+    codigo: ['', [Validators.required]]
+  });
+  modalStep: 'email' | 'otp' = 'email';
+  @ViewChildren('otpInput') otpInputs!: QueryList<ElementRef<HTMLInputElement>>;
+  otp: string[] = ['', '', '', ''];
+  resendDisabled = false;
+  resendSeconds = 60;
+  private resendTimer?: number;
+  private emailFlowTimers: any[] = [];
 
   constructor(
-    private router: Router,
     private fb: FormBuilder,
-    private alerts: AlertsService,
-    private cd: ChangeDetectorRef,
-    private snackbar: MatSnackBar,
     private auth: AuthenticationService,
-    private zone: NgZone, private cdr: ChangeDetectorRef,
-  ) {
-    this.loginForm = this.fb.group({
-      userName: [''],
-      password: ['']
-    });
-
-    this.credentials = {};
-  }
+    private alerts: AlertsService,
+    private router: Router,
+    private cdr: ChangeDetectorRef,
+    private location: Location
+  ) { }
 
   ngOnInit(): void {
-    this.initForm();
+    this.otpOpen = false;
+    if (window?.location?.hash) {
+      this.location.replaceState(window.location.pathname + window.location.search);
+    }
+    this.otpOpen = false;
   }
 
-  send() {
-    this.router.navigate(['/']);
-    this.snackbar.open(
-      "Lucky you! Looks like you didn't need a password or email address! For a real application we provide validators to prevent this. ;)",
-      'THANKS',
-      {
-        duration: 10000
-      }
-    );
+  ngOnDestroy(): void {
+    if (this.resendTimer) clearInterval(this.resendTimer as any);
+    this.clearEmailFlowTimers();
   }
 
   toggleVisibility() {
-    if (this.visible) {
-      this.inputType = 'password';
-      this.visible = false;
-      this.cd.markForCheck();
-    } else {
-      this.inputType = 'text';
-      this.visible = true;
-      this.cd.markForCheck();
-    }
+    this.inputType = this.visible ? 'password' : 'text';
+    this.visible = !this.visible;
+    this.cdr.markForCheck();
   }
 
-  initForm() {
-    this.loginForm = this.fb.group({
-      userName: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required]],
-      // email: ['admin@themesbrand.com', [Validators.required, Validators.email]],
-      // password: ['123456', [Validators.required]],
-    });
-  }
-
-onSubmit() {
-  this.loading = true;
-  this.textLogin = 'Cargando...';
-  const credentials = this.loginForm.value;
-
-  this.auth.authenticate(credentials).subscribe({
-    next: (result: User) => {
-      this.zone.run(() => {
-        // this.modalOpen = true;
-        // this.modalClosing = false;
-        this.alerts.open({
-          type: 'success',
-          title: 'Inicio de sesión correcto',
-          message: 'Tu cuenta ha sido autenticada exitosamente.',
-          showCancel: false,
-          confirmText: 'Confirmar',
-          cancelText: 'Cancelar'
-        }).then(result => {
-          if (result === 'confirm') {
-            this.router.navigate(['/administracion/dashboard']);
-          } else {
-            
-          }
-        });
+  onSubmit() {
+    if (this.loginForm.invalid || this.loading) return;
+    this.loading = true;
+    this.textLogin = 'Cargando...';
+    const credentials = this.loginForm.value;
+    this.auth.authenticate(credentials).subscribe({
+      next: (result: User) => {
         this.loading = false;
         this.textLogin = 'Iniciar Sesión';
-        this.cdr.detectChanges();
-        setTimeout(() => this.auth.setData(result), 0);
-      });
-    },
-    error: (err: any) => {
-      this.zone.run(() => {
+        this.cdr.markForCheck();
+        this.alerts.open({
+          type: 'success',
+          title: '¡Operación Exitosa!',
+          message: 'Tu cuenta ha sido autenticada exitosamente.',
+          confirmText: 'Confirmar',
+          backdropClose: false
+        }).then(res => {
+          if (res === 'confirm') {
+            this.auth.setData(result);
+            this.router.navigate(['/administracion/dashboard']);
+          }
+        });
+      },
+      error: async (err) => {
+        const msg = (await this.getErrorMessage(err)) || 'Ocurrió un error al ingresar sus credenciales.';
+        this.loading = false;
+        this.textLogin = 'Iniciar Sesión';
+        this.cdr.markForCheck();
         this.alerts.open({
           type: 'error',
           title: '¡Ops!',
-          message: 'Ocurrio un error al ingresar sus credenciales.',
+          message: msg,
+          confirmText: 'Entendido',
+          backdropClose: false
         });
+      }
+    });
+  }
+
+  onSendEmail() {
+    if (this.emailForm.invalid || this.loading) return;
+    this.loading = true;
+    const payload = { userName: this.emailForm.get('userName')!.value };
+
+    this.auth.recuperarAcceso(payload).subscribe({
+      next: (msg: string) => {
         this.loading = false;
-        this.textLogin = 'Iniciar Sesión';
-        this.cdr.detectChanges();
-      });
+        this.cdr.markForCheck();
+        this.closeOtpModal();
+        const t1 = setTimeout(() => {
+          this.alerts.open({
+            type: 'success',
+            title: '¡Operación Exitosa!',
+            message: msg || 'Se ha enviado un correo con el código de autenticación.',
+            confirmText: 'Continuar',
+            backdropClose: false
+          }).then(() => {
+            const t2 = setTimeout(() => {
+              this.startResendCountdown();
+              this.resendMsg = null;      // <-- limpiar mensaje previo
+              this.goToOtpStep();
+              this.openModal('otp');
+            }, 2000);
+          });
+        }, 2000);
+      },
+      error: async (err) => {
+        const msg = (await this.getErrorMessage(err));
+        this.loading = false;
+        this.cdr.markForCheck();
+        this.alerts.open({ type: 'error', title: '¡Ops!', message: msg, confirmText: 'Entendido', backdropClose: false });
+      }
+    });
+  }
+
+  onOtpInput(e: Event, i: number) {
+    const input = e.target as HTMLInputElement;
+    const v = (input.value || '').replace(/\D/g, '').slice(0, 1);
+    input.value = v;
+    this.otp[i] = v;
+    if (v && i < 3) {
+      const next = this.otpInputs?.get(i + 1)?.nativeElement;
+      next?.focus();
+      next?.select();
     }
-  });
-}
+    if (this.otp.join('').length === 4) {
+      this.verifyForm.patchValue({ codigo: this.otp.join('') }, { emitEvent: false });
+    }
+  }
 
-// Handlers específicos del modal rojo
-closeErrorModal() {
-  this.modalErrorClosing = true;
-  this.cdr.detectChanges();
-  setTimeout(() => {
-    this.modalErrorOpen = false;
-    this.modalErrorClosing = false;
-    this.cdr.detectChanges();
-  }, 200);
-}
-onBackdropError() { this.closeErrorModal(); }
+  onOtpKeydown(e: KeyboardEvent, i: number) {
+    const input = e.target as HTMLInputElement;
+    if (e.key === 'Backspace' && !input.value && i > 0) {
+      const prev = this.otpInputs?.get(i - 1)?.nativeElement;
+      prev?.focus();
+      prev?.select();
+      return;
+    }
+    if (!/^\d$/.test(e.key) && e.key !== 'Backspace' && e.key.length === 1) {
+      e.preventDefault();
+    }
+  }
 
-closeModal() {
-  this.modalClosing = true;
-  this.cdr.detectChanges();
+  onVerify() {
+    this.verifyForm.patchValue({ codigo: this.otp.join('') }, { emitEvent: false });
+    this.verifyForm.markAllAsTouched();
+    this.verifyForm.updateValueAndValidity();
+    if (this.verifyForm.invalid) {
+      this.alerts.open({
+        type: 'warning',
+        title: '¡Ops!',
+        message: `
+        <p style="text-align:center;font-size:15px;margin-bottom:16px;color:white">
+          Los siguientes <strong>campos obligatorios</strong> están vacíos.<br>
+          Por favor complétalos antes de continuar:
+        </p>
+        <div style="max-height:350px;overflow-y:auto;">
+          <div style="padding:8px 12px;border-left:4px solid #d9534f;background:#caa8a8;text-align:center;margin-bottom:8px;border-radius:4px;">
+            <strong style="color:#b02a37;">1. Código de Verificación</strong>
+          </div>
+        </div>
+      `,
+        confirmText: 'Entendido',
+        backdropClose: false
+      });
+      return;
+    }
 
-  // Navega DESPUÉS de la animación
-  setTimeout(() => {
-    this.modalOpen = false;
-    this.modalClosing = false;
-    this.cdr.detectChanges();
-    this.router.navigate(['/administracion/dispositivos']);
-  }, 600);
-}
+    this.loading = true;
+    const codigo = (this.verifyForm.get('codigo')!.value || '').toString().trim();
 
-  openModal() {
-    this.modalOpen = true;
-    this.modalClosing = false;
+    this.auth.reenviarCodigo({ codigo }).subscribe({
+      next: (msg: string) => {
+        this.loading = false;
+        this.otp = ['', '', '', ''];
+        this.verifyForm.reset({ codigo: '' }, { emitEvent: false });
+        this.closeOtpModal();
+        this.cdr.markForCheck();
+        this.alerts.open({
+          type: 'success',
+          title: '¡Operación Exitosa!',
+          message: msg || 'Código validado correctamente. Tu cuenta fue verificada.',
+          confirmText: 'Entendido',
+          backdropClose: false
+        });
+      },
+      error: async (err) => {
+        this.loading = false;
+        this.cdr.markForCheck();
+        const msg = (await this.getErrorMessage(err));
+        this.alerts.open({
+          type: 'error',
+          title: '¡Ops!',
+          message: msg,
+          confirmText: 'Entendido',
+          backdropClose: false
+        });
+      }
+    });
   }
 
 
+  private goToOtpStep(): void {
+    this.resendMsg = null;
+    this.modalStep = 'otp';
+    this.otp = ['', '', '', ''];
+    this.verifyForm.reset({ codigo: '' }, { emitEvent: false });
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      const first = this.otpInputs?.get(0)?.nativeElement;
+      first?.focus(); first?.select?.();
+    }, 0);
+  }
 
-// Agrega estos dos si los referencías en el HTML
-onBackdrop() { this.closeModal(); }
-onAnimEnd() { /* no-op para evitar errores de plantilla */ }
+  otpClosing = false;
 
+  onResend() {
+    if (this.resendDisabled || this.loading) return;
+    if (this.emailForm.invalid) return;
 
+    this.loading = true;
+    const payload = { userName: this.emailForm.get('userName')!.value };
 
-modalErrorOpen = false;
-modalErrorClosing = false;
+    this.auth.recuperarAcceso(payload).subscribe({
+      next: (msg: string) => {
+        this.loading = false;
+        this.startResendCountdown();
+        this.resendMsg = msg || 'Se ha enviado nuevamente el correo con tu código de verificación.';
+        this.cdr.markForCheck();
+      },
+      error: async (err) => {
+        // si prefieres no mostrar errores inline, mantenemos alerta para error
+        const msg = (await this.getErrorMessage(err));
+        this.loading = false;
+        this.cdr.markForCheck();
+        this.alerts.open({ type: 'error', title: '¡Ops!', message: msg, confirmText: 'Entendido', backdropClose: false });
+      }
+    });
+  }
 
+  private startResendCountdown() {
+    if (this.resendTimer) clearInterval(this.resendTimer as any);
+    this.resendDisabled = true;
+    this.resendSeconds = 60;
+    this.resendTimer = setInterval(() => {
+      this.resendSeconds -= 1;
+      if (this.resendSeconds <= 0) {
+        clearInterval(this.resendTimer as any);
+        this.resendDisabled = false;
+      }
+      this.cdr.markForCheck();
+    }, 1000) as unknown as number;
+  }
 
+  openOtpModal(): void {
+    this.modalStep = 'email';
+    this.otpOpen = true;
+    this.cdr.markForCheck();
+    setTimeout(() => {
+      const el = document.querySelector('#otp-modal .otp-email') as HTMLInputElement | null;
+      el?.focus(); el?.select?.();
+    }, 0);
+  }
+
+  closeOtpModal(ev?: Event) {
+    ev?.preventDefault();
+    if (!this.otpOpen || this.otpClosing) return;
+    this.otpClosing = true;
+    this.cdr.markForCheck();
+    setTimeout(() => {
+      this.otpOpen = false;
+      this.otpClosing = false;
+      this.cdr.markForCheck();
+    }, 220); // debe coincidir con la duración en CSS
+  }
+
+  private clearEmailFlowTimers() {
+    this.emailFlowTimers.forEach(t => clearTimeout(t));
+    this.emailFlowTimers = [];
+  }
+
+  openModal(step: 'email' | 'otp' = 'email') {
+    this.modalStep = step;
+    this.otpClosing = false;
+    this.otpOpen = true;
+    this.cdr.detectChanges();
+    if (step === 'otp') {
+      setTimeout(() => {
+        this.otpInputs?.get(0)?.nativeElement?.focus();
+        this.otpInputs?.get(0)?.nativeElement?.select?.();
+      }, 0);
+    }
+  }
+
+  private async getErrorMessage(err: any): Promise<string> {
+    if (err?.status === 0 && !err?.error) {
+      return 'No hay conexión con el servidor (status 0). Verifica tu red.';
+    }
+    if (err?.error instanceof Blob) {
+      try {
+        const txt = await err.error.text();
+        if (txt) return txt;
+      } catch { }
+    }
+    if (typeof err?.error === 'string' && err.error.trim()) {
+      return err.error;
+    }
+    if (typeof err?.message === 'string' && err.message.trim()) {
+      return err.message;
+    }
+    if (err?.error?.message) {
+      return String(err.error.message);
+    }
+    if (err?.error?.errors) {
+      const e = err.error.errors;
+      if (Array.isArray(e)) {
+        return e.filter(Boolean).join('\n');
+      }
+      if (typeof e === 'object') {
+        const lines: string[] = [];
+        for (const k of Object.keys(e)) {
+          const val = e[k];
+          if (Array.isArray(val)) lines.push(`${k}: ${val.join(', ')}`);
+          else if (val) lines.push(`${k}: ${val}`);
+        }
+        if (lines.length) return lines.join('\n');
+      }
+    }
+    const statusLine = err?.status
+      ? `HTTP ${err.status}${err.statusText ? ' ' + err.statusText : ''}`
+      : '';
+    return statusLine;
+  }
+
+  setEmailStep() {
+    this.modalStep = 'email';
+    this.cdr.markForCheck();
+  }
+  resendMsg: string | null = null;
 }

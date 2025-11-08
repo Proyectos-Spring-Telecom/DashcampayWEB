@@ -85,3 +85,355 @@
   transform: translateY(0);
   background: rgba(31, 90, 168, 0.2);
 }
+
+
+
+/* ===================================================================
+   MODAL OTP (estilo mejorado)
+   =================================================================== */
+
+/* Backdrop con blur y atenuación */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2, 6, 23, .62);
+  -webkit-backdrop-filter: saturate(120%) blur(6px);
+  backdrop-filter: saturate(120%) blur(6px);
+  padding: 20px;
+  z-index: 60;
+}
+.modal-backdrop:target { display: flex; }
+
+/* Card base y variante grande */
+.modal-card {
+  width: 100%;
+  max-width: 480px;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.25);
+  overflow: hidden;
+}
+.modal-card.modal-xl {
+  max-width: 860px;
+  border-radius: 24px;
+  box-shadow: 0 30px 80px rgba(0,0,0,.35);
+  transform: translateY(6px);
+  animation: otpPop .18s ease-out forwards;
+}
+@keyframes otpPop { to { transform: translateY(0); } }
+
+/* Además del :target, permite abrir por clase */
+.modal-backdrop.is-open { display: flex; }
+
+
+/* Header */
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 18px;
+  background: linear-gradient(135deg, var(--azul-oscuro), #0c3b73);
+  color: #fff;
+}
+.modal-header h3 { margin: 0; font-weight: 700; }
+.modal-header .close {
+  color: #fff; text-decoration: none; font-size: 22px; line-height: 1;
+  padding: 6px 10px; border-radius: 10px; transition: .15s;
+}
+.modal-header .close:hover { background: rgba(255,255,255,.14); }
+
+/* Título y body del OTP */
+.otp-header { padding: 26px 28px; }
+.otp-title {
+  color: #0A2E57;
+  margin: 0;
+  font-weight: 800;
+  font-size: clamp(24px, 3.4vw, 40px);
+  letter-spacing: .2px;
+}
+
+.modal-body { padding: 18px; }
+.otp-body { padding: 28px 34px 30px; text-align: center; }
+.modal-text { margin: 0 0 10px; color: #0b1220; }
+.otp-subtitle {
+  margin: 10px auto 18px;
+  max-width: 720px;
+  color: #0b1220;
+  font-size: clamp(14px, 1.8vw, 20px);
+}
+.otp-subtitle strong { font-weight: 700; }
+
+/* Inputs OTP estilo tarjeta */
+.otp-inputs {
+  display: flex;
+  gap: 18px;
+  justify-content: center;
+  margin: 20px 0 26px;
+  flex-wrap: wrap;
+}
+.otp-box {
+  width: 84px;
+  height: 84px;
+  border-radius: 20px;
+  border: 2px solid #e5e7eb;
+  background: #fff;
+  text-align: center;
+  font-size: 38px;
+  font-weight: 800;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s, transform .06s;
+  caret-color: transparent;
+}
+.otp-elev {
+  box-shadow: 0 10px 25px rgba(2, 6, 23, .08), inset 0 0 0 0 rgba(0,0,0,0);
+}
+.otp-box:focus {
+  border-color: #0b2847;
+  box-shadow: 0 0 0 4px rgba(11, 40, 71, .12), 0 14px 30px rgba(2,6,23,.12);
+}
+.otp-box:active { transform: scale(.98); }
+
+@media (max-width: 560px) {
+  .otp-box { width: 64px; height: 64px; font-size: 30px; border-radius: 16px; }
+}
+
+/* Acciones */
+.otp-actions {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Botón verificar (nuevo look) */
+.btn-verify {
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+  padding: 14px 30px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 18px;
+  color: #fff;
+  background: linear-gradient(135deg, #2ecc71, #1abc9c);
+  box-shadow: 0 10px 20px rgba(46, 204, 113, .25);
+  transition: filter .15s, transform .06s;
+}
+.btn-verify:hover { filter: brightness(1.06); }
+.btn-verify:active { transform: translateY(1px); }
+.btn-verify:disabled { opacity: .65; cursor: not-allowed; }
+
+/* Reenviar */
+.link-resend {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  color: #0b2847;
+  font-weight: 700;
+  text-decoration: underline;
+  padding: 10px 12px;
+  border-radius: 10px;
+  transition: background .15s;
+}
+.link-resend:hover { background: rgba(2,6,23,.06); }
+.link-resend[disabled] { opacity: .55; cursor: not-allowed; text-decoration: none; }
+
+/* Nota inferior */
+.otp-footnote { margin-top: 14px; color: #475569; font-size: 15px; }
+
+/* Botón primario alterno (por compatibilidad con versiones anteriores del modal) */
+.btn-primary {
+  width: 100%;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--azul), #2a6ed1);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter .15s;
+}
+.btn-primary:disabled { opacity: .65; cursor: not-allowed; }
+.btn-primary:hover:not(:disabled) { filter: brightness(1.05); }
+
+
+/* Input de email a 100% (no usar con .otp-box) */
+.otp-email {
+  width: 100%;
+  max-width: 720px;
+  height: 56px;
+  border-radius: 16px;
+  border: 2px solid #e5e7eb;
+  background: #fff;
+  padding: 0 16px;
+  font-size: 16px;
+  font-weight: 600;
+  outline: none;
+  display: block;
+  margin: 12px auto 20px;
+  box-shadow: 0 10px 25px rgba(2, 6, 23, .08);
+  transition: border-color .15s, box-shadow .15s, transform .06s;
+}
+
+.otp-email:focus {
+  border-color: #0b2847;
+  box-shadow: 0 0 0 4px rgba(11, 40, 71, .12), 0 14px 30px rgba(2,6,23,.12);
+}
+
+@media (max-width: 560px) {
+  .otp-email {
+    max-width: 100%;
+    height: 52px;
+    border-radius: 14px;
+    font-size: 15px;
+  }
+}
+
+/* Abrir modal: estilo enlace, sin fondo y compacto */
+.btn-open-otp {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0c3b73; /* o var(--azul-oscuro) */
+  text-decoration: underline;
+  cursor: pointer;
+}
+.btn-open-otp:hover { text-decoration: none; }
+
+/* Cerrar modal: compacto */
+/* Cerrar: mismo tamaño que .btn-verify pero sin fondo y en azul */
+.btn-close-otp,
+a.btn-close-otp,
+button.btn-close-otp {
+  appearance: none;
+  background: transparent;
+  border: 2px solid var(--azul);       /* azul */
+  color: var(--azul);                   /* azul */
+  padding: 14px 30px;                   /* igual que .btn-verify */
+  border-radius: 999px;                 /* pill */
+  font-weight: 800;
+  font-size: 18px;                      /* igual que .btn-verify */
+  line-height: 1;
+  cursor: pointer;
+  text-decoration: none;                /* sin subrayado */
+  box-shadow: none;                     /* sin sombra */
+  transition: background .15s, color .15s, border-color .15s, transform .06s;
+}
+
+.btn-close-otp:hover,
+a.btn-close-otp:hover,
+button.btn-close-otp:hover {
+  background: rgba(31, 90, 168, 0.08);  /* azul suave al hover */
+}
+
+.btn-close-otp:active,
+a.btn-close-otp:active,
+button.btn-close-otp:active {
+  transform: translateY(1px);
+}
+
+.btn-close-otp:disabled,
+a.btn-close-otp[disabled],
+button.btn-close-otp:disabled {
+  opacity: .65;
+  cursor: not-allowed;
+}
+
+
+
+/* Botón "Verificar cuenta por correo" */
+.btn-open-otp {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 4px 6px;
+  margin: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  text-decoration: none;        /* sin subrayado */
+}
+
+.btn-open-otp:hover,
+.btn-open-otp:focus {
+  text-decoration: none;        /* mantiene sin subrayado al hover/focus */
+  outline: none;
+}
+
+/* Estilo del texto interno (tu h4) */
+.btn-open-otp .body-2 {
+  color: #2ecc71;               /* verde */
+  font-size: 12px;              /* compacto */
+  line-height: 1.2;
+  font-weight: 800;
+  margin: 0;
+  text-decoration: none;        /* asegura sin subrayado */
+}
+
+/* Opcional: estado activo sutil */
+.btn-open-otp:active .body-2 {
+  transform: translateY(1px);
+}
+
+.resend-note {
+  margin-top: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #2ecc71; /* verde éxito */
+}
+
+
+/* base */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2, 6, 23, .62);
+  -webkit-backdrop-filter: saturate(120%) blur(6px);
+  backdrop-filter: saturate(120%) blur(6px);
+  padding: 20px;
+  z-index: 60;
+
+  /* para animar */
+  opacity: 0;
+  transition: opacity .22s ease;
+}
+.modal-backdrop.is-open {
+  display: flex;            /* se muestra */
+  opacity: 1;               /* fade-in */
+}
+.modal-backdrop.is-closing {
+  opacity: 0;               /* fade-out */
+}
+
+/* tarjeta con leve slide/scale */
+.modal-card.modal-xl {
+  max-width: 860px;
+  border-radius: 24px;
+  box-shadow: 0 30px 80px rgba(0,0,0,.35);
+  transform: translateY(6px) scale(0.98);
+  transition: transform .22s ease, opacity .22s ease;
+  opacity: 0;
+}
+
+/* cuando está abierta, entra */
+.is-open .modal-card.modal-xl {
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+/* al cerrar, sale */
+.is-closing .modal-card.modal-xl {
+  transform: translateY(10px) scale(0.98);
+  opacity: 0;
+}

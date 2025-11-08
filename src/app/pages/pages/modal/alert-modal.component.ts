@@ -21,13 +21,13 @@ export class AlertModalComponent {
   private navPending = false;
   private _lastResult: AlertResult | null = null;
 
-iconPath = {
-  success: 'M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z',
-  error:   'M18.3 5.71 16.88 4.29 10.59 10.59 4.29 4.29 2.87 5.71 9.17 12 2.87 18.29 4.29 19.71 10.59 13.41 16.88 19.71 18.3 18.29 12 12z',
-  warning: 'M12 2 2 22h20L12 2zm1 15h-2v-2h2v2zm0-4h-2V8h2v5z',
-  // círculo más grande pero con grosor medio y “i” estilizada
-  info:    'M12 1.5C6.2 1.5 1.5 6.2 1.5 12S6.2 22.5 12 22.5 22.5 17.8 22.5 12 17.8 1.5 12 1.5ZM11 7h2v2h-2V7Zm0 4h2v7h-2v-7Z'
-} as const;
+  iconPath = {
+    success: 'M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z',
+    error: 'M18.3 5.71 16.88 4.29 10.59 10.59 4.29 4.29 2.87 5.71 9.17 12 2.87 18.29 4.29 19.71 10.59 13.41 16.88 19.71 18.3 18.29 12 12z',
+    warning: 'M12 2 2 22h20L12 2zm1 15h-2v-2h2v2zm0-4h-2V8h2v5z',
+    // círculo más grande pero con grosor medio y “i” estilizada
+    info: 'M12 1.5C6.2 1.5 1.5 6.2 1.5 12S6.2 22.5 12 22.5 22.5 17.8 22.5 12 17.8 1.5 12 1.5ZM11 7h2v2h-2V7Zm0 4h2v7h-2v-7Z'
+  } as const;
 
 
 
@@ -60,61 +60,70 @@ iconPath = {
   }
 
   confirm() { this.close('confirm'); }
-  cancel()  { this.close('cancel');  }
+  cancel() { this.close('cancel'); }
 
   @HostListener('document:keydown', ['$event'])
   onKey(e: KeyboardEvent) {
     if (!this.open || this.closing) return;
+
+    if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey && !e.isComposing) {
+      if (this.state && !this.state.showCancel) {
+        e.preventDefault();
+        this.confirm();
+        return;
+      }
+    }
+
     if (e.key === 'Escape') {
       e.preventDefault();
       this.close('cancel');
     }
   }
 
-onAnimEnd(e: AnimationEvent) {
-  if (!this.closing) return;
-  if (e.animationName === 'am-pop-out' || e.animationName === 'am-fade-out') {
-    if (this.closeFallback) { clearTimeout(this.closeFallback); this.closeFallback = null; }
-    this.finalizeClose();
-  }
-}
 
-// añade este método
-private finalizeClose() {
-  if (!this.closing) return;
-  this.open = false;
-  this.closing = false;
-  this.unlockScroll();
-
-  const target = this.state?.navigateAfterClose;
-  if (target && !this.navPending) {
-    this.navPending = true;
-    const delay = this.state!.navigateDelayMs ?? 300;
-    setTimeout(() => {
-      Array.isArray(target) ? this.router.navigate(target) : this.router.navigate([target]);
-      this.navPending = false;
-    }, delay);
+  onAnimEnd(e: AnimationEvent) {
+    if (!this.closing) return;
+    if (e.animationName === 'am-pop-out' || e.animationName === 'am-fade-out') {
+      if (this.closeFallback) { clearTimeout(this.closeFallback); this.closeFallback = null; }
+      this.finalizeClose();
+    }
   }
 
-  this.alerts._resolve(this._lastResult as AlertResult);
-  this._lastResult = null;
-  this.state = null;
-  this.cdr.detectChanges();
-}
+  // añade este método
+  private finalizeClose() {
+    if (!this.closing) return;
+    this.open = false;
+    this.closing = false;
+    this.unlockScroll();
 
-private closeFallback: any = null;
+    const target = this.state?.navigateAfterClose;
+    if (target && !this.navPending) {
+      this.navPending = true;
+      const delay = this.state!.navigateDelayMs ?? 300;
+      setTimeout(() => {
+        Array.isArray(target) ? this.router.navigate(target) : this.router.navigate([target]);
+        this.navPending = false;
+      }, delay);
+    }
 
-// reemplaza tu close(...)
-private close(reason: AlertResult) {
-  if (!this.state || this.closing) return;
-  this._lastResult = reason;
-  this.closing = true;
-  this.cdr.markForCheck();
+    this.alerts._resolve(this._lastResult as AlertResult);
+    this._lastResult = null;
+    this.state = null;
+    this.cdr.detectChanges();
+  }
 
-  // Fallback por si no se emite animationend
-  if (this.closeFallback) clearTimeout(this.closeFallback);
-  this.closeFallback = setTimeout(() => this.finalizeClose(), 260); // > 0.18s
-}
+  private closeFallback: any = null;
+
+  // reemplaza tu close(...)
+  private close(reason: AlertResult) {
+    if (!this.state || this.closing) return;
+    this._lastResult = reason;
+    this.closing = true;
+    this.cdr.markForCheck();
+
+    if (this.closeFallback) clearTimeout(this.closeFallback);
+    this.closeFallback = setTimeout(() => this.finalizeClose(), 260);
+  }
 
   private lockScroll() {
     this.prevOverflow = document.body.style.overflow;

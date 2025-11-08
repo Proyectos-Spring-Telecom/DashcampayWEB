@@ -19,7 +19,23 @@ import { UsuariosService } from 'src/app/pages/services/usuarios.service';
 export class ListaContadoraComponent implements OnInit {
 
   layoutCtrl = new UntypedFormControl('fullwidth');
-  
+  estadoLabel: Record<number, string> = {
+    0: 'Inactivo',
+    1: 'Disponible',
+    2: 'Asignado',
+    3: 'En mantenimiento',
+    4: 'Dañado',
+    5: 'Retirado'
+  };
+
+  estadoClass: Record<number, string> = {
+    0: 'ea-inactivo',
+    1: 'ea-disponible',
+    2: 'ea-asignado',
+    3: 'ea-mantenimiento',
+    4: 'ea-danado',
+    5: 'ea-retirado'
+  };
   isLoading: boolean = false;
   listaDispositivos: any;
   public grid: boolean = false;

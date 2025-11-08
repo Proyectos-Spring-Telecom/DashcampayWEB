@@ -1,92 +1,269 @@
 <vex-page-layout @fadeInRight>
-    <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
-        [class.px-6]="layoutCtrl.value === 'fullwidth'">
-        <div class="card mt-4">
-            <div class="container-fluid p-4">
-                <div class="bg-app-bar appbar px-6 h-16 border-b sticky top-0 left-0 flex items-center z-10">
-                    <nav class="breadcrumb-simple" aria-label="Ruta de navegación">
-                        <a routerLink="/administracion" class="crumb-link">
-                            <mat-icon inline>home</mat-icon>
-                            Administración
-                        </a>
-                        <span class="sep">/</span>
-                        <span class="crumb-current" aria-current="page">Instalaciones</span>
-                        <span class="sep">/</span>
-                        <span class="crumb-current" aria-current="page">{{title}}</span>
-                    </nav>
-                </div>
-                <section class="mt-4">
-                    <form [formGroup]="instalacionesForm" class="form-skin-lite">
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <div class="section-head">
-                                    <h5 class="mb-1">Datos Generales</h5>
-                                </div>
-                                <div class="section-bar"></div>
-                            </div>
-                            <div class="col-12 col-md-6 col-lg-3">
-                                <label class="form-label">
-                                    <i class="fa fa-user-tie"></i><span>Cliente</span>
-                                </label>
-                                <mat-form-field appearance="fill" class="w-100">
-                                    <mat-select placeholder="Cliente" formControlName="idCliente">
-                                        <mat-option *ngFor="let c of listaClientes" [value]="c.id">
-                                            {{ c.nombreCliente || (c.nombre || '') + ' ' + (c.apellidoPaterno || '') + '
-                                            ' + (c.apellidoMaterno || '') }}
-                                        </mat-option>
-                                    </mat-select>
-                                </mat-form-field>
-                            </div>
-                            <div class="col-12 col-md-6 col-lg-3">
-                                <label class="form-label">
-                                    <i class="fa fa-microchip"></i><span>Validadores</span>
-                                </label>
-                                <mat-form-field appearance="fill" class="w-100">
-                                    <mat-select placeholder="Validador" formControlName="idValidador">
-                                        <mat-option *ngFor="let d of listaValidadores" [value]="d.id">
-                                            {{ d.numeroSerie }} - {{ d.marca }} - {{ d.modelo }}
-                                        </mat-option>
-                                    </mat-select>
-                                </mat-form-field>
-
-                            </div>
-                            <div class="col-12 col-md-6 col-lg-3">
-                                <label class="form-label">
-                                    <i class="fa fa-bluetooth-b"></i><span>Contadores</span>
-                                </label>
-                                <mat-form-field appearance="fill" class="w-100">
-                                    <mat-select placeholder="Contador" formControlName="idContador">
-                                        <mat-option *ngFor="let b of listaContadores" [value]="b.id">
-                                            {{ b.numeroSerie }} - {{ b.marca }} - {{ b.modelo }}
-                                        </mat-option>
-                                    </mat-select>
-                                </mat-form-field>
-                            </div>
-                            <div class="col-12 col-md-6 col-lg-3">
-                                <label class="form-label">
-                                    <i class="fa fa-car"></i><span>Vehículo</span>
-                                </label>
-                                <mat-form-field appearance="fill" class="w-100">
-                                    <mat-select placeholder="Vehículo" formControlName="idVehiculo">
-                                        <mat-option *ngFor="let v of listaVehiculos" [value]="v.id">
-                                            {{  v.placa }} - {{ v.numeroEconomico }}
-                                        </mat-option>
-                                    </mat-select>
-                                </mat-form-field>
-                            </div>
-                            <div class="col-12 d-flex justify-content-end gap-2 pt-2">
-                                <button mat-raised-button color="primary" type="submit" (click)="submit()">
-                                    <mat-icon>save</mat-icon> Guardar
-                                </button>
-                                <button mat-raised-button color="warn" type="button" (click)="regresar()">
-                                    <mat-icon>close</mat-icon> Cancelar
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </section>
-            </div>
+  <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
+                           [class.px-6]="layoutCtrl.value === 'fullwidth'">
+    <div class="card mt-4">
+      <div class="container-fluid p-4">
+        <div class="bg-app-bar appbar px-6 h-16 border-b sticky top-0 left-0 flex items-center z-10">
+          <nav class="breadcrumb-simple" aria-label="Ruta de navegación">
+            <a routerLink="/administracion" class="crumb-link">
+              <mat-icon inline>home</mat-icon>
+              Administración
+            </a>
+            <span class="sep">/</span>
+            <span class="crumb-current" aria-current="page">Instalaciones</span>
+            <span class="sep">/</span>
+            <span class="crumb-current" aria-current="page">{{ title }}</span>
+          </nav>
         </div>
 
-    </vex-page-layout-content>
+        <section class="mt-4">
+          <form [formGroup]="instalacionesForm" class="form-skin-lite">
+            <div class="row g-3">
+              <div class="col-12">
+                <div class="section-head">
+                  <h5 class="mb-1">Datos Generales</h5>
+                </div>
+                <div class="section-bar"></div>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-3">
+                <label class="form-label">
+                  <i class="fa fa-user-tie"></i><span>Cliente</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-select placeholder="Cliente" formControlName="idCliente">
+                    <mat-option *ngFor="let c of listaClientes" [value]="c.id">
+                      {{ c.nombreCliente || (c.nombre || '') + ' ' + (c.apellidoPaterno || '') + ' ' + (c.apellidoMaterno || '') }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-3">
+                <label class="form-label">
+                  <i class="fa fa-microchip"></i><span>Validadores</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-select placeholder="Validador" formControlName="idValidador">
+                    <mat-option *ngFor="let d of listaValidadores" [value]="d.id">
+                      {{ d.numeroSerie }} - {{ d.marca }} - {{ d.modelo }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-3">
+                <label class="form-label">
+                  <i class="fa fa-bluetooth-b"></i><span>Contadores</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-select placeholder="Contador" formControlName="idContador">
+                    <mat-option *ngFor="let b of listaContadores" [value]="b.id">
+                      {{ b.numeroSerie }} - {{ b.marca }} - {{ b.modelo }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-3">
+                <label class="form-label">
+                  <i class="fa fa-car"></i><span>Vehículo</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-select placeholder="Vehículo" formControlName="idVehiculo">
+                    <mat-option *ngFor="let v of listaVehiculos" [value]="v.id">
+                      {{ v.placa }} - {{ v.numeroEconomico }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 d-flex justify-content-end gap-2 pt-2">
+                <button mat-raised-button color="primary" type="submit" (click)="submit()">
+                  <mat-icon>save</mat-icon> Guardar
+                </button>
+                <button mat-raised-button color="warn" type="button" (click)="regresar()">
+                  <mat-icon>close</mat-icon> Cancelar
+                </button>
+              </div>
+            </div>
+          </form>
+        </section>
+      </div>
+    </div>
+  </vex-page-layout-content>
 </vex-page-layout>
+
+<!-- ====================== MODAL VALIDADOR ====================== -->
+<div *ngIf="modalValidadorOpen"
+     class="custom-modal-backdrop"
+     [class.fade-out]="modalValidadorClosing || modalValidadorAnim === 'out'"
+     (click)="onBackdropValidador()">
+  <div class="custom-modal-content"
+       [class.animate-in]="modalValidadorAnim === 'in'"
+       [class.animate-out]="modalValidadorAnim === 'out'"
+       (click)="$event.stopPropagation()">
+    <div class="custom-modal-header">
+      <div class="custom-modal-icon">
+        <i class="fa-solid fa-microchip"></i>
+      </div>
+      <h2>Cambio de Validador</h2>
+      <button class="custom-modal-close" (click)="cerrarModalValidador(true)"><span>×</span></button>
+    </div>
+
+    <div class="custom-modal-body">
+      <div class="row g-3">
+        <!-- Estado -->
+        <div class="col-12">
+          <label class="form-label">
+            <span>Estado actual</span>
+          </label>
+          <div style="position:relative;display:block;width:100%;">
+            <select
+              [value]="toSelectValue(estadoValidadorSel)"
+              (change)="estadoValidadorSel = parseSelect($any($event.target).value)"
+              style="
+                width:100%;
+                background:#ffffff;
+                color:#1f2937;
+                border:1px solid #c9d5e1;
+                border-radius:10px;
+                padding:10px 44px 10px 12px;
+                height:44px;
+                outline:none;
+                appearance:none;
+                -moz-appearance:none;
+                -webkit-appearance:none;
+                transition: border-color .15s ease, box-shadow .15s ease;
+              "
+              onfocus="this.style.borderColor='#2a4664'; this.style.boxShadow='0 0 0 3px rgba(56,132,255,0.15)'"
+              onblur="this.style.borderColor='#c9d5e1'; this.style.boxShadow='none'">
+              <option value="">-- Selecciona --</option>
+              <option *ngFor="let e of estadoEntries" [value]="e.value">{{ e.label }}</option>
+            </select>
+            <span style="pointer-events:none;position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;color:#6b7280;">▼</span>
+          </div>
+        </div>
+
+        <!-- Comentario -->
+        <div class="col-12">
+          <label class="form-label">
+            <span>Comentario (opcional)</span>
+          </label>
+          <input
+            [value]="comentarioValidadorText"
+            (input)="comentarioValidadorText = $any($event.target).value"
+            placeholder="Escribe comentarios"
+            style="
+              width:100%;
+              background:#ffffff;
+              color:#1f2937;
+              border:1px solid #c9d5e1;
+              border-radius:10px;
+              padding:10px 12px;
+              height:44px;
+              outline:none;
+              transition: border-color .15s ease, box-shadow .15s ease;
+            "
+            onfocus="this.style.borderColor='#2a4664'; this.style.boxShadow='0 0 0 3px rgba(56,132,255,0.15)'"
+            onblur="this.style.borderColor='#c9d5e1'; this.style.boxShadow='none'"/>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:center;align-items:center;margin-top:12px;">
+        <button class="btn-success" (click)="confirmarModalValidador()"
+                style="padding:10px 18px;border-radius:10px;border:none;background:#3b82f6;color:white;font-weight:600;cursor:pointer;transition:filter .15s ease;"
+                onmouseover="this.style.filter='brightness(1.05)'" onmouseout="this.style.filter='none'">
+          Confirmar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====================== MODAL CONTADOR ====================== -->
+<div *ngIf="modalContadorOpen"
+     class="custom-modal-backdrop"
+     [class.fade-out]="modalContadorClosing || modalContadorAnim === 'out'"
+     (click)="onBackdropContador()">
+  <div class="custom-modal-content"
+       [class.animate-in]="modalContadorAnim === 'in'"
+       [class.animate-out]="modalContadorAnim === 'out'"
+       (click)="$event.stopPropagation()">
+    <div class="custom-modal-header">
+      <div class="custom-modal-icon">
+        <i class="fa-solid fa-bluetooth-b"></i>
+      </div>
+      <h2>Cambio de Contador</h2>
+      <button class="custom-modal-close" (click)="cerrarModalContador(true)"><span>×</span></button>
+    </div>
+
+    <div class="custom-modal-body">
+      <div class="row g-3">
+        <!-- Estado -->
+        <div class="col-12">
+          <label class="form-label">
+            <span>Estado actual</span>
+          </label>
+          <div style="position:relative;display:block;width:100%;">
+            <select
+              [value]="toSelectValue(estadoContadorSel)"
+              (change)="estadoContadorSel = parseSelect($any($event.target).value)"
+              style="
+                width:100%;
+                background:#ffffff;
+                color:#1f2937;
+                border:1px solid #c9d5e1;
+                border-radius:10px;
+                padding:10px 44px 10px 12px;
+                height:44px;
+                outline:none;
+                appearance:none;
+                -moz-appearance:none;
+                -webkit-appearance:none;
+                transition: border-color .15s ease, box-shadow .15s ease;
+              "
+              onfocus="this.style.borderColor='#2a4664'; this.style.boxShadow='0 0 0 3px rgba(56,132,255,0.15)'"
+              onblur="this.style.borderColor='#c9d5e1'; this.style.boxShadow='none'">
+              <option value="">-- Selecciona --</option>
+              <option *ngFor="let e of estadoEntries" [value]="e.value">{{ e.label }}</option>
+            </select>
+            <span style="pointer-events:none;position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;color:#6b7280;">▼</span>
+          </div>
+        </div>
+
+        <!-- Comentario -->
+        <div class="col-12">
+          <label class="form-label">
+            <span>Comentario (opcional)</span>
+          </label>
+          <input
+            [value]="comentarioContadorText"
+            (input)="comentarioContadorText = $any($event.target).value"
+            placeholder="Escribe comentarios"
+            style="
+              width:100%;
+              background:#ffffff;
+              color:#1f2937;
+              border:1px solid #c9d5e1;
+              border-radius:10px;
+              padding:10px 12px;
+              height:44px;
+              outline:none;
+              transition: border-color .15s ease, box-shadow .15s ease;
+            "
+            onfocus="this.style.borderColor='#2a4664'; this.style.boxShadow='0 0 0 3px rgba(56,132,255,0.15)'"
+            onblur="this.style.borderColor='#c9d5e1'; this.style.boxShadow='none'"/>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:center;align-items:center;margin-top:12px;">
+        <button class="btn-success" (click)="confirmarModalContador()"
+                style="padding:10px 18px;border-radius:10px;border:none;background:#3b82f6;color:white;font-weight:600;cursor:pointer;transition:filter .15s ease;"
+                onmouseover="this.style.filter='brightness(1.05)'" onmouseout="this.style.filter='none'">
+          Confirmar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

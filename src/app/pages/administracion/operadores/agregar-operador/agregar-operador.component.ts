@@ -5,6 +5,7 @@ import { fadeInRight400ms } from '@vex/animations/fade-in-right.animation';
 import { finalize } from 'rxjs';
 import { AuthenticationService } from 'src/app/core/services/auth.service';
 import { AlertsService } from 'src/app/pages/pages/modal/alerts.service';
+import { ClientesService } from 'src/app/pages/services/clientes.service';
 import { OperadoresService } from 'src/app/pages/services/operadores.service';
 import { UsuariosService } from 'src/app/pages/services/usuarios.service';
 
@@ -24,7 +25,10 @@ export class AgregarOperadorComponent implements OnInit {
   public listaUsuarios: any;
   public title = 'Agregar Operador';
   public showUsuario: boolean = true;
-  public idClienteUser: any;
+  public showCliente: any;
+  listaClientes: any[] = [];
+  public idClienteUser: number = 0;
+  public selectedClienteId: number | null = null;
   selectedFileName: string = '';
   previewUrl: string | ArrayBuffer | null = null;
 
@@ -36,22 +40,85 @@ export class AgregarOperadorComponent implements OnInit {
     private usuaService: UsuariosService,
     private alerts: AlertsService,
     private users: AuthenticationService,
-  ) { const user = this.users.getUser();
-    this.idClienteUser = Number(user?.idCliente);}
+    private clieService: ClientesService
+  ) {
+    const user = this.users.getUser();
+    this.showCliente = user?.rol?.nombre === 'SA';
+    this.idClienteUser = Number(user?.idCliente);
+  }
 
   ngOnInit(): void {
-    this.obtenerUsuarios()
-    this.initForm()
-    this.activatedRouted.params.subscribe(
-      (params) => {
-        this.idOperador = params['idOperador'];
-        if (this.idOperador) {
-          this.title = 'Actualizar Operador';
-          this.obtenerOperadorID();
-          this.operadorForm.controls['idUsuario'].disable();
-        }
+    this.initForm();
+    if (this.showCliente) this.obtenerClientes();
+    this.obtenerUsuarios(this.idClienteUser);
+
+    this.activatedRouted.params.subscribe(params => {
+      this.idOperador = params['idOperador'];
+      if (this.idOperador) {
+        this.title = 'Actualizar Operador';
+        this.submitButton = 'Actualizar';
+        this.obtenerOperadorID();
+        this.operadorForm.controls['idUsuario'].disable();
       }
-    )
+    });
+  }
+
+  obtenerClientes() {
+    this.clieService.obtenerClientes().subscribe({
+      next: (response: any) => {
+        this.listaClientes = (response?.data || []).map((x: any) => ({
+          ...x,
+          id: Number(x?.id ?? x?.Id ?? x?.ID),
+        }));
+      },
+      error: () => {
+        this.alerts.open({
+          type: 'error',
+          title: '¡Ops!',
+          message: 'No fue posible obtener la lista de clientes.',
+          confirmText: 'Aceptar',
+          backdropClose: false,
+        });
+      },
+    });
+  }
+
+  private async getErrorMessage(err: any): Promise<string> {
+    if (err?.status === 0 && !err?.error)
+      return 'No hay conexión con el servidor (status 0). Verifica tu red.';
+    if (err?.error instanceof Blob) {
+      try {
+        const txt = await err.error.text();
+        if (txt) return txt;
+      } catch { }
+    }
+    if (typeof err?.error === 'string' && err.error.trim()) return err.error;
+    if (typeof err?.message === 'string' && err.message.trim())
+      return err.message;
+    if (err?.error?.message) return String(err.error.message);
+    if (err?.error?.errors) {
+      const e = err.error.errors;
+      if (Array.isArray(e)) return e.filter(Boolean).join('\n');
+      if (typeof e === 'object') {
+        const lines: string[] = [];
+        for (const k of Object.keys(e)) {
+          const val = e[k];
+          if (Array.isArray(val)) lines.push(`${k}: ${val.join(', ')}`);
+          else if (val) lines.push(`${k}: ${val}`);
+        }
+        if (lines.length) return lines.join('\n');
+      }
+    }
+    const statusLine = err?.status
+      ? `HTTP ${err.status}${err.statusText ? ' ' + err.statusText : ''}`
+      : '';
+    return statusLine;
+  }
+
+  private pickId(obj: any, keys: string[]): any {
+    for (const k of keys)
+      if (obj?.[k] !== undefined && obj?.[k] !== null) return obj[k];
+    return null;
   }
 
   obtenerOperadorID() {
@@ -64,6 +131,15 @@ export class AgregarOperadorComponent implements OnInit {
         for (const k of keys) if (o?.[k] !== undefined && o?.[k] !== null) return o[k];
         return null;
       };
+
+      const lic = this.operadorForm.get('licencia')?.value;
+      if (typeof lic === 'string' && /\.(png|jpe?g|webp|gif|bmp)(\?.*)?$/i.test(lic)) {
+        this.licPreviewUrl = lic;
+        this.licFileName = lic.split('/').pop() || '';
+      } else {
+        this.licPreviewUrl = null;
+        this.licFileName = null;
+      }
 
       const numeroLicencia = get(raw, ['numeroLicencia', 'NumeroLicencia']);
       const fechaNacimientoRaw = get(raw, ['fechaNacimiento', 'FechaNacimiento']);
@@ -91,13 +167,28 @@ export class AgregarOperadorComponent implements OnInit {
     });
   }
 
-  obtenerUsuarios() {
-    this.usuaService.obtenerUsuariosRolOperador(this.idClienteUser).subscribe((response) => {
+  obtenerUsuarios(clienteId: number) {
+    this.usuaService.obtenerUsuariosRolOperador(clienteId).subscribe((response) => {
       this.listaUsuarios = (response.data || []).map((c: any) => ({
         ...c,
         id: Number(c?.id ?? c?.Id ?? c?.ID),
       }));
-    })
+
+      if (!this.listaUsuarios.length) {
+        this.operadorForm.patchValue({ idUsuario: null });
+      }
+
+    });
+  }
+
+  onClienteChange(id: number) {
+    this.selectedClienteId = id;
+    if (id) {
+      this.obtenerUsuarios(id);
+    } else {
+      this.listaUsuarios = [];
+      this.operadorForm.patchValue({ idUsuario: null });
+    }
   }
 
   allowOnlyNumbers(event: KeyboardEvent): void {
@@ -286,8 +377,15 @@ export class AgregarOperadorComponent implements OnInit {
   }
 
   regresar() {
-    this.route.navigateByUrl('/administracion/operadores')
+    const clienteEfectivo = this.showCliente
+      ? (this.selectedClienteId ?? this.idClienteUser)
+      : this.idClienteUser;
+
+    this.route.navigate(['/administracion/operadores'], {
+      queryParams: { clienteId: clienteEfectivo }
+    });
   }
+
 
   // ====== ViewChilds de inputs de archivo ======
   @ViewChild('identFileInput') identFileInput!: ElementRef<HTMLInputElement>;
@@ -327,17 +425,28 @@ export class AgregarOperadorComponent implements OnInit {
 
   // ================= Utilidades =================
   private isAllowedPdf(file: File): boolean {
-  const allowed = [
-    'application/pdf',
-    'image/png',
-    'image/jpeg',
-    'image/jpg',
-    'image/webp',
-    'image/gif',
-    'image/bmp'
-  ];
-  return allowed.includes(file.type);
-}
+    const allowed = [
+      'application/pdf',
+      'image/png',
+      'image/jpeg',
+      'image/jpg',
+      'image/webp',
+      'image/gif',
+      'image/bmp'
+    ];
+    return allowed.includes(file.type);
+  }
+
+  private validateFile(file: File, tipo: 'licencia' | 'pdf'): 'type' | 'size' | null {
+    const maxBytes = this.MAX_MB * 1024 * 1024;
+    const allowed = tipo === 'licencia'
+      ? ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif', 'image/bmp']
+      : ['application/pdf'];
+    if (!allowed.includes(file.type)) return 'type';
+    if (file.size > maxBytes) return 'size';
+    return null;
+  }
+
 
 
   private extractFileUrl(res: any): string {
@@ -539,6 +648,8 @@ export class AgregarOperadorComponent implements OnInit {
 
   // Drag & drop
   licDragging = false;
+  licPreviewUrl: string | null = null;
+
 
   // Archivo
   licFileName: string | null = null;
@@ -565,25 +676,34 @@ export class AgregarOperadorComponent implements OnInit {
   clearLicFile(e: Event) {
     e.stopPropagation();
     this.licFileName = null;
+    this.licPreviewUrl = null;
     if (this.licFileInput) this.licFileInput.nativeElement.value = '';
     this.operadorForm.patchValue({ licencia: null });
     this.operadorForm.get('licencia')?.setErrors({ required: true });
   }
+
   private handleLicFile(file: File) {
     if (this.processingLic) return;
     this.processingLic = true;
 
-    if (!this.isAllowedPdf(file)) {
+    const v = this.validateFile(file, 'licencia');
+    if (v) {
       this.operadorForm.get('licencia')?.setErrors({ invalid: true });
       this.processingLic = false;
       return;
     }
 
     this.licFileName = file.name;
-    this.operadorForm.patchValue({ licencia: file });
-    this.operadorForm.get('licencia')?.setErrors(null);
-    this.uploadLic(file);
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.licPreviewUrl = reader.result as string;
+      this.operadorForm.patchValue({ licencia: file });
+      this.operadorForm.get('licencia')?.setErrors(null);
+      this.uploadLic(file);
+    };
+    reader.readAsDataURL(file);
   }
+
   private uploadLic(file: File): void {
     if (this.uploadingLic) { this.processingLic = false; return; }
     this.uploadingLic = true;
@@ -602,13 +722,14 @@ export class AgregarOperadorComponent implements OnInit {
       next: (res: any) => {
         const url = this.extractFileUrl(res);
         if (url) {
-          // Enviar tal cual "licencia"
           this.operadorForm.patchValue({ licencia: url });
+          this.licPreviewUrl = url;
         }
       },
       error: (err: any) => console.error('[UPLOAD][licencia]', err),
     });
   }
+
   @ViewChild('licFileInput') licFileInput!: ElementRef<HTMLInputElement>;
 
 

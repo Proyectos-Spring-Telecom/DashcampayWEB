@@ -33,16 +33,15 @@
         </div>
         <section class="mt-5 table-shell">
           <dx-data-grid #gridContainer id="gridContainer" [columnHidingEnabled]="true" [showBorders]="true"
-            [showColumnLines]="true" [showRowLines]="true" [rowAlternationEnabled]="true" [paging]="{ pageSize: pageSize }"
-            [dataSource]="listaDispositivos" [keyExpr]="'id'" [width]="'100%'" [remoteOperations]="{ paging: true }"
-            [pager]="{ 
+            [showColumnLines]="true" [showRowLines]="true" [rowAlternationEnabled]="true"
+            [paging]="{ pageSize: pageSize }" [dataSource]="listaDispositivos" [keyExpr]="'id'" [width]="'100%'"
+            [remoteOperations]="{ paging: true }" [pager]="{ 
                 showPageSizeSelector: true,
                 allowedPageSizes: [50], 
                 showInfo: true,
                 infoText: 'Página {0} de {1}', 
                 visible: true 
-            }" (onPageIndexChanged)=" onPageIndexChanged($event)"
-            (onOptionChanged)="onGridOptionChanged($event)">
+            }" (onPageIndexChanged)=" onPageIndexChanged($event)" (onOptionChanged)="onGridOptionChanged($event)">
             <dxo-search-panel [visible]="true" [width]="200" placeholder="Buscar..."></dxo-search-panel>
             <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[20]" [showInfo]="true"></dxo-pager>
             <dxo-group-panel [emptyPanelText]="mensajeAgrupar" [visible]="true"></dxo-group-panel>
@@ -52,7 +51,18 @@
             <dxi-column caption="Acciones" cellTemplate="Acciones" alignment="center" [width]="180"></dxi-column>
             <dxi-column dataField="marca" caption="Marca" alignment="center" dataType="string"></dxi-column>
             <dxi-column dataField="modelo" caption="Modelo" alignment="center" dataType="string"></dxi-column>
-            <dxi-column dataField="numeroSerie" caption="Número Serie" alignment="center" dataType="string"></dxi-column>
+            <dxi-column caption="Estado Actual" alignment="center" [width]="170" cellTemplate="estadoActualTpl">
+            <div *dxTemplate="let f of 'estadoActualTpl'">
+                <ng-container *ngIf="f.data?.estadoActual != null; else sinRegistroTpl">
+                  <span class="badge-estado" [ngClass]="estadoClass[f.data.estadoActual]">
+                    {{ estadoLabel[f.data.estadoActual] || '—' }}
+                  </span>
+                </ng-container>
+                <ng-template #sinRegistroTpl>Sin registro</ng-template>
+              </div>
+            </dxi-column>
+            <dxi-column dataField="numeroSerie" caption="Número Serie" alignment="center"
+              dataType="string"></dxi-column>
             <dxi-column caption="Cliente" alignment="center" cellTemplate="clien">
               <div *dxTemplate="let f of 'clien'">
                 {{ f.data.nombreCliente || ' ' }} {{ f.data.apellidoPaternoCliente || ' ' }} {{

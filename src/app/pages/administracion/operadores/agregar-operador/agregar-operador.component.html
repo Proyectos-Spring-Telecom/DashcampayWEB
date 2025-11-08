@@ -15,7 +15,7 @@
                         <span class="crumb-current" aria-current="page">Agregar Operador</span>
                     </nav>
                 </div>
-                idCliente: {{idClienteUser}}
+                <!-- idCliente: {{idClienteUser}} -->
                 <section class="mt-4">
                     <form [formGroup]="operadorForm" class="form-skin-lite">
                         <div class="row g-3">
@@ -25,6 +25,22 @@
                                 </div>
                                 <div class="section-bar"></div>
                             </div>
+                            <div class="col-12 col-md-6 col-lg-4" *ngIf="showCliente">
+                                <label class="form-label">
+                                    <i class="fa fa-building"></i><span>Cliente</span>
+                                </label>
+                                <mat-form-field appearance="fill" class="w-100">
+                                    <mat-select placeholder="Selecciona un cliente"
+                                        [value]="selectedClienteId ?? idClienteUser"
+                                        (selectionChange)="onClienteChange($event.value)">
+                                        <mat-option *ngFor="let c of listaClientes" [value]="c.id">
+                                            {{ c.nombre || c.Nombre || c.razonSocial || c.RazonSocial || ('Cliente '
+                                            + c.id) }}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                            </div>
+
                             <div class="col-12 col-md-6 col-lg-4">
                                 <label class="form-label"><i class="fa fa-id-card"></i><span>Número de
                                         Licencia</span></label>
@@ -46,14 +62,25 @@
                                 </label>
                                 <mat-form-field appearance="fill" class="w-100">
                                     <mat-select placeholder="Usuario" formControlName="idUsuario">
-                                    <mat-option *ngFor="let u of listaUsuarios" [value]="u.id">
-                                        {{ u.userName || (u.nombre + ' ' + (u.apellidoPaterno || '') + ' ' + (u.apellidoMaterno || '')) }}
-                                    </mat-option>
+
+                                        <!-- Si hay usuarios -->
+                                        <mat-option *ngFor="let u of listaUsuarios" [value]="u.id">
+                                            {{ u.userName || (u.nombre + ' ' + (u.apellidoPaterno || '') + ' ' +
+                                            (u.apellidoMaterno || '')) }}
+                                        </mat-option>
+
+                                        <!-- Si NO hay usuarios -->
+                                        <mat-option *ngIf="!listaUsuarios || listaUsuarios.length === 0" [value]="0">
+                                            Sin registros
+                                        </mat-option>
+
                                     </mat-select>
+
                                     <mat-error *ngIf="operadorForm.get('idUsuario')?.hasError('required')">
-                                    Selecciona un usuario.
+                                        Selecciona un usuario.
                                     </mat-error>
                                 </mat-form-field>
+
                             </div>
                             <div class="row g-3 uploads-skin mt-2 form-skin-lite">
                                 <div class="col-12">
@@ -72,36 +99,39 @@
                                         (dragover)="onLicDragOver($event)" (dragleave)="onLicDragLeave($event)"
                                         (drop)="onLicDrop($event)">
 
-                                        <div class="dz-body" *ngIf="!licFileName">
-                                            <mat-icon class="dz-icon">description</mat-icon>
+                                        <div class="dz-body" *ngIf="!licPreviewUrl">
+                                            <mat-icon class="dz-icon">image</mat-icon>
                                             <div class="dz-title">Arrastra y suelta o haz clic</div>
                                         </div>
 
-                                        <div class="dz-file" *ngIf="licFileName">
-                                            <mat-icon>insert_drive_file</mat-icon>
-                                            <span class="ms-1">{{ licFileName }}</span>
+                                        <div class="dz-preview" *ngIf="licPreviewUrl"
+                                            (click)="$event.stopPropagation()">
+                                            <img [src]="licPreviewUrl!" alt="Vista previa" class="img-fluid rounded" />
                                         </div>
 
                                         <button mat-stroked-button type="button" class="dz-action"
-                                            (click)="openLicFilePicker()">
+                                            (click)="$event.stopPropagation(); openLicFilePicker()">
                                             <mat-icon>upload</mat-icon> Seleccionar
                                         </button>
+
                                         <button mat-stroked-button color="warn" type="button" class="dz-clear"
-                                            *ngIf="licFileName" (click)="clearLicFile($event)">
+                                            *ngIf="licPreviewUrl || licFileName"
+                                            (click)="$event.stopPropagation(); clearLicFile($event)">
                                             <mat-icon>close</mat-icon> Quitar
                                         </button>
 
                                         <mat-progress-bar *ngIf="uploadingLic" mode="indeterminate"></mat-progress-bar>
 
-                                        <input #licFileInput type="file" class="d-none" accept="application/pdf,image/*"
+                                        <div class="dz-filename" *ngIf="licFileName">{{ licFileName }}</div>
+                                        <input #licFileInput type="file" class="d-none" accept="image/*"
                                             (change)="onLicFileSelected($event)">
                                     </div>
 
                                     <mat-error *ngIf="operadorForm.get('licencia')?.hasError('invalid')">
-  Archivo no permitido (PDF o imagen).
-</mat-error>
-
+                                        Solo se permiten imágenes.
+                                    </mat-error>
                                 </div>
+
 
                                 <div class="col-12 col-md-6 col-lg-4">
                                     <label class="form-label">
