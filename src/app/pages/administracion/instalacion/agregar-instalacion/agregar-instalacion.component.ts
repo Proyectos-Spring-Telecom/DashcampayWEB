@@ -257,63 +257,77 @@ export class AgregarInstalacionComponent implements OnInit {
 
   private suscribirCambioEquipos(): void {
     // Validador
-    this.instalacionesForm.get('idValidador')?.valueChanges.subscribe(async (nuevo: any) => {
-      if (this.bootstrapping || !this.idInstalacion) return; // solo en edición
+    this.instalacionesForm
+      .get('idValidador')
+      ?.valueChanges.subscribe(async (nuevo: any) => {
+        if (this.bootstrapping || !this.idInstalacion) return; // solo en edición
 
-      const nuevoId = this.toNumOrNull(nuevo);
-      const anteriorId = this.initialDispositivoId ?? null;
+        const nuevoId = this.toNumOrNull(nuevo);
+        const anteriorId = this.initialDispositivoId ?? null;
 
-      if (nuevoId === anteriorId) return;
+        if (nuevoId === anteriorId) return;
 
-      // Validar que el nuevo validador pertenezca al cliente seleccionado
-      const pertenece = this.listaValidadores.some(v => Number(v?.id) === Number(nuevoId));
-      if (!pertenece) {
-        await this.alerts.open({
-          type: 'error',
-          title: '¡Ops!',
-          message: 'El validador seleccionado no pertenece al cliente actual.',
-          confirmText: 'Entendido',
-          backdropClose: false
-        });
-        this.instalacionesForm.get('idValidador')?.setValue(anteriorId, { emitEvent: false });
-        return;
-      }
+        // Validar que el nuevo validador pertenezca al cliente seleccionado
+        const pertenece = this.listaValidadores.some(
+          (v) => Number(v?.id) === Number(nuevoId)
+        );
+        if (!pertenece) {
+          await this.alerts.open({
+            type: 'error',
+            title: '¡Ops!',
+            message:
+              'El validador seleccionado no pertenece al cliente actual.',
+            confirmText: 'Entendido',
+            backdropClose: false
+          });
+          this.instalacionesForm
+            .get('idValidador')
+            ?.setValue(anteriorId, { emitEvent: false });
+          return;
+        }
 
-      // Abrir modal y guardar "pendiente"
-      this.pendingNuevoValidadorId = nuevoId;
-      this.estadoValidadorSel = null;
-      this.comentarioValidadorText = '';
-      this.abrirModalValidador();
-    });
+        // Abrir modal y guardar "pendiente"
+        this.pendingNuevoValidadorId = nuevoId;
+        this.estadoValidadorSel = null;
+        this.comentarioValidadorText = '';
+        this.abrirModalValidador();
+      });
 
     // Contador (BlueVox)
-    this.instalacionesForm.get('idContador')?.valueChanges.subscribe(async (nuevo: any) => {
-      if (this.bootstrapping || !this.idInstalacion) return; // solo en edición
+    this.instalacionesForm
+      .get('idContador')
+      ?.valueChanges.subscribe(async (nuevo: any) => {
+        if (this.bootstrapping || !this.idInstalacion) return; // solo en edición
 
-      const nuevoId = this.toNumOrNull(nuevo);
-      const anteriorId = this.initialBlueVoxId ?? null;
+        const nuevoId = this.toNumOrNull(nuevo);
+        const anteriorId = this.initialBlueVoxId ?? null;
 
-      if (nuevoId === anteriorId) return;
+        if (nuevoId === anteriorId) return;
 
-      const pertenece = this.listaContadores.some(c => Number(c?.id) === Number(nuevoId));
-      if (!pertenece) {
-        await this.alerts.open({
-          type: 'error',
-          title: '¡Ops!',
-          message: 'La contadora seleccionada no pertenece al cliente actual.',
-          confirmText: 'Entendido',
-          backdropClose: false
-        });
-        this.instalacionesForm.get('idContador')?.setValue(anteriorId, { emitEvent: false });
-        return;
-      }
+        const pertenece = this.listaContadores.some(
+          (c) => Number(c?.id) === Number(nuevoId)
+        );
+        if (!pertenece) {
+          await this.alerts.open({
+            type: 'error',
+            title: '¡Ops!',
+            message:
+              'La contadora seleccionada no pertenece al cliente actual.',
+            confirmText: 'Entendido',
+            backdropClose: false
+          });
+          this.instalacionesForm
+            .get('idContador')
+            ?.setValue(anteriorId, { emitEvent: false });
+          return;
+        }
 
-      // Abrir modal y guardar "pendiente"
-      this.pendingNuevoContadorId = nuevoId;
-      this.estadoContadorSel = null;
-      this.comentarioContadorText = '';
-      this.abrirModalContador();
-    });
+        // Abrir modal y guardar "pendiente"
+        this.pendingNuevoContadorId = nuevoId;
+        this.estadoContadorSel = null;
+        this.comentarioContadorText = '';
+        this.abrirModalContador();
+      });
   }
 
   // ---------- Helpers visuales select options ----------
@@ -342,7 +356,8 @@ export class AgregarInstalacionComponent implements OnInit {
 
       if (cancelar) {
         // Revertir selección
-        this.instalacionesForm.get('idValidador')
+        this.instalacionesForm
+          .get('idValidador')
           ?.setValue(this.initialDispositivoId ?? null, { emitEvent: false });
         // limpiar temporales
         this.pendingNuevoValidadorId = null;
@@ -371,7 +386,8 @@ export class AgregarInstalacionComponent implements OnInit {
     this.comentariosValidador = this.comentarioValidadorText?.trim() || null;
 
     // Aceptar cambio como "inicial"
-    this.initialDispositivoId = this.pendingNuevoValidadorId ?? this.initialDispositivoId;
+    this.initialDispositivoId =
+      this.pendingNuevoValidadorId ?? this.initialDispositivoId;
 
     // Cerrar modal sin revertir
     this.cerrarModalValidador(false);
@@ -392,7 +408,8 @@ export class AgregarInstalacionComponent implements OnInit {
 
       if (cancelar) {
         // Revertir selección
-        this.instalacionesForm.get('idContador')
+        this.instalacionesForm
+          .get('idContador')
           ?.setValue(this.initialBlueVoxId ?? null, { emitEvent: false });
         // limpiar temporales
         this.pendingNuevoContadorId = null;
@@ -419,7 +436,8 @@ export class AgregarInstalacionComponent implements OnInit {
     this.estatusContadorAnterior = this.estadoContadorSel;
     this.comentariosContador = this.comentarioContadorText?.trim() || null;
 
-    this.initialBlueVoxId = this.pendingNuevoContadorId ?? this.initialBlueVoxId;
+    this.initialBlueVoxId =
+      this.pendingNuevoContadorId ?? this.initialBlueVoxId;
 
     this.cerrarModalContador(false);
   }
@@ -601,37 +619,19 @@ export class AgregarInstalacionComponent implements OnInit {
           this.listaContadores = bvx;
           this.listaVehiculos = vehs;
 
-          const habilitar =
-            errores.length === 0 &&
-            devs.length > 0 &&
-            bvx.length > 0 &&
-            vehs.length > 0;
-
-          if (habilitar) {
+          const sinErrores = errores.length === 0;
+          if (sinErrores) {
             this.desactivarCamposDependientes(false);
             if (applyPending) {
               const f = this.instalacionesForm;
-              f
-                .get('idValidador')
-                ?.setValue(toN(this.pendingSelecciones.idValidador), {
-                  emitEvent: false
-                });
-              f
-                .get('idContador')
-                ?.setValue(toN(this.pendingSelecciones.idContador), {
-                  emitEvent: false
-                });
-              f
-                .get('idVehiculo')
-                ?.setValue(toN(this.pendingSelecciones.idVehiculo), {
-                  emitEvent: false
-                });
+              f.get('idValidador')?.setValue(toN(this.pendingSelecciones.idValidador), { emitEvent: false });
+              f.get('idContador')?.setValue(toN(this.pendingSelecciones.idContador), { emitEvent: false });
+              f.get('idVehiculo')?.setValue(toN(this.pendingSelecciones.idVehiculo), { emitEvent: false });
               this.pendingSelecciones = {};
             }
           } else {
             this.desactivarCamposDependientes(true);
           }
-
           this.lastLoadedCliente = idCliente;
           this.instalacionesForm.updateValueAndValidity({ emitEvent: false });
           this.bootstrapping = false;
@@ -658,8 +658,8 @@ export class AgregarInstalacionComponent implements OnInit {
     this.instService.obtenerInstalacion(this.idInstalacion).subscribe({
       next: async (response: any) => {
         const raw = Array.isArray(response?.data)
-          ? (response.data[0] ?? {})
-          : (response?.data ?? {});
+          ? response.data[0] ?? {}
+          : response?.data ?? {};
         if (!raw || Object.keys(raw).length === 0) {
           this.bootstrapping = false;
           return;
@@ -668,41 +668,41 @@ export class AgregarInstalacionComponent implements OnInit {
         // IDs robustos
         const idClienteSrv = this.toNumOrNull(
           raw.idCliente ??
-          raw.idcliente ??
-          raw?.idCliente2?.id ??
-          raw?.cliente?.id ??
-          raw?.IdCliente ??
-          raw?.IDCliente
+            raw.idcliente ??
+            raw?.idCliente2?.id ??
+            raw?.cliente?.id ??
+            raw?.IdCliente ??
+            raw?.IDCliente
         );
         const estatus =
           this.toNumOrNull(raw.estatus ?? raw.Estatus ?? raw.status) ?? 1;
         const idValidador = this.toNumOrNull(
           raw.idValidador ??
-          raw.idvalidador ??
-          raw.idValidadores ??
-          raw.idvalidadores ??
-          raw?.dispositivos?.id ??
-          raw?.validador?.id ??
-          raw?.IdValidador ??
-          raw?.IDValidador
+            raw.idvalidador ??
+            raw.idValidadores ??
+            raw.idvalidadores ??
+            raw?.dispositivos?.id ??
+            raw?.validador?.id ??
+            raw?.IdValidador ??
+            raw?.IDValidador
         );
         const idContador = this.toNumOrNull(
           raw.idContador ??
-          raw.idcontador ??
-          raw.idContadores ??
-          raw.idcontadores ??
-          raw?.blueVoxs?.id ??
-          raw?.contador?.id ??
-          raw?.IdContador ??
-          raw?.IDContador
+            raw.idcontador ??
+            raw.idContadores ??
+            raw.idcontadores ??
+            raw?.blueVoxs?.id ??
+            raw?.contador?.id ??
+            raw?.IdContador ??
+            raw?.IDContador
         );
         const idVehiculo = this.toNumOrNull(
           raw.idVehiculo ??
-          raw.idvehiculo ??
-          raw?.vehiculos?.id ??
-          raw?.vehiculo?.id ??
-          raw?.IdVehiculo ??
-          raw?.IDVehiculo
+            raw.idvehiculo ??
+            raw?.vehiculos?.id ??
+            raw?.vehiculo?.id ??
+            raw?.IdVehiculo ??
+            raw?.IDVehiculo
         );
 
         // Guardar IDs iniciales
@@ -726,61 +726,67 @@ export class AgregarInstalacionComponent implements OnInit {
 
         // Placeholders inmediatos
         const placeholderValidador = idValidador
-          ? [{
-            id: idValidador,
-            numeroSerie: (
-              raw.numeroSerieValidadores ??
-              raw.numeroSerie ??
-              raw.numeroSerieDispositivo ??
-              ''
-            ).toString(),
-            marca: (
-              raw.marcaValidadores ??
-              raw.marcaValidador ??
-              raw.marca ??
-              ''
-            ).toString(),
-            modelo: (
-              raw.modeloValidadores ??
-              raw.modeloValidador ??
-              raw.modelo ??
-              ''
-            ).toString()
-          }]
+          ? [
+              {
+                id: idValidador,
+                numeroSerie: (
+                  raw.numeroSerieValidadores ??
+                  raw.numeroSerie ??
+                  raw.numeroSerieDispositivo ??
+                  ''
+                ).toString(),
+                marca: (
+                  raw.marcaValidadores ??
+                  raw.marcaValidador ??
+                  raw.marca ??
+                  ''
+                ).toString(),
+                modelo: (
+                  raw.modeloValidadores ??
+                  raw.modeloValidador ??
+                  raw.modelo ??
+                  ''
+                ).toString()
+              }
+            ]
           : [];
         const placeholderContador = idContador
-          ? [{
-            id: idContador,
-            numeroSerie: (
-              raw.numeroSerieContadores ??
-              raw.numeroSerieBlueVox ??
-              raw.numeroSerie ??
-              ''
-            ).toString(),
-            marca: (
-              raw.marcaContadores ??
-              raw.marcaBlueVox ??
-              raw.marca ??
-              ''
-            ).toString(),
-            modelo: (
-              raw.modeloContadores ??
-              raw.modeloBlueVox ??
-              raw.modelo ??
-              ''
-            ).toString()
-          }]
+          ? [
+              {
+                id: idContador,
+                numeroSerie: (
+                  raw.numeroSerieContadores ??
+                  raw.numeroSerieBlueVox ??
+                  raw.numeroSerie ??
+                  ''
+                ).toString(),
+                marca: (
+                  raw.marcaContadores ??
+                  raw.marcaBlueVox ??
+                  raw.marca ??
+                  ''
+                ).toString(),
+                modelo: (
+                  raw.modeloContadores ??
+                  raw.modeloBlueVox ??
+                  raw.modelo ??
+                  ''
+                ).toString()
+              }
+            ]
           : [];
         const placeholderVehiculo = idVehiculo
-          ? [{
-            id: idVehiculo,
-            placa: (raw.placaVehiculo ?? raw.placa ?? '').toString(),
-            numeroEconomico: (
-              raw.numeroEconomicoVehiculo ??
-              raw.numeroEconomico ??
-              ''
-            ).toString()
-          }]
+          ? [
+              {
+                id: idVehiculo,
+                placa: (raw.placaVehiculo ?? raw.placa ?? '').toString(),
+                numeroEconomico: (
+                  raw.numeroEconomicoVehiculo ??
+                  raw.numeroEconomico ??
+                  ''
+                ).toString()
+              }
+            ]
           : [];
 
         this.listaValidadores = placeholderValidador;
@@ -795,20 +801,30 @@ export class AgregarInstalacionComponent implements OnInit {
 
         // Pedir listas reales y fusionar
         const idClienteParaServicios =
-          this.toNumOrNull(this.instalacionesForm.get('idCliente')?.value) ?? idCliente;
+          this.toNumOrNull(this.instalacionesForm.get('idCliente')?.value) ??
+          idCliente;
 
         const dispositivos$ = this.dispoService
           .obtenerDispositivosByCliente(idClienteParaServicios)
-          .pipe(shareReplay(1), catchError(err => of({ __error: err } as any)));
+          .pipe(
+            shareReplay(1),
+            catchError((err) => of({ __error: err } as any))
+          );
         const bluevox$ = this.blueVoService
           .obtenerDispositivosBlueByCliente(idClienteParaServicios)
-          .pipe(shareReplay(1), catchError(err => of({ __error: err } as any)));
+          .pipe(
+            shareReplay(1),
+            catchError((err) => of({ __error: err } as any))
+          );
 
-        const esError = (r: any) => r && typeof r === 'object' && '__error' in r;
+        const esError = (r: any) =>
+          r && typeof r === 'object' && '__error' in r;
 
         const mapValidador = (x: any) => ({
           ...x,
-          id: Number(this.pickId(x, ['id', 'idValidador', 'IdValidador', 'IDValidador'])),
+          id: Number(
+            this.pickId(x, ['id', 'idValidador', 'IdValidador', 'IDValidador'])
+          ),
           numeroSerie:
             x.numeroSerie ??
             x.numeroSerieValidadores ??
@@ -834,7 +850,9 @@ export class AgregarInstalacionComponent implements OnInit {
 
         const mapContador = (x: any) => ({
           ...x,
-          id: Number(this.pickId(x, ['id', 'idContador', 'IdContador', 'IDContador'])),
+          id: Number(
+            this.pickId(x, ['id', 'idContador', 'IdContador', 'IDContador'])
+          ),
           numeroSerie:
             x.numeroSerie ??
             x.numeroSerieBlueVox ??
@@ -860,23 +878,39 @@ export class AgregarInstalacionComponent implements OnInit {
             const errores: string[] = [];
 
             if (esError(resp.dispositivos)) {
-              errores.push(await this.getErrorMessage(resp.dispositivos.__error));
+              errores.push(
+                await this.getErrorMessage(resp.dispositivos.__error)
+              );
             } else {
-              const devsRaw = this.ensureArray(resp?.dispositivos ?? resp?.data?.dispositivos ?? resp?.data);
+              const devsRaw = this.ensureArray(
+                resp?.dispositivos ?? resp?.data?.dispositivos ?? resp?.data
+              );
               const devs = devsRaw.map(mapValidador);
-              this.listaValidadores = this.mergeUniqueByIdPreferFilled(devs, placeholderValidador);
+              this.listaValidadores = this.mergeUniqueByIdPreferFilled(
+                devs,
+                placeholderValidador
+              );
             }
 
             if (esError(resp.bluevox)) {
               errores.push(await this.getErrorMessage(resp.bluevox.__error));
             } else {
-              const bvxRaw = this.ensureArray(resp?.bluevox ?? resp?.data?.bluevox ?? resp?.data);
+              const bvxRaw = this.ensureArray(
+                resp?.bluevox ?? resp?.data?.bluevox ?? resp?.data
+              );
               const bvx = bvxRaw.map(mapContador);
-              this.listaContadores = this.mergeUniqueByIdPreferFilled(bvx, placeholderContador);
+              this.listaContadores = this.mergeUniqueByIdPreferFilled(
+                bvx,
+                placeholderContador
+              );
             }
 
-            this.instalacionesForm.get('idValidador')?.enable({ emitEvent: false });
-            this.instalacionesForm.get('idContador')?.enable({ emitEvent: false });
+            this.instalacionesForm
+              .get('idValidador')
+              ?.enable({ emitEvent: false });
+            this.instalacionesForm
+              .get('idContador')
+              ?.enable({ emitEvent: false });
             this.cdr.detectChanges();
 
             if (errores.length) {
@@ -1032,14 +1066,20 @@ export class AgregarInstalacionComponent implements OnInit {
 
     // COALESCE: usa lo actual, o lo ÚLTIMO ENVIADO si esta vez no cambiaste ese lado
     const _estatusValAnt =
-      this.estatusValidadorAnterior ?? this.lastSubmittedMeta.estatusValidadorAnterior;
+      this.estatusValidadorAnterior ??
+      this.lastSubmittedMeta.estatusValidadorAnterior;
     const _comentVal =
-      (this.comentariosValidador ?? this.lastSubmittedMeta.comentariosValidador) ?? null;
+      this.comentariosValidador ??
+      this.lastSubmittedMeta.comentariosValidador ??
+      null;
 
     const _estatusConAnt =
-      this.estatusContadorAnterior ?? this.lastSubmittedMeta.estatusContadorAnterior;
+      this.estatusContadorAnterior ??
+      this.lastSubmittedMeta.estatusContadorAnterior;
     const _comentCon =
-      (this.comentariosContador ?? this.lastSubmittedMeta.comentariosContador) ?? null;
+      this.comentariosContador ??
+      this.lastSubmittedMeta.comentariosContador ??
+      null;
 
     const payload = {
       idValidador: this.toNumOrNull(raw.idValidador),
@@ -1144,7 +1184,7 @@ export class AgregarInstalacionComponent implements OnInit {
       try {
         const txt = await err.error.text();
         if (txt) return txt;
-      } catch { }
+      } catch {}
     }
     if (typeof err?.error === 'string' && err.error.trim()) return err.error;
     if (typeof err?.message === 'string' && err.message.trim())
@@ -1302,7 +1342,10 @@ export class AgregarInstalacionComponent implements OnInit {
     fields: string[] = ['numeroSerie', 'marca', 'modelo']
   ): any[] {
     const score = (o: any) =>
-      fields.reduce((s, f) => s + (o && typeof o[f] === 'string' && o[f].trim() ? 1 : 0), 0);
+      fields.reduce(
+        (s, f) => s + (o && typeof o[f] === 'string' && o[f].trim() ? 1 : 0),
+        0
+      );
 
     const map = new Map<number, any>();
     const put = (o: any) => {

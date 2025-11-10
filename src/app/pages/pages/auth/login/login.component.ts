@@ -12,6 +12,7 @@ import { AuthenticationService } from 'src/app/core/services/auth.service';
 import { AlertsService } from '../../modal/alerts.service';
 import { User } from 'src/app/entities/User';
 import { Location } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'vex-login',
@@ -83,44 +84,61 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  onSubmit() {
-    if (this.loginForm.invalid || this.loading) return;
-    this.loading = true;
-    this.textLogin = 'Cargando...';
-    const credentials = this.loginForm.value;
-    this.auth.authenticate(credentials).subscribe({
-      next: (result: User) => {
-        this.loading = false;
-        this.textLogin = 'Iniciar Sesión';
-        this.cdr.markForCheck();
-        this.alerts.open({
-          type: 'success',
-          title: '¡Operación Exitosa!',
-          message: 'Tu cuenta ha sido autenticada exitosamente.',
-          confirmText: 'Confirmar',
-          backdropClose: false
-        }).then(res => {
-          if (res === 'confirm') {
-            this.auth.setData(result);
-            this.router.navigate(['/administracion/dashboard']);
-          }
-        });
-      },
-      error: async (err) => {
-        const msg = (await this.getErrorMessage(err)) || 'Ocurrió un error al ingresar sus credenciales.';
-        this.loading = false;
-        this.textLogin = 'Iniciar Sesión';
-        this.cdr.markForCheck();
-        this.alerts.open({
-          type: 'error',
-          title: '¡Ops!',
-          message: msg,
-          confirmText: 'Entendido',
-          backdropClose: false
-        });
+
+onSubmit() {
+  if (this.loginForm.invalid || this.loading) return;
+
+  this.loading = true;
+  this.textLogin = 'Cargando...';
+
+  const credentials = this.loginForm.value as { userName: string; password: string };
+
+  this.auth.authenticate(credentials).subscribe({
+    next: (user: User) => {
+      this.loading = false;
+      this.textLogin = 'Iniciar Sesión';
+      this.cdr.markForCheck();
+
+      this.alerts.open({
+        type: 'success',
+        title: '¡Operación Exitosa!',
+        message: 'Tu cuenta ha sido autenticada exitosamente.',
+        confirmText: 'Confirmar',
+        backdropClose: false
+      }).then((res) => {
+        if (res === 'confirm') {
+          this.auth.setData(user);        // <-- ahora sí guardas el usuario real
+          this.router.navigate(['/administracion/dashboard']);
+        }
+      });
+    },
+    error: async (err: HttpErrorResponse) => {
+      // mostrar EXACTO lo que manda el back (text/plain, Blob o JSON)
+      let backendMsg = '';
+      if (typeof err?.error === 'string') {
+        backendMsg = err.error;
+      } else if (err?.error instanceof Blob) {
+        try { backendMsg = await err.error.text(); } catch {}
+      } else if (err?.error?.message) {
+        backendMsg = String(err.error.message);
       }
-    });
-  }
+      if (!backendMsg) backendMsg = err?.statusText || `HTTP ${err?.status || ''}`.trim();
+
+      this.loading = false;
+      this.textLogin = 'Iniciar Sesión';
+      this.cdr.markForCheck();
+
+      this.alerts.open({
+        type: 'error',
+        title: '¡Ops!',
+        message: backendMsg,   // p.ej. "Credenciales invalidas"
+        confirmText: 'Entendido',
+        backdropClose: false
+      });
+    }
+  });
+}
+
 
   onSendEmail() {
     if (this.emailForm.invalid || this.loading) return;
@@ -136,18 +154,19 @@ export class LoginComponent implements OnInit, OnDestroy {
           this.alerts.open({
             type: 'success',
             title: '¡Operación Exitosa!',
-            message: msg || 'Se ha enviado un correo con el código de autenticación.',
-            confirmText: 'Continuar',
+            message: msg || 'Se ha enviado a su correo electrónico el código de verificación para su cuenta.',
+            confirmText: 'Confirmar',
             backdropClose: false
-          }).then(() => {
+          })
+          .then(() => {
             const t2 = setTimeout(() => {
               this.startResendCountdown();
-              this.resendMsg = null;      // <-- limpiar mensaje previo
+              this.resendMsg = null;
               this.goToOtpStep();
               this.openModal('otp');
-            }, 2000);
+            }, 1000);
           });
-        }, 2000);
+        }, 1000);
       },
       error: async (err) => {
         const msg = (await this.getErrorMessage(err));
@@ -306,18 +325,29 @@ export class LoginComponent implements OnInit, OnDestroy {
       el?.focus(); el?.select?.();
     }, 0);
   }
+closeOtpModal(ev?: Event) {
+  ev?.preventDefault();
+  if (!this.otpOpen || this.otpClosing) return;
 
-  closeOtpModal(ev?: Event) {
-    ev?.preventDefault();
-    if (!this.otpOpen || this.otpClosing) return;
-    this.otpClosing = true;
+  // Reiniciar formularios del flujo de email/OTP
+  this.emailForm.reset({ userName: '' }, { emitEvent: false });
+  this.emailForm.markAsPristine();
+  this.emailForm.markAsUntouched();
+
+  this.verifyForm.reset({ codigo: '' }, { emitEvent: false });
+  this.verifyForm.markAsPristine();
+  this.verifyForm.markAsUntouched();
+
+  this.otpClosing = true;
+  this.cdr.markForCheck();
+
+  setTimeout(() => {
+    this.otpOpen = false;
+    this.otpClosing = false;
     this.cdr.markForCheck();
-    setTimeout(() => {
-      this.otpOpen = false;
-      this.otpClosing = false;
-      this.cdr.markForCheck();
-    }, 220); // debe coincidir con la duración en CSS
-  }
+  }, 220); // debe coincidir con la duración en CSS
+}
+
 
   private clearEmailFlowTimers() {
     this.emailFlowTimers.forEach(t => clearTimeout(t));

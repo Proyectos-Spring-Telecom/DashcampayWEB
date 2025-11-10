@@ -134,10 +134,8 @@ export class AuthenticationService extends BaseServicesService {
       return [];
     }
   }
-
   public authenticate(body: Credentials): Observable<User> {
-    return this.http.post<User>(environment.API_SECURITY + "/login", body)
-      .pipe(catchError(this.handleError));
+    return this.http.post<User>(environment.API_SECURITY + '/login', body);
   }
 
   // auth.service.ts

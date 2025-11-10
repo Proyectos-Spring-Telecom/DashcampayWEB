@@ -25,12 +25,8 @@ export class AlertModalComponent {
     success: 'M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z',
     error: 'M18.3 5.71 16.88 4.29 10.59 10.59 4.29 4.29 2.87 5.71 9.17 12 2.87 18.29 4.29 19.71 10.59 13.41 16.88 19.71 18.3 18.29 12 12z',
     warning: 'M12 2 2 22h20L12 2zm1 15h-2v-2h2v2zm0-4h-2V8h2v5z',
-    // círculo más grande pero con grosor medio y “i” estilizada
     info: 'M12 1.5C6.2 1.5 1.5 6.2 1.5 12S6.2 22.5 12 22.5 22.5 17.8 22.5 12 17.8 1.5 12 1.5ZM11 7h2v2h-2V7Zm0 4h2v7h-2v-7Z'
   } as const;
-
-
-
 
   get iconD(): string {
     const t: AlertType = (this.state?.type ?? 'info') as AlertType;
@@ -49,7 +45,6 @@ export class AlertModalComponent {
       if (s.autoCloseMs && s.autoCloseMs > 0) {
         this.autoTimer = setTimeout(() => this.close('auto'), s.autoCloseMs);
       }
-      // OnPush: marcamos para render
       this.cdr.markForCheck();
     });
   }
@@ -80,7 +75,6 @@ export class AlertModalComponent {
     }
   }
 
-
   onAnimEnd(e: AnimationEvent) {
     if (!this.closing) return;
     if (e.animationName === 'am-pop-out' || e.animationName === 'am-fade-out') {
@@ -89,7 +83,6 @@ export class AlertModalComponent {
     }
   }
 
-  // añade este método
   private finalizeClose() {
     if (!this.closing) return;
     this.open = false;
@@ -114,7 +107,6 @@ export class AlertModalComponent {
 
   private closeFallback: any = null;
 
-  // reemplaza tu close(...)
   private close(reason: AlertResult) {
     if (!this.state || this.closing) return;
     this._lastResult = reason;

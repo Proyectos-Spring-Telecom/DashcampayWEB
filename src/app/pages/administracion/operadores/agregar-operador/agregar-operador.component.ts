@@ -49,8 +49,14 @@ export class AgregarOperadorComponent implements OnInit {
 
   ngOnInit(): void {
     this.initForm();
-    if (this.showCliente) this.obtenerClientes();
-    this.obtenerUsuarios(this.idClienteUser);
+
+    if (this.showCliente) {
+      this.obtenerClientes();
+      this.listaUsuarios = [];
+      this.operadorForm.patchValue({ idUsuario: null });
+    } else {
+      this.obtenerUsuarios(this.idClienteUser);
+    }
 
     this.activatedRouted.params.subscribe(params => {
       this.idOperador = params['idOperador'];

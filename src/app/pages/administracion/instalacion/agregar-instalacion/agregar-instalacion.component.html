@@ -45,6 +45,9 @@
                 </label>
                 <mat-form-field appearance="fill" class="w-100">
                   <mat-select placeholder="Validador" formControlName="idValidador">
+                    <mat-option *ngIf="listaValidadores.length === 0" [disabled]="true" [value]="null">
+                      Sin registros
+                    </mat-option>
                     <mat-option *ngFor="let d of listaValidadores" [value]="d.id">
                       {{ d.numeroSerie }} - {{ d.marca }} - {{ d.modelo }}
                     </mat-option>
@@ -58,6 +61,9 @@
                 </label>
                 <mat-form-field appearance="fill" class="w-100">
                   <mat-select placeholder="Contador" formControlName="idContador">
+                    <mat-option *ngIf="listaContadores.length === 0" [disabled]="true" [value]="null">
+                      Sin registros
+                    </mat-option>
                     <mat-option *ngFor="let b of listaContadores" [value]="b.id">
                       {{ b.numeroSerie }} - {{ b.marca }} - {{ b.modelo }}
                     </mat-option>
@@ -73,6 +79,9 @@
                   <mat-select placeholder="Vehículo" formControlName="idVehiculo">
                     <mat-option *ngFor="let v of listaVehiculos" [value]="v.id">
                       {{ v.placa }} - {{ v.numeroEconomico }}
+                    </mat-option>
+                    <mat-option *ngIf="listaVehiculos.length === 0" [disabled]="true" [value]="null">
+                      Sin registros
                     </mat-option>
                   </mat-select>
                 </mat-form-field>
@@ -94,7 +103,7 @@
   </vex-page-layout-content>
 </vex-page-layout>
 
-<!-- ====================== MODAL VALIDADOR ====================== -->
+
 <div *ngIf="modalValidadorOpen"
      class="custom-modal-backdrop"
      [class.fade-out]="modalValidadorClosing || modalValidadorAnim === 'out'"
@@ -113,7 +122,6 @@
 
     <div class="custom-modal-body">
       <div class="row g-3">
-        <!-- Estado -->
         <div class="col-12">
           <label class="form-label">
             <span>Estado actual</span>
@@ -144,8 +152,6 @@
             <span style="pointer-events:none;position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;color:#6b7280;">▼</span>
           </div>
         </div>
-
-        <!-- Comentario -->
         <div class="col-12">
           <label class="form-label">
             <span>Comentario (opcional)</span>
@@ -181,7 +187,6 @@
   </div>
 </div>
 
-<!-- ====================== MODAL CONTADOR ====================== -->
 <div *ngIf="modalContadorOpen"
      class="custom-modal-backdrop"
      [class.fade-out]="modalContadorClosing || modalContadorAnim === 'out'"
@@ -200,7 +205,6 @@
 
     <div class="custom-modal-body">
       <div class="row g-3">
-        <!-- Estado -->
         <div class="col-12">
           <label class="form-label">
             <span>Estado actual</span>
@@ -232,7 +236,6 @@
           </div>
         </div>
 
-        <!-- Comentario -->
         <div class="col-12">
           <label class="form-label">
             <span>Comentario (opcional)</span>

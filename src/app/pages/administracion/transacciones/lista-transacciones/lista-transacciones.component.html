@@ -78,16 +78,16 @@
             </dxi-column>
             <dxi-column dataField="numeroSerieMonedero" caption="N° Serie de Monedero" alignment="center"></dxi-column>
             <dxi-column caption="Pasajero" alignment="center" cellTemplate="psaj">
-              <div *dxTemplate="let f of 'psaj' ">
+              <div *dxTemplate="let f of 'psaj'">
                 <ng-container
-                  *ngIf="f?.nombrePasajero || f?.apellidoPaternoPasajero || f?.apellidoMaternoPasajero; else sinRegistro">
-                  {{ f?.nombrePasajero || '' }} {{ f?.apellidoPaternoPasajero || '' }} {{ f?.apellidoMaternoPasajero ||
-                  '' }}
+                  *ngIf="f?.data?.pasajeroNombre || f?.data?.pasajeroApellidoPaterno || f?.data?.pasajeroApellidoMaterno; else sinRegistro">
+                  {{ f.data.pasajeroNombre || '' }}
+                  {{ f.data.pasajeroApellidoPaterno || '' }}
+                  {{ f.data.pasajeroApellidoMaterno || '' }}
                 </ng-container>
                 <ng-template #sinRegistro>sin registro</ng-template>
               </div>
             </dxi-column>
-
             <div *dxTemplate="let transaccion of 'Acciones'" class="d-flex gap-3 justify-content-center">
               <div>
                 <button class="btn-edit" (click)="abrirModal(transaccion.data)" style="border-radius: 5px;">

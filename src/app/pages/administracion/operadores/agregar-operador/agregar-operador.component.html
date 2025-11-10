@@ -31,12 +31,11 @@
                                 </label>
                                 <mat-form-field appearance="fill" class="w-100">
                                     <mat-select placeholder="Selecciona un cliente"
-                                        [value]="selectedClienteId ?? idClienteUser"
-                                        (selectionChange)="onClienteChange($event.value)">
-                                        <mat-option *ngFor="let c of listaClientes" [value]="c.id">
-                                            {{ c.nombre || c.Nombre || c.razonSocial || c.RazonSocial || ('Cliente '
-                                            + c.id) }}
-                                        </mat-option>
+                                            [value]="selectedClienteId"
+                                            (selectionChange)="onClienteChange($event.value)">
+                                    <mat-option *ngFor="let c of listaClientes" [value]="c.id">
+                                        {{ c.nombre || c.Nombre || c.razonSocial || c.RazonSocial || ('Cliente ' + c.id) }}
+                                    </mat-option>
                                     </mat-select>
                                 </mat-form-field>
                             </div>
