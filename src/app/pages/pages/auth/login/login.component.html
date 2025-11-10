@@ -38,7 +38,6 @@
               </h4>
             </button>
           </div>
-
         </div>
         <button class="mt-2 align" type="submit" [disabled]="loginForm.invalid || loading">
           <span *ngIf="loading" class="loader"></span>
@@ -62,20 +61,16 @@
       <h3 class="otp-title">Verificación de Cuenta</h3>
       <a class="close" href="#">×</a>
     </div>
-
     <div class="modal-body otp-body">
       <div *ngIf="modalStep === 'email'">
         <p class="otp-subtitle">
           Ingresa tu correo electrónico para reenviar el código de verificación.
         </p>
-
         <form [formGroup]="emailForm" (ngSubmit)="onSendEmail()" class="otp-form">
           <div class="otp-inputs">
             <input class="otp-email" type="email" formControlName="userName" placeholder="correo@dominio.com"
               autocomplete="email" aria-label="Correo electrónico" />
-
           </div>
-
           <div class="otp-actions">
             <button class="btn-verify" type="submit" [disabled]="emailForm.invalid || loading">
               Enviar Correo
@@ -83,17 +78,14 @@
             <button type="button" class="btn-close-otp" (click)="closeOtpModal()">
               Cerrar
             </button>
-
           </div>
         </form>
       </div>
-
       <div *ngIf="modalStep === 'otp'">
         <p class="otp-subtitle">
           Nos alegra que estés aquí. Para terminar el registro, ingresa el código de <strong>4 dígitos</strong> que te
           enviamos a tu correo.
         </p>
-
         <form [formGroup]="verifyForm" (ngSubmit)="onVerify()" class="otp-form">
           <div class="otp-inputs">
             <input #otpInput class="otp-box otp-elev" maxlength="1" inputmode="numeric" pattern="[0-9]*"
@@ -105,7 +97,6 @@
             <input #otpInput class="otp-box otp-elev" maxlength="1" inputmode="numeric" pattern="[0-9]*"
               aria-label="Dígito 4" (input)="onOtpInput($event,3)" (keydown)="onOtpKeydown($event,3)" />
           </div>
-
           <div class="otp-actions">
             <button class="btn-verify" type="submit" [disabled]="verifyForm.invalid || loading">
               Verificar
@@ -113,8 +104,10 @@
             <button class="link-resend" type="button" (click)="onResend()" [disabled]="resendDisabled || loading">
               Reenviar código <span *ngIf="resendDisabled">({{ resendSeconds }}s)</span>
             </button>
+            <button type="button" class="btn-close-otp" (click)="closeOtpModal()">
+              Cerrar
+            </button>
           </div>
-
           <p *ngIf="resendMsg" @fadeInRight class="resend-note">
             {{ resendMsg }}
           </p>

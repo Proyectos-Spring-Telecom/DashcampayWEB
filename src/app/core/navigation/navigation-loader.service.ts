@@ -122,7 +122,7 @@ export class NavigationLoaderService {
           },
           {
             type: 'link',
-            label: 'Bitacora',
+            label: 'Bitácora',
             route: '/administracion/bitacora',
             icon: 'mat:assignment',
           },

@@ -257,7 +257,13 @@ export class ListaTransaccionesComponent implements OnInit {
             fechaHora: x?.fechaHora ?? null,
             fhRegistro: x?.fhRegistro ?? null,
             numeroSerieMonedero: x?.numeroSerieMonedero ?? null,
-            numeroSerieDispositivo: x?.numeroSerieDispositivo ?? null
+            numeroSerieDispositivo: x?.numeroSerieDispositivo ?? null,
+            // 👇 nuevo: nombre completo del pasajero
+            pasajero: fullName(
+              x?.nombrePasajero,
+              x?.apellidoPaternoPasajero,
+              x?.apellidoMaternoPasajero
+            )
           }));
 
           this.totalRegistros = totalRegistros;
@@ -288,6 +294,18 @@ export class ListaTransaccionesComponent implements OnInit {
       const n = Number(s);
       return Number.isFinite(n) ? Number(n.toFixed(2)) : null;
     }
+
+    // helper para concatenar y limpiar
+    function fullName(n?: any, a1?: any, a2?: any): string | null {
+      const parts = [n, a1, a2]
+        .map(v => (typeof v === 'string' ? v.trim() : ''))
+        .filter(Boolean);
+      return parts.length ? parts.join(' ') : null;
+    }
   }
+
+  // Texto “sin registro” cuando venga vacío
+  customizePasajeroText = (cellInfo: any) => cellInfo?.value ? cellInfo.value : 'sin registro';
+
 
 }

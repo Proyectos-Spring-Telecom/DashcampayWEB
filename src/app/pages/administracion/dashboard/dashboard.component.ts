@@ -40,10 +40,10 @@ ahora = new Date();
   ascensosVsBoletos: any[] = [];
   pasajerosPorRuta: any[] = [];
   franjas = [
-    { name: 'Mañana', value: 'manana' },
-    { name: 'Medio día', value: 'mediodia' },
-    { name: 'Tarde', value: 'tarde' },
-    { name: 'Noche', value: 'noche' }
+    { name: 'Adulto Mayor', value: 'manana' },
+    { name: 'Estudiantes', value: 'mediodia' },
+    { name: 'Embarazadas', value: 'tarde' },
+    { name: 'Discapacidad', value: 'noche' }
   ];
 
   histPuntualidad: any[] = [];
@@ -61,7 +61,13 @@ ahora = new Date();
 
   simularDatos(): void {
     const horas = Array.from({ length: 24 }, (_, i) => i);
-    const ingresos = horas.map(h => Math.max(0, 20000 + Math.sin((h + 2) / 24 * Math.PI * 2) * 12000 + (h < 5 ? -15000 : 0)));
+    const ingresos = horas.map(h =>
+  Math.max(
+    0,
+    2500 + Math.sin((h + 2) / 24 * Math.PI * 2) * 1500 + (h < 5 ? -2000 : 0)
+  )
+);
+
     const validaciones = horas.map(h => Math.max(200, 900 + Math.sin((h + 1) / 24 * Math.PI * 2) * 500 + (h < 5 ? -600 : 0)));
     const ascensos = horas.map((_, i) => Math.round(validaciones[i] * (1.06 + Math.random() * 0.04)));
     const boletos = validaciones;
@@ -95,7 +101,7 @@ ahora = new Date();
     }));
 
     const rutas = ['R-01','R-02','R-03','R-04','R-05','R-06','R-07'];
-    const buildFranja = () => rutas.reduce((acc,r)=> (acc[r]=Math.round(800+Math.random()*2200),acc), {} as any);
+    const buildFranja = () => rutas.reduce((acc,r)=> (acc[r]=Math.round(800+Math.random()*200),acc), {} as any);
     const fMan = buildFranja();
     const fMed = buildFranja();
     const fTar = buildFranja();
@@ -110,10 +116,12 @@ ahora = new Date();
     }));
 
     this.topRutas = rutas.map(r=>{
-      const p = [fMan[r],fMed[r],fTar[r],fNoc[r]].reduce((a,b)=>a+b,0);
-      const m = Math.round(p * (ticket));
-      return { ruta:r, monto:m, pasajeros:p, ticket: m/Math.max(1,p) };
-    }).sort((a,b)=>b.monto-a.monto).slice(0,5);
+  const p = [fMan[r],fMed[r],fTar[r],fNoc[r]].reduce((a,b)=>a+b,0);
+  const pInt = Math.round(p); // 👈 entero
+  const m = Math.round(pInt * (ticket));
+  return { ruta:r, monto:m, pasajeros:pInt, ticket: m/Math.max(1,pInt) };
+}).sort((a,b)=>b.monto-a.monto).slice(0,5);
+
 
     const fallidas = Math.round(pasajerosHoy * 0.02);
     const ok = pasajerosHoy;
