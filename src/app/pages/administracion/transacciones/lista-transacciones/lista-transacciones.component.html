@@ -62,8 +62,12 @@
             </dxi-column>
 
             <dxi-column dataField="monto" caption="Monto" alignment="center" cellTemplate="sald">
-              <div *dxTemplate="let f of 'sald' ">
-                {{f.data.monto | currency: '$'}}
+              <div *dxTemplate="let f of 'sald'">
+                {{
+                (f?.data?.tipoTransaccion === 'DEBITO'
+                ? 0 - (f?.data?.monto ?? 0)
+                : (f?.data?.monto ?? 0)) | currency:'$'
+                }}
               </div>
             </dxi-column>
             <dxi-column dataField="tipoTransaccion" caption="Tipo Transacción" alignment="center" cellTemplate="est">
@@ -77,17 +81,11 @@
               </div>
             </dxi-column>
             <dxi-column dataField="numeroSerieMonedero" caption="N° Serie de Monedero" alignment="center"></dxi-column>
-            <dxi-column caption="Pasajero" alignment="center" cellTemplate="psaj">
-              <div *dxTemplate="let f of 'psaj'">
-                <ng-container
-                  *ngIf="f?.data?.pasajeroNombre || f?.data?.pasajeroApellidoPaterno || f?.data?.pasajeroApellidoMaterno; else sinRegistro">
-                  {{ f.data.pasajeroNombre || '' }}
-                  {{ f.data.pasajeroApellidoPaterno || '' }}
-                  {{ f.data.pasajeroApellidoMaterno || '' }}
-                </ng-container>
-                <ng-template #sinRegistro>sin registro</ng-template>
-              </div>
+            <dxi-column dataField="pasajero" caption="Pasajero" alignment="center"
+              [customizeText]="customizePasajeroText">
             </dxi-column>
+
+
             <div *dxTemplate="let transaccion of 'Acciones'" class="d-flex gap-3 justify-content-center">
               <div>
                 <button class="btn-edit" (click)="abrirModal(transaccion.data)" style="border-radius: 5px;">

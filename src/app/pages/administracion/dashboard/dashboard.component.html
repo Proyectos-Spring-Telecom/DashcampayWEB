@@ -93,7 +93,7 @@
                   <tr *ngFor="let r of topRutas">
                     <td>{{ r.ruta }}</td>
                     <td class="text-end">{{ r.monto | currency:'MXN':'symbol':'1.0-0' }}</td>
-                    <td class="text-end">{{ r.pasajeros | number }}</td>
+                    <td class="text-end">{{ (r.pasajeros ?? 0) | number:'1.0-0' }}</td>
                     <td class="text-end">{{ r.ticket | currency:'MXN' }}</td>
                   </tr>
                 </tbody>
@@ -125,7 +125,7 @@
         <div class="col-12 col-xl-7">
           <div class="card-plot shadow-sm">
             <div class="plot-head">
-              <h3>Ingresos por hora (hoy)</h3><span class="hint">Barras + ticket</span>
+              <h3>Ingresos por hora en Dinero (hoy)</h3><span class="hint">Barras + ticket</span>
             </div>
             <dx-chart [dataSource]="ingresosHora" class="dx-chart-brand">
               <dxi-series type="bar" argumentField="hora" valueField="ingresos" name="Ingresos"></dxi-series>
