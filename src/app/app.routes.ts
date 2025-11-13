@@ -248,6 +248,16 @@ export const appRoutes: VexRoutes = [
             path: 'turnos',
             loadChildren:() => import('./pages/administracion/turnos/turnos.module')
               .then(m => m.TurnosModule)
+          },
+          {
+            path: 'bitacora-viajes',
+            loadChildren:() => import('./pages/administracion/bitacora-viajes/bitacora-viajes.module')
+              .then(m => m.BitacoraViajesModule)
+          },
+          {
+            path: 'perfil-pasajero',
+            loadChildren:() => import('./pages/administracion/perfil-pasajero/perfil-pasajero.module')
+              .then(m => m.PerfilPasajeroModule)
           }
         ]
       },

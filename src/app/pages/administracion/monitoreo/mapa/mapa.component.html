@@ -1,35 +1,138 @@
 <vex-page-layout @fadeInRight>
-    <vex-page-layout-header class="pb-16 flex flex-col items-start justify-center">
-        <div [class.container]="layoutCtrl.value === 'boxed'" [class.px-6]="layoutCtrl.value === 'fullwidth'"
-            class="w-full flex flex-col sm:flex-row justify-between">
-            <div>
-                <h1 class="title mt-0 mb-1">Lista de Modulos</h1>
-                <vex-breadcrumbs [crumbs]="['Aplicaciones', 'Registros']"></vex-breadcrumbs>
-            </div>
-        </div>
-    </vex-page-layout-header>
 
-    <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
-        [class.px-6]="layoutCtrl.value === 'fullwidth'" class="-mt-6">
-        <div class="card overflow-auto -mt-16">
-            <div class="bg-app-bar px-6 h-16 border-b sticky left-0 flex items-center">
-                <h2
-                    class="title my-0 ltr:pr-4 rtl:pl-4 ltr:mr-4 rtl:ml-4 ltr:border-r rtl:border-l hidden sm:block flex-none">
-                    <span>Información General</span>
-                </h2>
-                <div class="mr-4 pr-4 border-r flex-none">
-                    <button color="primary" mat-raised-button type="button" (click)="toggleExpandGroups()">
-                        <mat-icon svgIcon="mat:compare_arrows"></mat-icon> {{ autoExpandAllGroups ? ' Contraer Grupos' :
-                        ' Expandir Grupos' }}
-                    </button>&nbsp;&nbsp;
-                    <button color="accent" mat-raised-button type="button" (click)="limpiarCampos()">
-                        <mat-icon svgIcon="mat:restore"></mat-icon> Limpiar
-                    </button>
+  <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
+    [class.px-6]="layoutCtrl.value === 'fullwidth'" class="-mt-6">
+    <div class="card mt-4">
+      <div class="dashboard-lite p-4">
+
+        <section class="mt-0 table-shell">
+          <div class="dashboard-lite p-0">
+            <div class="dc-layout container-fluid px-0">
+
+              <!-- Mapa a todo el ancho -->
+              <div class="row g-3 g-lg-4">
+                <div class="col-12">
+                  <div class="dc-block dc-map-wrapper">
+                    <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center mb-3 gap-2" style="width: 100%;">
+                      <div class="bg-app-bar appbar px-6 h-16 border-b sticky top-0 left-0 flex items-center z-100" style="width: 100%;">
+                        <nav class="breadcrumb-simple" aria-label="Ruta de navegación">
+                          <a routerLink="/administracion" class="crumb-link">
+                            <mat-icon inline>home</mat-icon>
+                            Administración
+                          </a>
+                          <span class="sep">/</span>
+                          <span class="crumb-current" aria-current="page">En Vivo</span>
+                        </nav>
+                      </div>
+                    </div>
+
+                    <div id="map" #mapContainer class="dc-map"></div>
+                  </div>
                 </div>
-            </div>
-            <div class="mt-3 p-3">
-            </div>
+              </div>
 
-        </div>
-    </vex-page-layout-content>
+              <!-- Cards inferiores -->
+              <div class="row g-3 g-lg-4 mt-3">
+                <div class="col-12 col-md-4">
+                  <div class="dc-block dc-mini-card h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <div class="dc-mini-title">U-143 · Boxer 2022</div>
+                      <span class="badge rounded-pill dc-badge-ok">En ruta</span>
+                    </div>
+                    <div class="dc-mini-body">
+                      <div class="d-flex justify-content-between">
+                        <span class="dc-mini-label">Conductor</span>
+                        <span class="dc-mini-value">R. García</span>
+                      </div>
+                      <div class="d-flex justify-content-between">
+                        <span class="dc-mini-label">Última Ubicación</span>
+                        <span class="dc-mini-value">08:14</span>
+                      </div>
+                      <div class="d-flex justify-content-between">
+                        <span class="dc-mini-label">Velocidad</span>
+                        <span class="dc-mini-value">67 km/h</span>
+                      </div>
+                    </div>
+                    <div class="d-flex gap-2 mt-3">
+                      <button type="button" class="btn btn-outline-primary btn-sm dc-btn-pill"
+                        (click)="centrarUnidad(143)">
+                        Centrar
+                      </button>
+                      <button type="button" class="btn btn-primary btn-sm dc-btn-pill">
+                        Detalles
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-12 col-md-4">
+                  <div class="dc-block dc-mini-card h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <div class="dc-mini-title">U-092 · Worker 15.190</div>
+                      <span class="badge rounded-pill dc-badge-ok">En ruta</span>
+                    </div>
+                    <div class="dc-mini-body">
+                      <div class="d-flex justify-content-between">
+                        <span class="dc-mini-label">Conductor</span>
+                        <span class="dc-mini-value">M. Ruiz</span>
+                      </div>
+                      <div class="d-flex justify-content-between">
+                        <span class="dc-mini-label">Último ping</span>
+                        <span class="dc-mini-value">08:06</span>
+                      </div>
+                      <div class="d-flex justify-content-between">
+                        <span class="dc-mini-label">Tiempo parado</span>
+                        <span class="dc-mini-value">18 min</span>
+                      </div>
+                    </div>
+                    <div class="d-flex gap-2 mt-3">
+                      <button type="button" class="btn btn-outline-primary btn-sm dc-btn-pill"
+                        (click)="centrarUnidad(92)">
+                        Centrar
+                      </button>
+                      <button type="button" class="btn btn-primary btn-sm dc-btn-pill">
+                        Detalles
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-12 col-md-4">
+                  <div class="dc-block dc-mini-card h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                      <div class="dc-mini-title">U-218 · Boxer 2021</div>
+                      <span class="badge rounded-pill dc-badge-error">Fuera de ruta</span>
+                    </div>
+                    <div class="dc-mini-body">
+                      <div class="d-flex justify-content-between">
+                        <span class="dc-mini-label">Conductor</span>
+                        <span class="dc-mini-value">J. Flores</span>
+                      </div>
+                      <div class="d-flex justify-content-between">
+                        <span class="dc-mini-label">Último ping</span>
+                        <span class="dc-mini-value">07:58</span>
+                      </div>
+                      <div class="d-flex justify-content-between">
+                        <span class="dc-mini-label">Desvío</span>
+                        <span class="dc-mini-value">3.1 km</span>
+                      </div>
+                    </div>
+                    <div class="d-flex gap-2 mt-3">
+                      <button type="button" class="btn btn-outline-primary btn-sm dc-btn-pill"
+                        (click)="centrarUnidad(218)">
+                        Centrar
+                      </button>
+                      <button type="button" class="btn btn-primary btn-sm dc-btn-pill">
+                        Detalles
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </vex-page-layout-content>
 </vex-page-layout>
