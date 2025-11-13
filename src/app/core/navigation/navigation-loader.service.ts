@@ -124,8 +124,26 @@ export class NavigationLoaderService {
             type: 'link',
             label: 'Bitácora',
             route: '/administracion/bitacora',
-            icon: 'mat:assignment',
+            icon: 'mat:event_note'
           },
+          {
+            type: 'link',
+            label: 'En Vivo',
+            route: '/administracion/monitoreo',
+            icon: 'mat:location_on',
+          },
+          {
+            type: 'link',
+            label: 'Conteo de Personas',
+            route: '/administracion/bitacora-viajes',
+            icon: 'mat:groups'
+          },
+          {
+            type: 'link',
+            label: 'Perfil Pasajero',
+            route: '/administracion/perfil-pasajero',
+            icon: 'mat:groups'
+          }
         ]
       },
       {
