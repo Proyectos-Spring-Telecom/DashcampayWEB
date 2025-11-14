@@ -262,21 +262,26 @@
   font-size: 0.9rem;
 }
 
-/* colores por tipo, SIN hover */
+/* fondos por tipo */
 
 .last-transactions .list-group-item.mov-recarga {
-  background-color: #e1f0b5; /* verde más oscuro */
+  background-color: #d5e99a; /* verde un poco más oscuro */
 }
 
 .last-transactions .list-group-item.mov-debito {
-  background-color: #f6c3c3; /* rojo más oscuro */
+  background-color: #f2b1b1; /* rojo un poco más oscuro */
 }
 
+/* texto izquierda centrado verticalmente */
+
 .last-transactions .transaction-title {
-  margin-top: 11px;
   color: #0A2E57;
   font-weight: 600;
   font-size: 1rem;
+  margin: 0;
+  height: 36px;
+  display: flex;
+  align-items: center;
 }
 
 .last-transactions .transaction-subtitle {
@@ -285,7 +290,7 @@
   line-height: 1.1;
 }
 
-/* DERECHA – monto y fecha grandes */
+/* derecha */
 
 .last-transactions .transaction-amount {
   color: #1F5AA8;
@@ -299,16 +304,25 @@
   font-weight: 600;
 }
 
-/* CÍRCULO DEL ICONO – NEGRO */
+/* círculo del icono */
 
 .last-transactions .transaction-icon-wrapper {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #111111;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* círculo verde oscuro para Recarga */
+.last-transactions .list-group-item.mov-recarga .transaction-icon-wrapper {
+  background-color: #4b7f1f;
+}
+
+/* círculo rojo oscuro para Débito */
+.last-transactions .list-group-item.mov-debito .transaction-icon-wrapper {
+  background-color: #c62828;
 }
 
 .last-transactions .transaction-icon-wrapper i {

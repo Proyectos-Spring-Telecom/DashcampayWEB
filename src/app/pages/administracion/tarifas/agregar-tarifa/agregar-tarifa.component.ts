@@ -162,9 +162,19 @@ export class AgregarTarifaComponent implements OnInit {
     // quitar id antes de enviar (consistencia con otros módulos)
     if (this.tarifaForm.contains('id')) this.tarifaForm.removeControl('id');
 
-    const payload = this.tarifaForm.getRawValue();
+    const raw = this.tarifaForm.getRawValue();
 
-    this.tarSerice.agregarTarifa(payload).subscribe(
+const payload = {
+  tarifaBase: this.toNumber(raw.tarifaBase),
+  distanciaBaseKm: this.toNumber(raw.distanciaBaseKm),
+  incrementoCadaMetros: this.toNumber(raw.incrementoCadaMetros),
+  costoAdicional: this.toNumber(raw.costoAdicional),
+  estatus: Number(raw.estatus),
+  idVariante: Number(raw.idVariante),
+};
+
+this.tarSerice.agregarTarifa(payload).subscribe(
+
       () => {
         this.submitButton = 'Guardar';
         this.loading = false;
@@ -244,9 +254,19 @@ export class AgregarTarifaComponent implements OnInit {
       return; // salir si es inválido
     }
 
-    const payload = this.tarifaForm.getRawValue();
+    const raw = this.tarifaForm.getRawValue();
 
-    this.tarSerice.actualizarTarifa(this.idTarifa, payload).subscribe(
+const payload = {
+  tarifaBase: this.toNumber(raw.tarifaBase),
+  distanciaBaseKm: this.toNumber(raw.distanciaBaseKm),
+  incrementoCadaMetros: this.toNumber(raw.incrementoCadaMetros),
+  costoAdicional: this.toNumber(raw.costoAdicional),
+  estatus: Number(raw.estatus),
+  idVariante: Number(raw.idVariante),
+};
+
+this.tarSerice.agregarTarifa(payload).subscribe(
+
       () => {
         this.submitButton = 'Actualizar';
         this.loading = false;

@@ -19,7 +19,6 @@ export class BitacoraViajesComponent implements OnInit {
 
   layoutCtrl = new UntypedFormControl('fullwidth');
   public mensajeAgrupar: string = 'Arrastre un encabezado de columna aquí para agrupar por esa columna';
-  public listaModulos: any;
   public showFilterRow: boolean;
   public showHeaderFilter: boolean;
   public loading!: boolean;
@@ -34,6 +33,133 @@ export class BitacoraViajesComponent implements OnInit {
   isGrouped: boolean = false;
   public paginaActualData: any[] = [];
   public filtroActivo: string = '';
+  public listaModuloss: any;
+
+public listaModulos = [
+  {
+    id: 1,
+    diferencia: 1,              // entradas - salidas
+    contadora: 'AMG-1003-GHI',  // número de validador
+    entradas: 2,
+    salidas: 1,
+    fhRegistro: new Date('2025-11-13T17:18:00')
+  },
+  {
+    id: 2,
+    diferencia: 3,
+    contadora: 'AMG-2001-ABC',
+    entradas: 5,
+    salidas: 2,
+    fhRegistro: new Date('2025-11-13T18:05:00')
+  },
+  {
+    id: 3,
+    diferencia: 0,
+    contadora: 'AMG-3005-XYZ',
+    entradas: 4,
+    salidas: 4,
+    fhRegistro: new Date('2025-11-13T18:42:00')
+  },
+  {
+    id: 4,
+    diferencia: 1,
+    contadora: 'AMG-1010-JKL',
+    entradas: 4,
+    salidas: 3,
+    fhRegistro: new Date('2025-11-14T07:15:00')
+  },
+  {
+    id: 5,
+    diferencia: 2,
+    contadora: 'AMG-5555-MNO',
+    entradas: 6,
+    salidas: 4,
+    fhRegistro: new Date('2025-11-14T08:30:00')
+  },
+  // Nuevos registros
+  {
+    id: 6,
+    diferencia: 1,
+    contadora: 'AMG-6001-PQR',
+    entradas: 3,
+    salidas: 2,
+    fhRegistro: new Date('2025-11-14T09:15:00')
+  },
+  {
+    id: 7,
+    diferencia: 2,
+    contadora: 'AMG-7002-STU',
+    entradas: 5,
+    salidas: 3,
+    fhRegistro: new Date('2025-11-14T10:05:00')
+  },
+  {
+    id: 8,
+    diferencia: 3,
+    contadora: 'AMG-8003-VWX',
+    entradas: 7,
+    salidas: 4,
+    fhRegistro: new Date('2025-11-14T11:47:00')
+  },
+  {
+    id: 9,
+    diferencia: 1,
+    contadora: 'AMG-9004-YZA',
+    entradas: 4,
+    salidas: 3,
+    fhRegistro: new Date('2025-11-14T12:30:00')
+  },
+  {
+    id: 10,
+    diferencia: 2,
+    contadora: 'AMG-1011-BCD',
+    entradas: 6,
+    salidas: 4,
+    fhRegistro: new Date('2025-11-14T13:10:00')
+  },
+  {
+    id: 11,
+    diferencia: 4,
+    contadora: 'AMG-1112-EFG',
+    entradas: 9,
+    salidas: 5,
+    fhRegistro: new Date('2025-11-14T14:22:00')
+  },
+  {
+    id: 12,
+    diferencia: 1,
+    contadora: 'AMG-1213-HIJ',
+    entradas: 5,
+    salidas: 4,
+    fhRegistro: new Date('2025-11-14T15:05:00')
+  },
+  {
+    id: 13,
+    diferencia: 2,
+    contadora: 'AMG-1314-KLM',
+    entradas: 6,
+    salidas: 4,
+    fhRegistro: new Date('2025-11-14T15:47:00')
+  },
+  {
+    id: 14,
+    diferencia: 3,
+    contadora: 'AMG-1415-NOP',
+    entradas: 8,
+    salidas: 5,
+    fhRegistro: new Date('2025-11-14T16:10:00')
+  },
+  {
+    id: 15,
+    diferencia: 1,
+    contadora: 'AMG-1516-QRS',
+    entradas: 4,
+    salidas: 3,
+    fhRegistro: new Date('2025-11-14T16:35:00')
+  }
+];
+
+
 
 
   constructor(
@@ -148,7 +274,7 @@ export class BitacoraViajesComponent implements OnInit {
   setupDataSource() {
     this.loading = true;
 
-    this.listaModulos = new CustomStore({
+    this.listaModuloss = new CustomStore({
       key: 'id',
       load: async (loadOptions: any) => {
         const take = Number(loadOptions?.take) || this.pageSize || 10;
