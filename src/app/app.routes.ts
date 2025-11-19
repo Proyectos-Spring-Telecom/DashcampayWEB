@@ -180,6 +180,16 @@ export const appRoutes: VexRoutes = [
               .then(m => m.ClientesModule)
           },
           {
+            path: 'talleres',
+            loadChildren:() => import('./pages/administracion/talleres/talleres.module')
+              .then(m => m.TalleresModule)
+          },
+          {
+            path: 'mantenimientos',
+            loadChildren:() => import('./pages/administracion/mantenimientos/mantenimientos.module')
+              .then(m => m.MantenimientosModule)
+          },
+          {
             path: 'permisos',
             loadChildren:() => import('./pages/administracion/permisos/permisos.module')
               .then(m => m.PermisosModule)
