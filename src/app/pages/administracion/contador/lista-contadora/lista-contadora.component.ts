@@ -212,11 +212,11 @@ export class ListaContadoraComponent implements OnInit {
       this.obtenerDispositivos();
       this.dataGrid.instance.refresh();
     },
-    (error) => {
+    (error: any) => {
       this.alerts.open({
         type: 'error',
         title: '¡Ops!',
-        message: String(error),
+        message: error.error,
         confirmText: 'Confirmar',
         backdropClose: false,
       });
@@ -250,11 +250,11 @@ export class ListaContadoraComponent implements OnInit {
       this.obtenerDispositivos();
       this.dataGrid.instance.refresh();
     },
-    (error) => {
+    (error: any) => {
       this.alerts.open({
         type: 'error',
         title: '¡Ops!',
-        message: String(error),
+        message: error.error,
         confirmText: 'Confirmar',
         backdropClose: false,
       });

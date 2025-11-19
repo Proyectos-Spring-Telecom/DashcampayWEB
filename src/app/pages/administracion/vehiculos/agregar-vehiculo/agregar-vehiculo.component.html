@@ -3,7 +3,6 @@
     [class.px-6]="layoutCtrl.value === 'fullwidth'">
     <div class="card mt-4">
       <div class="container-fluid p-4">
-        <!-- Breadcrumb -->
         <div class="bg-app-bar appbar px-6 h-16 border-b sticky top-0 left-0 flex items-center z-10">
           <nav class="breadcrumb-simple" aria-label="Ruta de navegación">
             <a routerLink="/administracion" class="crumb-link">
@@ -17,7 +16,6 @@
           </nav>
         </div>
 
-        <!-- Formulario -->
         <section class="mt-4">
           <form [formGroup]="vehiculosForm" class="form-skin-lite">
             <div class="row g-3">
@@ -29,35 +27,51 @@
               </div>
 
               <div class="col-12 col-md-6 col-lg-4">
-                <label class="form-label"><i class="fa fa-industry"></i><span>Marca</span></label>
+                <label class="form-label">
+                  <i class="fa fa-industry"></i>
+                  <span>Marca</span>
+                </label>
                 <mat-form-field appearance="fill" class="w-100">
                   <input matInput placeholder="Marca" formControlName="marca" />
                 </mat-form-field>
               </div>
 
               <div class="col-12 col-md-6 col-lg-4">
-                <label class="form-label"><i class="fa fa-cogs"></i><span>Modelo</span></label>
+                <label class="form-label">
+                  <i class="fa fa-cogs"></i>
+                  <span>Modelo</span>
+                </label>
                 <mat-form-field appearance="fill" class="w-100">
                   <input matInput placeholder="Modelo" formControlName="modelo" />
                 </mat-form-field>
               </div>
 
               <div class="col-12 col-md-6 col-lg-4">
-                <label class="form-label"><i class="fa fa-calendar-alt"></i><span>Año</span></label>
+                <label class="form-label">
+                  <i class="fa fa-calendar-alt"></i>
+                  <span>Año</span>
+                </label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput placeholder="Año" formControlName="ano" maxlength="4" (keypress)="allowOnlyNumbers($event)" />
+                  <input matInput placeholder="Año" formControlName="ano" maxlength="4"
+                    (keypress)="allowOnlyNumbers($event)" />
                 </mat-form-field>
               </div>
 
               <div class="col-12 col-md-6 col-lg-4">
-                <label class="form-label"><i class="fa fa-id-card"></i><span>Placa</span></label>
+                <label class="form-label">
+                  <i class="fa fa-id-card"></i>
+                  <span>Placa</span>
+                </label>
                 <mat-form-field appearance="fill" class="w-100">
                   <input matInput placeholder="Placa" formControlName="placa" />
                 </mat-form-field>
               </div>
 
               <div class="col-12 col-md-6 col-lg-4">
-                <label class="form-label"><i class="fa fa-hashtag"></i><span>Número Económico</span></label>
+                <label class="form-label">
+                  <i class="fa fa-hashtag"></i>
+                  <span>Número Económico</span>
+                </label>
                 <mat-form-field appearance="fill" class="w-100">
                   <input matInput placeholder="Número Económico" formControlName="numeroEconomico" />
                 </mat-form-field>
@@ -69,14 +83,65 @@
                   <span>Cliente</span>
                 </label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <mat-select
-                    placeholder="Cliente"
-                    formControlName="idCliente">
+                  <mat-select placeholder="Cliente" formControlName="idCliente">
                     <mat-option [value]="null">— Seleccione —</mat-option>
-                    <mat-option *ngFor="let c of listaClientes" [value]="c.id">
-                      {{ c.nombre }}
-                    </mat-option>
                   </mat-select>
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-tachometer-alt"></i>
+                  <span>Kilometraje</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput placeholder="Kilometraje" formControlName="kilometraje"
+                    (keypress)="allowOnlyNumbers($event)" />
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-gas-pump"></i>
+                  <span>Tipo de combustible</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-select placeholder="Seleccione el tipo" formControlName="tipoCombustible">
+                    <mat-option [value]="null">— Seleccione —</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-oil-can"></i>
+                  <span>Capacidad de combustible (L)</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput placeholder="Capacidad de combustible (L)" formControlName="capacidadCombustible"
+                    (keypress)="allowOnlyNumbers($event)" />
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-users"></i>
+                  <span>Pasajeros sentados</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput placeholder="Pasajeros sentados" formControlName="pasajerosSentados"
+                    (keypress)="allowOnlyNumbers($event)" />
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-user-friends"></i>
+                  <span>Pasajeros parados</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput placeholder="Pasajeros parados" formControlName="pasajerosParados"
+                    (keypress)="allowOnlyNumbers($event)" />
                 </mat-form-field>
               </div>
 
@@ -88,9 +153,11 @@
                   <div class="section-bar"></div>
                 </div>
 
-                <!-- Foto del vehículo (solo imagen con preview) -->
                 <div class="col-12 col-md-6 col-lg-4">
-                  <label class="form-label"><i class="fa fa-camera"></i><span>Foto del Vehículo</span></label>
+                  <label class="form-label">
+                    <i class="fa fa-camera"></i>
+                    <span>Foto del Vehículo</span>
+                  </label>
 
                   <div class="dropzone" [class.dragging]="fotoDragging" (click)="openFotoFilePicker()"
                     (dragover)="onFotoDragOver($event)" (dragleave)="onFotoDragLeave($event)"
@@ -105,20 +172,26 @@
                       <img [src]="fotoPreviewUrl!" alt="Vista previa" class="img-fluid rounded" />
                     </div>
 
-                    <button mat-stroked-button type="button" class="dz-action" (click)="$event.stopPropagation(); openFotoFilePicker()">
-                      <mat-icon>upload</mat-icon> Seleccionar
+                    <button mat-stroked-button type="button" class="dz-action"
+                      (click)="$event.stopPropagation(); openFotoFilePicker()">
+                      <mat-icon>upload</mat-icon>
+                      Seleccionar
                     </button>
 
                     <button mat-stroked-button color="warn" type="button" class="dz-clear"
                       *ngIf="fotoPreviewUrl || fotoFileName" (click)="$event.stopPropagation(); clearFotoFile($event)">
-                      <mat-icon>close</mat-icon> Quitar
+                      <mat-icon>close</mat-icon>
+                      Quitar
                     </button>
 
                     <mat-progress-bar *ngIf="uploadingFoto" mode="indeterminate"></mat-progress-bar>
 
-                    <div class="dz-filename" *ngIf="fotoFileName">{{ fotoFileName }}</div>
+                    <div class="dz-filename" *ngIf="fotoFileName">
+                      {{ fotoFileName }}
+                    </div>
+
                     <input #fotoFileInput type="file" class="d-none" accept="image/png,image/jpeg,image/webp"
-                      (change)="onFotoFileSelected($event)">
+                      (change)="onFotoFileSelected($event)" />
                   </div>
 
                   <mat-error *ngIf="vehiculosForm.get('foto')?.hasError('invalid')">
@@ -129,9 +202,11 @@
                   </mat-error>
                 </div>
 
-                <!-- Tarjeta de circulación (PDF) -->
                 <div class="col-12 col-md-6 col-lg-4">
-                  <label class="form-label"><i class="fa fa-id-card"></i><span>Tarjeta de Circulación</span></label>
+                  <label class="form-label">
+                    <i class="fa fa-id-card"></i>
+                    <span>Tarjeta de Circulación</span>
+                  </label>
 
                   <div class="dropzone" [class.dragging]="tcDragging" (click)="openTcFilePicker()"
                     (dragover)="onTcDragOver($event)" (dragleave)="onTcDragLeave($event)" (drop)="onTcDrop($event)">
@@ -146,19 +221,22 @@
                       <span class="ms-1">{{ tcFileName }}</span>
                     </div>
 
-                    <button mat-stroked-button type="button" class="dz-action" (click)="$event.stopPropagation(); openTcFilePicker()">
-                      <mat-icon>upload</mat-icon> Seleccionar
+                    <button mat-stroked-button type="button" class="dz-action"
+                      (click)="$event.stopPropagation(); openTcFilePicker()">
+                      <mat-icon>upload</mat-icon>
+                      Seleccionar
                     </button>
 
                     <button mat-stroked-button color="warn" type="button" class="dz-clear" *ngIf="tcFileName"
                       (click)="$event.stopPropagation(); clearTcFile($event)">
-                      <mat-icon>close</mat-icon> Quitar
+                      <mat-icon>close</mat-icon>
+                      Quitar
                     </button>
 
                     <mat-progress-bar *ngIf="uploadingTc" mode="indeterminate"></mat-progress-bar>
 
                     <input #tcFileInput type="file" class="d-none" accept="application/pdf"
-                      (change)="onTcFileSelected($event)">
+                      (change)="onTcFileSelected($event)" />
                   </div>
 
                   <mat-error *ngIf="vehiculosForm.get('tarjetaCirculacion')?.hasError('invalid')">
@@ -169,9 +247,11 @@
                   </mat-error>
                 </div>
 
-                <!-- Póliza de seguro (PDF) -->
                 <div class="col-12 col-md-6 col-lg-4">
-                  <label class="form-label"><i class="fa fa-file-shield"></i><span>Póliza de Seguro</span></label>
+                  <label class="form-label">
+                    <i class="fa fa-file-shield"></i>
+                    <span>Póliza de Seguro</span>
+                  </label>
 
                   <div class="dropzone" [class.dragging]="polizaDragging" (click)="openPolizaFilePicker()"
                     (dragover)="onPolizaDragOver($event)" (dragleave)="onPolizaDragLeave($event)"
@@ -187,19 +267,22 @@
                       <span class="ms-1">{{ polizaFileName }}</span>
                     </div>
 
-                    <button mat-stroked-button type="button" class="dz-action" (click)="$event.stopPropagation(); openPolizaFilePicker()">
-                      <mat-icon>upload</mat-icon> Seleccionar
+                    <button mat-stroked-button type="button" class="dz-action"
+                      (click)="$event.stopPropagation(); openPolizaFilePicker()">
+                      <mat-icon>upload</mat-icon>
+                      Seleccionar
                     </button>
 
                     <button mat-stroked-button color="warn" type="button" class="dz-clear" *ngIf="polizaFileName"
                       (click)="$event.stopPropagation(); clearPolizaFile($event)">
-                      <mat-icon>close</mat-icon> Quitar
+                      <mat-icon>close</mat-icon>
+                      Quitar
                     </button>
 
                     <mat-progress-bar *ngIf="uploadingPoliza" mode="indeterminate"></mat-progress-bar>
 
                     <input #polizaFileInput type="file" class="d-none" accept="application/pdf"
-                      (change)="onPolizaFileSelected($event)">
+                      (change)="onPolizaFileSelected($event)" />
                   </div>
 
                   <mat-error *ngIf="vehiculosForm.get('polizaSeguro')?.hasError('invalid')">
@@ -210,9 +293,11 @@
                   </mat-error>
                 </div>
 
-                <!-- Permiso de concesión (PDF) -->
                 <div class="col-12 col-md-6 col-lg-4">
-                  <label class="form-label"><i class="fa fa-file-contract"></i><span>Permiso de Concesión</span></label>
+                  <label class="form-label">
+                    <i class="fa fa-file-contract"></i>
+                    <span>Permiso de Concesión</span>
+                  </label>
 
                   <div class="dropzone" [class.dragging]="permisoDragging" (click)="openPermisoFilePicker()"
                     (dragover)="onPermisoDragOver($event)" (dragleave)="onPermisoDragLeave($event)"
@@ -228,19 +313,22 @@
                       <span class="ms-1">{{ permisoFileName }}</span>
                     </div>
 
-                    <button mat-stroked-button type="button" class="dz-action" (click)="$event.stopPropagation(); openPermisoFilePicker()">
-                      <mat-icon>upload</mat-icon> Seleccionar
+                    <button mat-stroked-button type="button" class="dz-action"
+                      (click)="$event.stopPropagation(); openPermisoFilePicker()">
+                      <mat-icon>upload</mat-icon>
+                      Seleccionar
                     </button>
 
                     <button mat-stroked-button color="warn" type="button" class="dz-clear" *ngIf="permisoFileName"
                       (click)="$event.stopPropagation(); clearPermisoFile($event)">
-                      <mat-icon>close</mat-icon> Quitar
+                      <mat-icon>close</mat-icon>
+                      Quitar
                     </button>
 
                     <mat-progress-bar *ngIf="uploadingPermiso" mode="indeterminate"></mat-progress-bar>
 
                     <input #permisoFileInput type="file" class="d-none" accept="application/pdf"
-                      (change)="onPermisoFileSelected($event)">
+                      (change)="onPermisoFileSelected($event)" />
                   </div>
 
                   <mat-error *ngIf="vehiculosForm.get('permisoConcesion')?.hasError('invalid')">
@@ -251,10 +339,11 @@
                   </mat-error>
                 </div>
 
-                <!-- Inspección mecánica (PDF) -->
                 <div class="col-12 col-md-6 col-lg-4">
-                  <label class="form-label"><i class="fa fa-screwdriver-wrench"></i><span>Inspección
-                      Mecánica</span></label>
+                  <label class="form-label">
+                    <i class="fa fa-screwdriver-wrench"></i>
+                    <span>Inspección Mecánica</span>
+                  </label>
 
                   <div class="dropzone" [class.dragging]="inspeccionDragging" (click)="openInspeccionFilePicker()"
                     (dragover)="onInspeccionDragOver($event)" (dragleave)="onInspeccionDragLeave($event)"
@@ -270,19 +359,22 @@
                       <span class="ms-1">{{ inspeccionFileName }}</span>
                     </div>
 
-                    <button mat-stroked-button type="button" class="dz-action" (click)="$event.stopPropagation(); openInspeccionFilePicker()">
-                      <mat-icon>upload</mat-icon> Seleccionar
+                    <button mat-stroked-button type="button" class="dz-action"
+                      (click)="$event.stopPropagation(); openInspeccionFilePicker()">
+                      <mat-icon>upload</mat-icon>
+                      Seleccionar
                     </button>
 
                     <button mat-stroked-button color="warn" type="button" class="dz-clear" *ngIf="inspeccionFileName"
                       (click)="$event.stopPropagation(); clearInspeccionFile($event)">
-                      <mat-icon>close</mat-icon> Quitar
+                      <mat-icon>close</mat-icon>
+                      Quitar
                     </button>
 
                     <mat-progress-bar *ngIf="uploadingInspeccion" mode="indeterminate"></mat-progress-bar>
 
                     <input #inspeccionFileInput type="file" class="d-none" accept="application/pdf"
-                      (change)="onInspeccionFileSelected($event)">
+                      (change)="onInspeccionFileSelected($event)" />
                   </div>
 
                   <mat-error *ngIf="vehiculosForm.get('inspeccionMecanica')?.hasError('invalid')">
@@ -292,18 +384,18 @@
                     Documento requerido.
                   </mat-error>
                 </div>
-
               </div>
 
               <div class="col-12 d-flex justify-content-end gap-2 pt-2">
                 <button mat-raised-button color="primary" type="submit" (click)="submit()">
-                  <mat-icon>save</mat-icon> Guardar
+                  <mat-icon>save</mat-icon>
+                  Guardar
                 </button>
                 <button mat-raised-button color="warn" type="button" (click)="regresar()">
-                  <mat-icon>close</mat-icon> Cancelar
+                  <mat-icon>close</mat-icon>
+                  Cancelar
                 </button>
               </div>
-
             </div>
           </form>
         </section>

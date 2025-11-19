@@ -12,7 +12,7 @@
             <span class="sep">/</span>
             <span class="crumb-current" aria-current="page">Validadores</span>
             <span class="sep">/</span>
-            <span class="crumb-current" aria-current="page">Agregar Validador</span>
+            <span class="crumb-current" aria-current="page">{{title}}</span>
           </nav>
         </div>
 
@@ -62,7 +62,7 @@
                     placeholder="Cliente"
                     formControlName="idCliente"
                     [disabled]="!isAdmin">
-                    <mat-option [value]="null">— Seleccione —</mat-option>
+                    <mat-option [value]="null" disabled>Seleccione un cliente</mat-option>
                     <mat-option *ngFor="let c of listaClientes" [value]="c.id">
                       {{ c.nombre }}
                     </mat-option>

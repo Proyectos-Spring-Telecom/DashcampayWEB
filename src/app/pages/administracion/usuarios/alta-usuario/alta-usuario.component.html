@@ -51,7 +51,8 @@
               <div class="col-12 col-md-6 col-lg-4">
                 <label class="form-label"><i class="fa fa-phone"></i><span>Teléfono</span></label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput placeholder="Teléfono" formControlName="telefono" maxlength="10" (keypress)="allowOnlyNumbers($event)" />
+                  <input matInput placeholder="Teléfono" formControlName="telefono" maxlength="10"
+                    (keypress)="allowOnlyNumbers($event)" />
                 </mat-form-field>
               </div>
               <div class="col-12 col-md-6 col-lg-4">
@@ -59,7 +60,8 @@
                   <i class="fa fa-user-shield"></i><span>Rol</span>
                 </label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <mat-select placeholder="Selecciona un rol" formControlName="idRol" (selectionChange)="onRolChanged($event.value)">
+                  <mat-select placeholder="Selecciona un rol" formControlName="idRol"
+                    (selectionChange)="onRolChanged($event.value)">
                     <mat-option *ngFor="let r of listaRoles" [value]="r.id">
                       {{ r.nombre }}
                     </mat-option>
@@ -147,14 +149,29 @@
                         <div class="perm-card__body scroll-inner">
                           <div class="perm-item d-flex align-items-center justify-content-between"
                             *ngFor="let p of (m?.permisos || []); trackBy: trackPermiso">
-                            <div class="perm-item__text">
-                              <div class="perm-item__desc">
+                            <div class="perm-item-toggle-all__text">
+                              <div class="perm-item-toggle-all__title">
                                 {{ p?.descripcion || p?.Descripcion || (p?.nombre || p?.Nombre) }}
                               </div>
                             </div>
                             <mat-slide-toggle class="brand-switch" color="primary"
                               [checked]="isPermisoAsignado(p?.id || p?.Id)" (change)="onToggle(p, $event.checked)">
                             </mat-slide-toggle>
+                          </div>
+
+                          <div class="perm-item perm-item-toggle-all d-flex align-items-center justify-content-between">
+                            <div class="perm-item-toggle-all__text">
+                              <div class="perm-item-toggle-all__title">
+                                Activar todos los permisos
+                              </div>
+                              <div class="perm-item-toggle-all__hint">
+                                Aplica a este módulo
+                              </div>
+                            </div>
+                            <mat-slide-toggle class="brand-switch brand-switch-all" color="primary"
+                              [checked]="isModuloCompleto(m)" (change)="onToggleAll(m, $event.checked)">
+                            </mat-slide-toggle>
+
                           </div>
                         </div>
                       </div>

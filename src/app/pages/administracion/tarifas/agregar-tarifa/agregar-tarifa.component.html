@@ -41,6 +41,19 @@
 
               <div class="col-12 col-md-6 col-lg-4">
                 <label class="form-label">
+                  <i class="fa fa-tags"></i><span>Tipo de Tarifa</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-select placeholder="Variante" formControlName="tipoTarifa">
+                    <mat-option *ngFor="let c of listaTipoTarifa" [value]="c.id">
+                      {{ c.nombre }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
                   <i class="fa fa-coins"></i><span>Tarifa Base</span>
                 </label>
                 <mat-form-field appearance="fill" class="w-100">
@@ -55,9 +68,8 @@
                   <i class="fa fa-road"></i><span>Distancia Base Km</span>
                 </label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput type="text" class="form-control" formControlName="distanciaBaseKm"
-                    placeholder="Ej: 100" inputmode="decimal" (keydown)="distanciaKeydown($event)"
-                    (input)="distanciaInput($event)" (paste)="distanciaPaste($event)" />
+                  <input matInput type="text" class="form-control" formControlName="distanciaBaseKm" placeholder="120.5"
+              (focus)="onDistanciaFocus()" (blur)="onDistanciaBlur()" (keypress)="allowOnlyNumbers($event)" />
                 </mat-form-field>
               </div>
 
@@ -66,9 +78,9 @@
                   <i class="fa fa-ruler-horizontal"></i><span>Incremento Por Metros</span>
                 </label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput type="text" class="form-control" formControlName="incrementoCadaMetros"
-                    placeholder="Ej: 10" inputmode="decimal" (keydown)="incrementoKeydown($event)"
-                    (input)="incrementoInput($event)" (paste)="incrementoPaste($event)" />
+                  <input matInput type="text" class="form-control" formControlName="incrementoCadaMetros" placeholder="10.25"
+              inputmode="decimal" (focus)="onIncrementoFocus()" (blur)="onIncrementoBlur()"
+              (keypress)="allowOnlyNumbers($event)" />
                 </mat-form-field>
               </div>
 
@@ -77,9 +89,9 @@
                   <i class="fa fa-circle-plus"></i><span>Costo Adicional</span>
                 </label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput type="text" class="form-control" formControlName="costoAdicional"
-                    placeholder="Ej: 2.00" inputmode="decimal" (keydown)="costoKeydown($event)"
-                    (input)="costoInput($event)" (paste)="costoPaste($event)" (blur)="costoBlur($event)" />
+                  <input matInput type="text" class="form-control" formControlName="costoAdicional" placeholder="50.00"
+              inputmode="decimal" (focus)="onCostoFocus()" (blur)="onCostoBlur()"
+              (keypress)="allowOnlyNumbers($event)" />
                 </mat-form-field>
               </div>
 

@@ -1,10 +1,9 @@
 <vex-page-layout @fadeInRight>
   <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
-                           [class.px-6]="layoutCtrl.value === 'fullwidth'">
+    [class.px-6]="layoutCtrl.value === 'fullwidth'">
 
     <div class="card mt-4">
       <div class="container-fluid p-4">
-        <!-- Breadcrumb -->
         <div class="bg-app-bar appbar px-6 h-16 border-b sticky top-0 left-0 flex items-center z-10">
           <nav class="breadcrumb-simple" aria-label="Ruta de navegación">
             <a routerLink="/administracion" class="crumb-link">
@@ -17,8 +16,6 @@
             <span class="crumb-current" aria-current="page">{{title}}</span>
           </nav>
         </div>
-
-        <!-- Formulario -->
         <section class="mt-4">
           <form [formGroup]="dispositivoForm" class="form-skin-lite">
             <div class="row g-3">
@@ -65,10 +62,7 @@
                   <span>Cliente</span>
                 </label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <mat-select
-                    placeholder="Cliente"
-                    formControlName="idCliente"
-                    [disabled]="!isAdmin">
+                  <mat-select placeholder="Cliente" formControlName="idCliente" [disabled]="!isAdmin">
                     <mat-option [value]="null">— Seleccione —</mat-option>
                     <mat-option *ngFor="let c of listaClientes" [value]="c.id">
                       {{ c.nombre }}

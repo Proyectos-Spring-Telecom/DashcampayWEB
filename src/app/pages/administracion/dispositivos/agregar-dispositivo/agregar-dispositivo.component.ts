@@ -186,14 +186,14 @@ export class AgregarDispositivoComponent implements OnInit {
 
         this.regresar();
       },
-      () => {
+      (error: any) => {
         this.submitButton = 'Guardar';
         this.loading = false;
 
         this.alerts.open({
           type: 'error',
           title: '¡Ops!',
-          message: 'Ocurrió un error al agregar el validador.',
+          message: error.error,
           confirmText: 'Confirmar',
           backdropClose: false,
         });
@@ -262,14 +262,14 @@ export class AgregarDispositivoComponent implements OnInit {
 
         this.regresar();
       },
-      () => {
+      (error: any) => {
         this.submitButton = 'Actualizar';
         this.loading = false;
 
         this.alerts.open({
           type: 'error',
           title: '¡Ops!',
-          message: 'Ocurrió un error al actualizar el validador.',
+          message: error.error,
           confirmText: 'Confirmar',
           backdropClose: false,
         });
