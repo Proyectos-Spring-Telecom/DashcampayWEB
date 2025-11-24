@@ -1,5 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, UntypedFormControl, Validators } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  UntypedFormControl,
+  Validators
+} from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { fadeInRight400ms } from '@vex/animations/fade-in-right.animation';
 import { AlertsService } from 'src/app/pages/pages/modal/alerts.service';
@@ -10,7 +15,7 @@ import { VariantesService } from 'src/app/pages/services/variantes.service';
   selector: 'vex-agregar-tarifa',
   templateUrl: './agregar-tarifa.component.html',
   styleUrl: './agregar-tarifa.component.scss',
-  animations: [fadeInRight400ms],
+  animations: [fadeInRight400ms]
 })
 export class AgregarTarifaComponent implements OnInit {
   layoutCtrl = new UntypedFormControl('fullwidth');
@@ -24,7 +29,7 @@ export class AgregarTarifaComponent implements OnInit {
   previewUrl: string | ArrayBuffer | null = null;
   listaTipoTarifa = [
     { id: 0, nombre: 'Estacionaria' },
-    { id: 1, nombre: 'Incremental' },
+    { id: 1, nombre: 'Incremental' }
   ];
   displayDerrotero = (d: any) => (d ? d.nombreDerrotero : '');
 
@@ -34,8 +39,8 @@ export class AgregarTarifaComponent implements OnInit {
     private activatedRouted: ActivatedRoute,
     private varService: VariantesService,
     private route: Router,
-    private alerts: AlertsService,
-  ) { }
+    private alerts: AlertsService
+  ) {}
 
   ngOnInit(): void {
     this.obtenerVariantes();
@@ -52,7 +57,7 @@ export class AgregarTarifaComponent implements OnInit {
   obtenerVariantes() {
     this.varService.obtenerVariantes().subscribe((response) => {
       this.listaVariantes = response.data;
-    })
+    });
   }
 
   private toNumber(v: any): number | null {
@@ -169,59 +174,72 @@ export class AgregarTarifaComponent implements OnInit {
     return Number.isFinite(n) ? n : null;
   }
 
-  private normalizeFormToNumbers(): void {
-    const v = this.tarifaForm.value;
-    this.tarifaForm.patchValue(
-      {
-        tarifaBase: this.parseNumeric(v.tarifaBase),
-        distanciaBaseKm: this.parseNumeric(v.distanciaBaseKm),
-        incrementoCadaMetros: this.parseNumeric(v.incrementoCadaMetros),
-        costoAdicional: this.parseNumeric(v.costoAdicional),
-      },
-      { emitEvent: false }
-    );
-  }
-
   obtenerTarifa() {
     this.tarSerice.obtenerTarifa(this.idTarifa).subscribe({
       next: (response: any) => {
         const data = response?.data;
+        if (!data) return;
 
         const item = Array.isArray(data)
-          ? data.find((x: any) => Number(x?.id) === Number(this.idTarifa)) ?? data[0]
+          ? data.find((x: any) => Number(x?.id) === Number(this.idTarifa)) ??
+            data[0]
           : data;
 
         if (!item) return;
-
-        const tipoTarifa = this.toNumber(
-          item.tipoTarifa ??
-          item.TipoTarifa ??
-          item.idTipoTarifa ??
-          item.IdTipoTarifa
+        let tarifaBase = this.toNumber(item.tarifaBase ?? item.TarifaBase);
+        let distanciaBaseKm = this.toNumber(
+          item.distanciaBaseKm ?? item.DistanciaBaseKm
         );
-
+        let incrementoCadaMetros = this.toNumber(
+          item.incrementoCadaMetros ?? item.IncrementoCadaMetros
+        );
+        let costoAdicional = this.toNumber(
+          item.costoAdicional ?? item.CostoAdicional
+        );
+        let tipoTarifa = this.toNumber(
+          item.tipoTarifa ??
+            item.TipoTarifa ??
+            item.idTipoTarifa ??
+            item.IdTipoTarifa
+        );
+        if (tipoTarifa === null) {
+          const tieneIncrementos =
+            (distanciaBaseKm ?? 0) > 0 ||
+            (incrementoCadaMetros ?? 0) > 0 ||
+            (costoAdicional ?? 0) > 0;
+          tipoTarifa = tieneIncrementos ? 1 : 0;
+        }
         const dto = {
           tipoTarifa: tipoTarifa,
-          tarifaBase: this.toNumber(item.tarifaBase ?? item.TarifaBase),
-          distanciaBaseKm: this.toNumber(item.distanciaBaseKm ?? item.DistanciaBaseKm),
-          incrementoCadaMetros: this.toNumber(item.incrementoCadaMetros ?? item.IncrementoCadaMetros),
-          costoAdicional: this.toNumber(item.costoAdicional ?? item.CostoAdicional),
-          estatus: this.toNumber(item.estatus ?? item.estatusTarifa) ?? 1,
-          idVariante: item.idVariantes ?? item.idVariantes ?? null,
+          tarifaBase: tarifaBase,
+          distanciaBaseKm: distanciaBaseKm,
+          incrementoCadaMetros: incrementoCadaMetros,
+          costoAdicional: costoAdicional,
+          estatus:
+            this.toNumber(
+              item.estatus ?? item.estatusTarifa ?? item.EstatusTarifa
+            ) ?? 1,
+          idVariante: this.toNumber(
+            item.idVariante ??
+              item.IdVariante ??
+              item.idVariantes ??
+              item.IdVariantes
+          )
         };
-
         this.tarifaForm.patchValue(dto, { emitEvent: false });
-
         this.actualizarCamposPorTipoTarifa(dto.tipoTarifa);
-
-        const derroteroCtrl = this.tarifaForm.get('idVariante');
-        if (derroteroCtrl && dto.idVariante != null && !isNaN(dto.idVariante)) {
-          derroteroCtrl.disable({ emitEvent: false });
+        this.onTarifaBlur();
+        this.onDistanciaBlur();
+        this.onIncrementoBlur();
+        this.onCostoBlur();
+        const varianteCtrl = this.tarifaForm.get('idVariante');
+        if (varianteCtrl && dto.idVariante != null && !isNaN(dto.idVariante)) {
+          varianteCtrl.disable({ emitEvent: false });
         }
       },
       error: (e) => {
         console.error('Error obtenerTarifa', e);
-      },
+      }
     });
   }
 
@@ -231,20 +249,25 @@ export class AgregarTarifaComponent implements OnInit {
     if (tipo !== null && typeof tipo === 'object') {
       tipoNum = this.toNum(
         (tipo as any).id ??
-        (tipo as any).Id ??
-        (tipo as any).value ??
-        (tipo as any).valor
+          (tipo as any).Id ??
+          (tipo as any).value ??
+          (tipo as any).valor
       );
     } else {
       tipoNum = this.toNum(tipo);
     }
 
-    const tarifaBaseCtrl        = this.tarifaForm.get('tarifaBase');
-    const distanciaBaseCtrl     = this.tarifaForm.get('distanciaBaseKm');
-    const incrementoMetrosCtrl  = this.tarifaForm.get('incrementoCadaMetros');
-    const costoAdicionalCtrl    = this.tarifaForm.get('costoAdicional');
+    const tarifaBaseCtrl = this.tarifaForm.get('tarifaBase');
+    const distanciaBaseCtrl = this.tarifaForm.get('distanciaBaseKm');
+    const incrementoMetrosCtrl = this.tarifaForm.get('incrementoCadaMetros');
+    const costoAdicionalCtrl = this.tarifaForm.get('costoAdicional');
 
-    if (!tarifaBaseCtrl || !distanciaBaseCtrl || !incrementoMetrosCtrl || !costoAdicionalCtrl) {
+    if (
+      !tarifaBaseCtrl ||
+      !distanciaBaseCtrl ||
+      !incrementoMetrosCtrl ||
+      !costoAdicionalCtrl
+    ) {
       return;
     }
 
@@ -259,13 +282,11 @@ export class AgregarTarifaComponent implements OnInit {
 
       costoAdicionalCtrl.disable({ emitEvent: false });
       costoAdicionalCtrl.setValue(null, { emitEvent: false });
-
     } else if (tipoNum === 1) {
       tarifaBaseCtrl.enable({ emitEvent: false });
       distanciaBaseCtrl.enable({ emitEvent: false });
       incrementoMetrosCtrl.enable({ emitEvent: false });
       costoAdicionalCtrl.enable({ emitEvent: false });
-
     } else {
       tarifaBaseCtrl.disable({ emitEvent: false });
       tarifaBaseCtrl.setValue(null, { emitEvent: false });
@@ -295,17 +316,24 @@ export class AgregarTarifaComponent implements OnInit {
       incrementoCadaMetros: [null, Validators.required],
       costoAdicional: [null, Validators.required],
       estatus: [1, Validators.required],
-      idVariante: [null, Validators.required],
+      idVariante: [null, Validators.required]
     });
 
-    const campos = ['tarifaBase', 'distanciaBaseKm', 'incrementoCadaMetros', 'costoAdicional'];
-    campos.forEach(nombre => {
+    const campos = [
+      'tarifaBase',
+      'distanciaBaseKm',
+      'incrementoCadaMetros',
+      'costoAdicional'
+    ];
+    campos.forEach((nombre) => {
       this.tarifaForm.get(nombre)?.disable({ emitEvent: false });
     });
 
     const tipoCtrl = this.tarifaForm.get('tipoTarifa');
     if (tipoCtrl) {
-      tipoCtrl.valueChanges.subscribe(v => this.actualizarCamposPorTipoTarifa(v));
+      tipoCtrl.valueChanges.subscribe((v) =>
+        this.actualizarCamposPorTipoTarifa(v)
+      );
     }
   }
 
@@ -319,7 +347,7 @@ export class AgregarTarifaComponent implements OnInit {
     }
   }
 
- async agregar() {
+  async agregar() {
     this.submitButton = 'Cargando...';
     this.loading = true;
 
@@ -333,7 +361,7 @@ export class AgregarTarifaComponent implements OnInit {
         distanciaBaseKm: 'Distancia Base',
         incrementoCadaMetros: 'Incremento de Distancia por Metro',
         costoAdicional: 'Costo por Incremento',
-        idVariante: 'Variante',
+        idVariante: 'Variante'
       };
 
       const camposFaltantes: string[] = [];
@@ -365,7 +393,7 @@ export class AgregarTarifaComponent implements OnInit {
         <div style="max-height: 350px; overflow-y: auto;">${lista}</div>
       `,
         confirmText: 'Entendido',
-        backdropClose: false,
+        backdropClose: false
       });
       return;
     }
@@ -377,11 +405,17 @@ export class AgregarTarifaComponent implements OnInit {
     const payload = {
       tipoTarifa: tipoTarifaNum,
       tarifaBase: this.parseNumeric(v.tarifaBase),
-      distanciaBaseKm: esEstacionaria ? null : this.parseNumeric(v.distanciaBaseKm),
-      incrementoCadaMetros: esEstacionaria ? null : this.parseNumeric(v.incrementoCadaMetros),
-      costoAdicional: esEstacionaria ? null : this.parseNumeric(v.costoAdicional),
+      distanciaBaseKm: esEstacionaria
+        ? null
+        : this.parseNumeric(v.distanciaBaseKm),
+      incrementoCadaMetros: esEstacionaria
+        ? null
+        : this.parseNumeric(v.incrementoCadaMetros),
+      costoAdicional: esEstacionaria
+        ? null
+        : this.parseNumeric(v.costoAdicional),
       estatus: this.toNum(v.estatus),
-      idVariante: this.toNum(v.idVariante),
+      idVariante: this.toNum(v.idVariante)
     };
 
     this.tarSerice.agregarTarifa(payload).subscribe(
@@ -393,7 +427,7 @@ export class AgregarTarifaComponent implements OnInit {
           title: '¡Operación Exitosa!',
           message: 'Se agregó un nueva tarifa de manera exitosa.',
           confirmText: 'Confirmar',
-          backdropClose: false,
+          backdropClose: false
         });
         this.regresar();
       },
@@ -405,7 +439,7 @@ export class AgregarTarifaComponent implements OnInit {
           title: '¡Ops!',
           message: error.error,
           confirmText: 'Confirmar',
-          backdropClose: false,
+          backdropClose: false
         });
       }
     );
@@ -426,7 +460,7 @@ export class AgregarTarifaComponent implements OnInit {
         incrementoCadaMetros: 'Incremento de Distancia por Metro',
         costoAdicional: 'Costo por Incremento',
         estatus: 'Estatus',
-        idVariante: 'Variante',
+        idVariante: 'Variante'
       };
 
       const camposFaltantes: string[] = [];
@@ -458,23 +492,29 @@ export class AgregarTarifaComponent implements OnInit {
         <div style="max-height: 350px; overflow-y: auto;">${lista}</div>
       `,
         confirmText: 'Entendido',
-        backdropClose: false,
+        backdropClose: false
       });
       return;
     }
 
-    const v = this.tarifaForm.getRawValue();      // incluye idVariante aunque esté disabled
+    const v = this.tarifaForm.getRawValue();
     const tipoTarifaNum = this.toNum(v.tipoTarifa);
     const esEstacionaria = tipoTarifaNum === 0;
 
     const payload = {
-      tipoTarifa: tipoTarifaNum,                                 // ✅ AHORA SÍ SE MANDA EN UPDATE
+      tipoTarifa: tipoTarifaNum,
       tarifaBase: this.parseNumeric(v.tarifaBase),
-      distanciaBaseKm: esEstacionaria ? null : this.parseNumeric(v.distanciaBaseKm),
-      incrementoCadaMetros: esEstacionaria ? null : this.parseNumeric(v.incrementoCadaMetros),
-      costoAdicional: esEstacionaria ? null : this.parseNumeric(v.costoAdicional),
+      distanciaBaseKm: esEstacionaria
+        ? null
+        : this.parseNumeric(v.distanciaBaseKm),
+      incrementoCadaMetros: esEstacionaria
+        ? null
+        : this.parseNumeric(v.incrementoCadaMetros),
+      costoAdicional: esEstacionaria
+        ? null
+        : this.parseNumeric(v.costoAdicional),
       estatus: this.toNum(v.estatus),
-      idVariante: this.toNum(v.idVariante),
+      idVariante: this.toNum(v.idVariante)
     };
 
     this.tarSerice.actualizarTarifa(this.idTarifa, payload).subscribe(
@@ -486,7 +526,7 @@ export class AgregarTarifaComponent implements OnInit {
           title: '¡Operación Exitosa!',
           message: 'Los datos de la tarifa se actualizaron correctamente.',
           confirmText: 'Confirmar',
-          backdropClose: false,
+          backdropClose: false
         });
         this.regresar();
       },
@@ -498,14 +538,14 @@ export class AgregarTarifaComponent implements OnInit {
           title: '¡Ops!',
           message: error.error,
           confirmText: 'Confirmar',
-          backdropClose: false,
+          backdropClose: false
         });
       }
     );
   }
 
   regresar() {
-    this.route.navigateByUrl('/tarifas');
+    this.route.navigateByUrl('/administracion/tarifas');
   }
 
   moneyKeydown(e: KeyboardEvent) {
@@ -516,7 +556,7 @@ export class AgregarTarifaComponent implements OnInit {
       'ArrowRight',
       'Delete',
       'Home',
-      'End',
+      'End'
     ];
     if (allowed.includes(e.key)) return;
     const input = e.target as HTMLInputElement;
@@ -599,7 +639,7 @@ export class AgregarTarifaComponent implements OnInit {
       'ArrowRight',
       'Delete',
       'Home',
-      'End',
+      'End'
     ];
     if (allowed.includes(e.key)) return;
     const input = e.target as HTMLInputElement;
@@ -681,7 +721,7 @@ export class AgregarTarifaComponent implements OnInit {
       'ArrowRight',
       'Delete',
       'Home',
-      'End',
+      'End'
     ];
     if (allowed.includes(e.key)) return;
     const input = e.target as HTMLInputElement;
@@ -736,7 +776,7 @@ export class AgregarTarifaComponent implements OnInit {
       'ArrowRight',
       'Delete',
       'Home',
-      'End',
+      'End'
     ];
     if (allowed.includes(e.key)) return;
     const input = e.target as HTMLInputElement;

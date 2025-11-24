@@ -18,7 +18,7 @@ export class InstalacionesService {
     return this.http.get(`${environment.API_SECURITY}/instalaciones/list`);
   }
 
-  agregarInstalacion(data: FormData): Observable<string> {
+  agregarInstalacion(data: any): Observable<string> {
     return this.http.post<string>(
       `${environment.API_SECURITY}/instalaciones`,
       data,

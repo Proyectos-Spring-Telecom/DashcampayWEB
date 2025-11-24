@@ -101,6 +101,12 @@
                         <dxi-column dataField="userNameUsuario" caption="Correo Electrónico" alignment="center" dataType="string"></dxi-column>
                         <dxi-column dataField="telefonoUsuario" caption="Teléfono" alignment="center" dataType="string"></dxi-column>
                         <dxi-column dataField="FechaNacimientoTexto" caption="Fecha de Nacimiento" alignment="center" dataType="string" [width]="150"></dxi-column>
+                        <dxi-column caption="Cliente" alignment="center" cellTemplate="clien">
+                                <div *dxTemplate="let f of 'clien'">
+                                    {{ f.data.nombreCliente || ' ' }} {{ f.data.apellidoPaternocliente || ' ' }} {{
+                                    f.data.apellidoMaternocliente || ' ' }}
+                                </div>
+                            </dxi-column>
                         <dxi-column dataField="estatus" caption="Estatus" alignment="center" cellTemplate="est">
                             <div *dxTemplate="let f of 'est'">
                                 <span

@@ -76,27 +76,11 @@ export class AgregarInstalacionComponent implements OnInit {
   initialDispositivoId?: number | null;
   initialBlueVoxId?: number | null;
 
-  // --- campos para payload de actualización (valores de esta sesión) ---
-  estatusValidadorAnterior: number | null = null;
-  estatusContadorAnterior: number | null = null;
-  comentariosValidador: string | null = null;
-  comentariosContador: string | null = null;
+  estatusValidadorAnterior?: number | null;
+  estatusContadorAnterior?: number | null;
+  comentariosValidador?: string | null;
+  comentariosContador?: string | null;
 
-  // --- buffer persistente de lo ÚLTIMO ENVIADO (para reusar si no cambias uno de los dos) ---
-  private lastSubmittedMeta: {
-    estatusValidadorAnterior: number | null;
-    comentariosValidador: string | null;
-    estatusContadorAnterior: number | null;
-    comentariosContador: string | null;
-  } = {
-    estatusValidadorAnterior: null,
-    comentariosValidador: null,
-    estatusContadorAnterior: null,
-    comentariosContador: null
-  };
-
-  // --- estado de modales ---
-  // Validador
   modalValidadorOpen = false;
   modalValidadorClosing = false;
   modalValidadorAnim: 'in' | 'out' = 'in';
@@ -104,7 +88,6 @@ export class AgregarInstalacionComponent implements OnInit {
   comentarioValidadorText = '';
   private pendingNuevoValidadorId: number | null = null;
 
-  // Contador
   modalContadorOpen = false;
   modalContadorClosing = false;
   modalContadorAnim: 'in' | 'out' = 'in';
@@ -112,7 +95,6 @@ export class AgregarInstalacionComponent implements OnInit {
   comentarioContadorText = '';
   private pendingNuevoContadorId: number | null = null;
 
-  // opciones de estado para los selects del modal
   estadoEntries = [
     { value: EstadoComponente.INACTIVO, label: 'INACTIVO' },
     { value: EstadoComponente.DISPONIBLE, label: 'DISPONIBLE' },
@@ -140,7 +122,6 @@ export class AgregarInstalacionComponent implements OnInit {
     this.idRolUser = Number(user?.rol?.id);
   }
 
-  // ---------- Ciclo de vida ----------
   ngOnInit(): void {
     this.initForm();
     this.suscribirCambioCliente();
@@ -159,7 +140,6 @@ export class AgregarInstalacionComponent implements OnInit {
     });
   }
 
-  // ---------- Form ----------
   initForm(): void {
     this.instalacionesForm = this.fb.group({
       estatus: [1, Validators.required],
@@ -214,17 +194,18 @@ export class AgregarInstalacionComponent implements OnInit {
     this.listaVehiculos = [];
   }
 
-  // ---------- Utilidades ----------
   private toNumOrNull(v: any): number | null {
     return v === undefined || v === null || v === '' || Number.isNaN(Number(v))
       ? null
       : Number(v);
   }
+
   private pickId(obj: any, keys: string[]): any {
     for (const k of keys)
       if (obj?.[k] !== undefined && obj?.[k] !== null) return obj[k];
     return null;
   }
+
   private ensureArray(maybe: any): any[] {
     if (Array.isArray(maybe)) return maybe;
     if (Array.isArray(maybe?.data)) return maybe.data;
@@ -236,7 +217,30 @@ export class AgregarInstalacionComponent implements OnInit {
     return [];
   }
 
-  // ---------- Suscripciones ----------
+  private ensureSelectedOptionVisible(
+    list: any[],
+    selectedId: number | null | undefined,
+    displayLabel: string | null | undefined,
+    labelField: string
+  ): any[] {
+    const id = selectedId == null ? null : Number(selectedId);
+    if (id == null) return list;
+    const exists = list.some((x) => Number(x.id) === id);
+    if (!exists) list.unshift({ id, [labelField]: displayLabel || String(id) });
+    return list;
+  }
+
+  private getNumericFormPayload() {
+    const raw = this.instalacionesForm.getRawValue();
+    return {
+      estatus: this.toNumOrNull(raw.estatus) ?? 1,
+      idCliente: this.toNumOrNull(raw.idCliente) ?? this.idClienteUser,
+      idValidador: this.toNumOrNull(raw.idValidador),
+      idContador: this.toNumOrNull(raw.idContador),
+      idVehiculo: this.toNumOrNull(raw.idVehiculo)
+    };
+  }
+
   private suscribirCambioCliente(): void {
     this.instalacionesForm
       .get('idCliente')
@@ -256,84 +260,39 @@ export class AgregarInstalacionComponent implements OnInit {
   }
 
   private suscribirCambioEquipos(): void {
-    // Validador
     this.instalacionesForm
       .get('idValidador')
       ?.valueChanges.subscribe(async (nuevo: any) => {
-        if (this.bootstrapping || !this.idInstalacion) return; // solo en edición
+        if (this.bootstrapping || !this.idInstalacion) return;
 
-        const nuevoId = this.toNumOrNull(nuevo);
-        const anteriorId = this.initialDispositivoId ?? null;
-
-        if (nuevoId === anteriorId) return;
-
-        // Validar que el nuevo validador pertenezca al cliente seleccionado
-        const pertenece = this.listaValidadores.some(
-          (v) => Number(v?.id) === Number(nuevoId)
-        );
-        if (!pertenece) {
-          await this.alerts.open({
-            type: 'error',
-            title: '¡Ops!',
-            message:
-              'El validador seleccionado no pertenece al cliente actual.',
-            confirmText: 'Entendido',
-            backdropClose: false
-          });
-          this.instalacionesForm
-            .get('idValidador')
-            ?.setValue(anteriorId, { emitEvent: false });
-          return;
+        const prev = this.initialDispositivoId;
+        if (prev != null && Number(nuevo) !== Number(prev)) {
+          this.pendingNuevoValidadorId = this.toNumOrNull(nuevo);
+          this.estadoValidadorSel = null;
+          this.comentarioValidadorText = '';
+          this.abrirModalValidador();
         }
-
-        // Abrir modal y guardar "pendiente"
-        this.pendingNuevoValidadorId = nuevoId;
-        this.estadoValidadorSel = null;
-        this.comentarioValidadorText = '';
-        this.abrirModalValidador();
       });
 
-    // Contador (BlueVox)
     this.instalacionesForm
       .get('idContador')
       ?.valueChanges.subscribe(async (nuevo: any) => {
-        if (this.bootstrapping || !this.idInstalacion) return; // solo en edición
+        if (this.bootstrapping || !this.idInstalacion) return;
 
-        const nuevoId = this.toNumOrNull(nuevo);
-        const anteriorId = this.initialBlueVoxId ?? null;
-
-        if (nuevoId === anteriorId) return;
-
-        const pertenece = this.listaContadores.some(
-          (c) => Number(c?.id) === Number(nuevoId)
-        );
-        if (!pertenece) {
-          await this.alerts.open({
-            type: 'error',
-            title: '¡Ops!',
-            message:
-              'La contadora seleccionada no pertenece al cliente actual.',
-            confirmText: 'Entendido',
-            backdropClose: false
-          });
-          this.instalacionesForm
-            .get('idContador')
-            ?.setValue(anteriorId, { emitEvent: false });
-          return;
+        const prev = this.initialBlueVoxId;
+        if (prev != null && Number(nuevo) !== Number(prev)) {
+          this.pendingNuevoContadorId = this.toNumOrNull(nuevo);
+          this.estadoContadorSel = null;
+          this.comentarioContadorText = '';
+          this.abrirModalContador();
         }
-
-        // Abrir modal y guardar "pendiente"
-        this.pendingNuevoContadorId = nuevoId;
-        this.estadoContadorSel = null;
-        this.comentarioContadorText = '';
-        this.abrirModalContador();
       });
   }
 
-  // ---------- Helpers visuales select options ----------
   toSelectValue(v: number | null): string {
     return v === null || v === undefined ? '' : String(v);
   }
+
   parseSelect(value: any): number | null {
     const s = String(value ?? '');
     if (!s.length) return null;
@@ -341,12 +300,12 @@ export class AgregarInstalacionComponent implements OnInit {
     return Number.isNaN(n) ? null : n;
   }
 
-  // ---------- Modal Validador ----------
   abrirModalValidador(): void {
     this.modalValidadorAnim = 'in';
     this.modalValidadorClosing = false;
     this.modalValidadorOpen = true;
   }
+
   async cerrarModalValidador(cancelar: boolean): Promise<void> {
     this.modalValidadorClosing = true;
     this.modalValidadorAnim = 'out';
@@ -355,11 +314,9 @@ export class AgregarInstalacionComponent implements OnInit {
       this.modalValidadorClosing = false;
 
       if (cancelar) {
-        // Revertir selección
         this.instalacionesForm
           .get('idValidador')
           ?.setValue(this.initialDispositivoId ?? null, { emitEvent: false });
-        // limpiar temporales
         this.pendingNuevoValidadorId = null;
         this.estadoValidadorSel = null;
         this.comentarioValidadorText = '';
@@ -367,9 +324,11 @@ export class AgregarInstalacionComponent implements OnInit {
       }
     }, 240);
   }
+
   onBackdropValidador(): void {
     this.cerrarModalValidador(true);
   }
+
   confirmarModalValidador(): void {
     if (this.estadoValidadorSel == null) {
       this.alerts.open({
@@ -381,24 +340,19 @@ export class AgregarInstalacionComponent implements OnInit {
       });
       return;
     }
-    // Asignar datos de ESTA sesión
     this.estatusValidadorAnterior = this.estadoValidadorSel;
     this.comentariosValidador = this.comentarioValidadorText?.trim() || null;
-
-    // Aceptar cambio como "inicial"
     this.initialDispositivoId =
       this.pendingNuevoValidadorId ?? this.initialDispositivoId;
-
-    // Cerrar modal sin revertir
     this.cerrarModalValidador(false);
   }
 
-  // ---------- Modal Contador ----------
   abrirModalContador(): void {
     this.modalContadorAnim = 'in';
     this.modalContadorClosing = false;
     this.modalContadorOpen = true;
   }
+
   async cerrarModalContador(cancelar: boolean): Promise<void> {
     this.modalContadorClosing = true;
     this.modalContadorAnim = 'out';
@@ -407,11 +361,9 @@ export class AgregarInstalacionComponent implements OnInit {
       this.modalContadorClosing = false;
 
       if (cancelar) {
-        // Revertir selección
         this.instalacionesForm
           .get('idContador')
           ?.setValue(this.initialBlueVoxId ?? null, { emitEvent: false });
-        // limpiar temporales
         this.pendingNuevoContadorId = null;
         this.estadoContadorSel = null;
         this.comentarioContadorText = '';
@@ -419,9 +371,11 @@ export class AgregarInstalacionComponent implements OnInit {
       }
     }, 240);
   }
+
   onBackdropContador(): void {
     this.cerrarModalContador(true);
   }
+
   confirmarModalContador(): void {
     if (this.estadoContadorSel == null) {
       this.alerts.open({
@@ -435,14 +389,11 @@ export class AgregarInstalacionComponent implements OnInit {
     }
     this.estatusContadorAnterior = this.estadoContadorSel;
     this.comentariosContador = this.comentarioContadorText?.trim() || null;
-
     this.initialBlueVoxId =
       this.pendingNuevoContadorId ?? this.initialBlueVoxId;
-
     this.cerrarModalContador(false);
   }
 
-  // ---------- Carga dependientes por cliente ----------
   private cargarListasPorCliente(
     idCliente: number,
     applyPending: boolean
@@ -470,7 +421,7 @@ export class AgregarInstalacionComponent implements OnInit {
         catchError((err) => of({ __error: err } as any))
       );
 
-    const toN = (v: any) => (v == null ? null : Number(v));
+    const n = (v: any) => (v == null ? null : Number(v));
     const esError = (r: any) => r && typeof r === 'object' && '__error' in r;
 
     forkJoin({
@@ -483,7 +434,6 @@ export class AgregarInstalacionComponent implements OnInit {
         next: async (resp: any) => {
           const errores: string[] = [];
 
-          // Normalizadores
           const mapValidador = (x: any) => ({
             ...x,
             id: Number(
@@ -578,60 +528,49 @@ export class AgregarInstalacionComponent implements OnInit {
             ).map(mapVehiculo);
           }
 
-          // Asegurar opción seleccionada aunque no esté en lista
-          const sidDev =
-            this.pendingSelecciones?.idValidador == null
-              ? null
-              : Number(this.pendingSelecciones.idValidador);
-          if (sidDev != null && !devs.some((x) => Number(x.id) === sidDev)) {
-            devs.unshift({
-              id: sidDev,
-              numeroSerie: this.pendingLabels.dispositivo ?? '',
-              marca: '',
-              modelo: ''
-            });
-          }
-          const sidBvx =
-            this.pendingSelecciones?.idContador == null
-              ? null
-              : Number(this.pendingSelecciones.idContador);
-          if (sidBvx != null && !bvx.some((x) => Number(x.id) === sidBvx)) {
-            bvx.unshift({
-              id: sidBvx,
-              numeroSerie: this.pendingLabels.bluevox ?? '',
-              marca: '',
-              modelo: ''
-            });
-          }
-          const sidVeh =
-            this.pendingSelecciones?.idVehiculo == null
-              ? null
-              : Number(this.pendingSelecciones.idVehiculo);
-          if (sidVeh != null && !vehs.some((x) => Number(x.id) === sidVeh)) {
-            vehs.unshift({
-              id: sidVeh,
-              placa: this.pendingLabels.vehiculo ?? '',
-              numeroEconomico: ''
-            });
+          if (!devs?.length) devs = [];
+          this.listaValidadores = this.ensureSelectedOptionVisible(
+            devs,
+            this.pendingSelecciones?.idValidador,
+            this.pendingLabels.dispositivo,
+            'numeroSerie'
+          );
+
+          if (!bvx?.length) bvx = [];
+          this.listaContadores = this.ensureSelectedOptionVisible(
+            bvx,
+            this.pendingSelecciones?.idContador,
+            this.pendingLabels.bluevox,
+            'numeroSerie'
+          );
+
+          if (!vehs?.length) vehs = [];
+          this.listaVehiculos = this.ensureSelectedOptionVisible(
+            vehs,
+            this.pendingSelecciones?.idVehiculo,
+            this.pendingLabels.vehiculo,
+            'placa'
+          );
+
+          this.desactivarCamposDependientes(false);
+
+          if (applyPending) {
+            const f = this.instalacionesForm;
+            f.get('idValidador')?.setValue(
+              n(this.pendingSelecciones.idValidador),
+              { emitEvent: false }
+            );
+            f.get('idContador')?.setValue(
+              n(this.pendingSelecciones.idContador),
+              { emitEvent: false }
+            );
+            f.get('idVehiculo')?.setValue(
+              n(this.pendingSelecciones.idVehiculo),
+              { emitEvent: false }
+            );
+            this.pendingSelecciones = {};
           }
 
-          this.listaValidadores = devs;
-          this.listaContadores = bvx;
-          this.listaVehiculos = vehs;
-
-          const sinErrores = errores.length === 0;
-          if (sinErrores) {
-            this.desactivarCamposDependientes(false);
-            if (applyPending) {
-              const f = this.instalacionesForm;
-              f.get('idValidador')?.setValue(toN(this.pendingSelecciones.idValidador), { emitEvent: false });
-              f.get('idContador')?.setValue(toN(this.pendingSelecciones.idContador), { emitEvent: false });
-              f.get('idVehiculo')?.setValue(toN(this.pendingSelecciones.idVehiculo), { emitEvent: false });
-              this.pendingSelecciones = {};
-            }
-          } else {
-            this.desactivarCamposDependientes(true);
-          }
           this.lastLoadedCliente = idCliente;
           this.instalacionesForm.updateValueAndValidity({ emitEvent: false });
           this.bootstrapping = false;
@@ -642,10 +581,48 @@ export class AgregarInstalacionComponent implements OnInit {
           }
         },
         error: async (err) => {
-          this.desactivarCamposDependientes(true);
+          this.listaValidadores = this.ensureSelectedOptionVisible(
+            [],
+            this.pendingSelecciones?.idValidador,
+            this.pendingLabels.dispositivo,
+            'numeroSerie'
+          );
+          this.listaContadores = this.ensureSelectedOptionVisible(
+            [],
+            this.pendingSelecciones?.idContador,
+            this.pendingLabels.bluevox,
+            'numeroSerie'
+          );
+          this.listaVehiculos = this.ensureSelectedOptionVisible(
+            [],
+            this.pendingSelecciones?.idVehiculo,
+            this.pendingLabels.vehiculo,
+            'placa'
+          );
+
+          const f = this.instalacionesForm;
+          if (this.pendingSelecciones.idValidador != null)
+            f.get('idValidador')?.setValue(
+              n(this.pendingSelecciones.idValidador),
+              { emitEvent: false }
+            );
+          if (this.pendingSelecciones.idContador != null)
+            f.get('idContador')?.setValue(
+              n(this.pendingSelecciones.idContador),
+              { emitEvent: false }
+            );
+          if (this.pendingSelecciones.idVehiculo != null)
+            f.get('idVehiculo')?.setValue(
+              n(this.pendingSelecciones.idVehiculo),
+              { emitEvent: false }
+            );
+          this.pendingSelecciones = {};
+
+          this.desactivarCamposDependientes(false);
           this.bootstrapping = false;
           this.instalacionesForm.updateValueAndValidity({ emitEvent: false });
           this.cdr.detectChanges();
+
           const msg = await this.getErrorMessage(err);
           await this.mostrarErroresServiciosSecuencial([msg]);
         }
@@ -654,294 +631,92 @@ export class AgregarInstalacionComponent implements OnInit {
 
   obtenerInstalacion(): void {
     this.bootstrapping = true;
-
     this.instService.obtenerInstalacion(this.idInstalacion).subscribe({
-      next: async (response: any) => {
+      next: (response: any) => {
         const raw = Array.isArray(response?.data)
-          ? response.data[0] ?? {}
-          : response?.data ?? {};
-        if (!raw || Object.keys(raw).length === 0) {
+          ? response.data[0]
+          : response?.data || {};
+        if (!raw) {
           this.bootstrapping = false;
           return;
         }
 
-        // IDs robustos
         const idClienteSrv = this.toNumOrNull(
-          raw.idCliente ??
-            raw.idcliente ??
-            raw?.idCliente2?.id ??
-            raw?.cliente?.id ??
-            raw?.IdCliente ??
-            raw?.IDCliente
+          raw.idCliente ?? raw?.idCliente2?.id
         );
-        const estatus =
-          this.toNumOrNull(raw.estatus ?? raw.Estatus ?? raw.status) ?? 1;
+        const estatus = this.toNumOrNull(raw.estatus) ?? 1;
         const idValidador = this.toNumOrNull(
-          raw.idValidador ??
-            raw.idvalidador ??
-            raw.idValidadores ??
-            raw.idvalidadores ??
-            raw?.dispositivos?.id ??
-            raw?.validador?.id ??
-            raw?.IdValidador ??
-            raw?.IDValidador
+          raw.idValidador ?? raw?.dispositivos?.id
         );
         const idContador = this.toNumOrNull(
-          raw.idContador ??
-            raw.idcontador ??
-            raw.idContadores ??
-            raw.idcontadores ??
-            raw?.blueVoxs?.id ??
-            raw?.contador?.id ??
-            raw?.IdContador ??
-            raw?.IDContador
+          raw.idContador ?? raw?.blueVoxs?.id
         );
         const idVehiculo = this.toNumOrNull(
-          raw.idVehiculo ??
-            raw.idvehiculo ??
-            raw?.vehiculos?.id ??
-            raw?.vehiculo?.id ??
-            raw?.IdVehiculo ??
-            raw?.IDVehiculo
+          raw.idVehiculo ?? raw?.vehiculos?.id
         );
 
-        // Guardar IDs iniciales
         this.initialDispositivoId = idValidador ?? null;
         this.initialBlueVoxId = idContador ?? null;
 
-        // Cliente fijo en edición si no es admin
+        this.pendingLabels = {
+          dispositivo: raw?.numeroSerieValidadores ?? raw?.numeroSerie ?? null,
+          bluevox: raw?.numeroSerieContadores ?? raw?.numeroSerieBlueVox ?? null,
+          vehiculo:
+            raw?.placaVehiculo ??
+            raw?.placa ??
+            raw?.numeroEconomicoVehiculo ??
+            null
+        };
+
         const idCliente = this.isAdmin ? idClienteSrv : this.idClienteUser;
 
-        // Set de valores sin disparar dependientes
         this.instalacionesForm.patchValue(
-          {
-            idCliente,
-            estatus,
-            idValidador: idValidador ?? null,
-            idContador: idContador ?? null,
-            idVehiculo: idVehiculo ?? null
-          },
+          { idCliente, estatus },
           { emitEvent: false }
         );
 
-        // Placeholders inmediatos
-        const placeholderValidador = idValidador
-          ? [
-              {
-                id: idValidador,
-                numeroSerie: (
-                  raw.numeroSerieValidadores ??
-                  raw.numeroSerie ??
-                  raw.numeroSerieDispositivo ??
-                  ''
-                ).toString(),
-                marca: (
-                  raw.marcaValidadores ??
-                  raw.marcaValidador ??
-                  raw.marca ??
-                  ''
-                ).toString(),
-                modelo: (
-                  raw.modeloValidadores ??
-                  raw.modeloValidador ??
-                  raw.modelo ??
-                  ''
-                ).toString()
-              }
-            ]
-          : [];
-        const placeholderContador = idContador
-          ? [
-              {
-                id: idContador,
-                numeroSerie: (
-                  raw.numeroSerieContadores ??
-                  raw.numeroSerieBlueVox ??
-                  raw.numeroSerie ??
-                  ''
-                ).toString(),
-                marca: (
-                  raw.marcaContadores ??
-                  raw.marcaBlueVox ??
-                  raw.marca ??
-                  ''
-                ).toString(),
-                modelo: (
-                  raw.modeloContadores ??
-                  raw.modeloBlueVox ??
-                  raw.modelo ??
-                  ''
-                ).toString()
-              }
-            ]
-          : [];
-        const placeholderVehiculo = idVehiculo
-          ? [
-              {
-                id: idVehiculo,
-                placa: (raw.placaVehiculo ?? raw.placa ?? '').toString(),
-                numeroEconomico: (
-                  raw.numeroEconomicoVehiculo ??
-                  raw.numeroEconomico ??
-                  ''
-                ).toString()
-              }
-            ]
-          : [];
+        this.pendingSelecciones = { idValidador, idContador, idVehiculo };
 
-        this.listaValidadores = placeholderValidador;
-        this.listaContadores = placeholderContador;
-        this.listaVehiculos = placeholderVehiculo;
-
-        // En edición: bloquear cliente/vehículo y permitir validador/contador
-        this.keepEditLocks();
-        const opts = { emitEvent: false };
-        this.instalacionesForm.get('idValidador')?.enable(opts);
-        this.instalacionesForm.get('idContador')?.enable(opts);
-
-        // Pedir listas reales y fusionar
-        const idClienteParaServicios =
-          this.toNumOrNull(this.instalacionesForm.get('idCliente')?.value) ??
-          idCliente;
-
-        const dispositivos$ = this.dispoService
-          .obtenerDispositivosByCliente(idClienteParaServicios)
-          .pipe(
-            shareReplay(1),
-            catchError((err) => of({ __error: err } as any))
+        if (idCliente) {
+          this.cargarListasPorCliente(idCliente, true);
+        } else {
+          this.listaValidadores = this.ensureSelectedOptionVisible(
+            [],
+            idValidador,
+            this.pendingLabels.dispositivo,
+            'numeroSerie'
           );
-        const bluevox$ = this.blueVoService
-          .obtenerDispositivosBlueByCliente(idClienteParaServicios)
-          .pipe(
-            shareReplay(1),
-            catchError((err) => of({ __error: err } as any))
+          this.listaContadores = this.ensureSelectedOptionVisible(
+            [],
+            idContador,
+            this.pendingLabels.bluevox,
+            'numeroSerie'
+          );
+          this.listaVehiculos = this.ensureSelectedOptionVisible(
+            [],
+            idVehiculo,
+            this.pendingLabels.vehiculo,
+            'placa'
           );
 
-        const esError = (r: any) =>
-          r && typeof r === 'object' && '__error' in r;
+          const f = this.instalacionesForm;
+          const opts = { emitEvent: false };
+          if (idValidador != null)
+            f.get('idValidador')?.patchValue(idValidador, opts);
+          if (idContador != null)
+            f.get('idContador')?.patchValue(idContador, opts);
+          if (idVehiculo != null)
+            f.get('idVehiculo')?.patchValue(idVehiculo, opts);
 
-        const mapValidador = (x: any) => ({
-          ...x,
-          id: Number(
-            this.pickId(x, ['id', 'idValidador', 'IdValidador', 'IDValidador'])
-          ),
-          numeroSerie:
-            x.numeroSerie ??
-            x.numeroSerieValidadores ??
-            x.numeroSerieDispositivo ??
-            x.numeroSerieBlueVox ??
-            x.numeroSerieContadores ??
-            '',
-          marca:
-            x.marca ??
-            x.marcaValidador ??
-            x.marcaValidadores ??
-            x.marcaContadores ??
-            x.marcaBlueVox ??
-            '',
-          modelo:
-            x.modelo ??
-            x.modeloValidador ??
-            x.modeloValidadores ??
-            x.modeloContadores ??
-            x.modeloBlueVox ??
-            ''
-        });
-
-        const mapContador = (x: any) => ({
-          ...x,
-          id: Number(
-            this.pickId(x, ['id', 'idContador', 'IdContador', 'IDContador'])
-          ),
-          numeroSerie:
-            x.numeroSerie ??
-            x.numeroSerieBlueVox ??
-            x.numeroSerieContadores ??
-            x.numeroSerieValidadores ??
-            '',
-          marca:
-            x.marca ??
-            x.marcaBlueVox ??
-            x.marcaContadores ??
-            x.marcaValidador ??
-            '',
-          modelo:
-            x.modelo ??
-            x.modeloBlueVox ??
-            x.modeloContadores ??
-            x.modeloValidador ??
-            ''
-        });
-
-        forkJoin({ dispositivos: dispositivos$, bluevox: bluevox$ }).subscribe({
-          next: async (resp: any) => {
-            const errores: string[] = [];
-
-            if (esError(resp.dispositivos)) {
-              errores.push(
-                await this.getErrorMessage(resp.dispositivos.__error)
-              );
-            } else {
-              const devsRaw = this.ensureArray(
-                resp?.dispositivos ?? resp?.data?.dispositivos ?? resp?.data
-              );
-              const devs = devsRaw.map(mapValidador);
-              this.listaValidadores = this.mergeUniqueByIdPreferFilled(
-                devs,
-                placeholderValidador
-              );
-            }
-
-            if (esError(resp.bluevox)) {
-              errores.push(await this.getErrorMessage(resp.bluevox.__error));
-            } else {
-              const bvxRaw = this.ensureArray(
-                resp?.bluevox ?? resp?.data?.bluevox ?? resp?.data
-              );
-              const bvx = bvxRaw.map(mapContador);
-              this.listaContadores = this.mergeUniqueByIdPreferFilled(
-                bvx,
-                placeholderContador
-              );
-            }
-
-            this.instalacionesForm
-              .get('idValidador')
-              ?.enable({ emitEvent: false });
-            this.instalacionesForm
-              .get('idContador')
-              ?.enable({ emitEvent: false });
-            this.cdr.detectChanges();
-
-            if (errores.length) {
-              await this.mostrarErroresServiciosSecuencial(errores);
-            }
-          },
-          error: async (err) => {
-            const msg = await this.getErrorMessage(err);
-            await this.mostrarErroresServiciosSecuencial([msg]);
-          }
-        });
-
-        this.bootstrapping = false;
-        this.instalacionesForm.updateValueAndValidity({ emitEvent: false });
-        this.cdr.detectChanges();
-      },
-      error: async (err) => {
-        this.bootstrapping = false;
-        const msg = await this.getErrorMessage(err);
-        await this.alerts.open({
-          type: 'error',
-          title: '¡Ops!',
-          message: msg,
-          confirmText: 'Aceptar',
-          backdropClose: false
-        });
+          this.desactivarCamposDependientes(false);
+          f.updateValueAndValidity({ emitEvent: false });
+          this.bootstrapping = false;
+          this.cdr.detectChanges();
+        }
       }
     });
   }
 
-  // ---------- Clientes / Submit ----------
   obtenerClientes(): void {
     this.clieService.obtenerClientes().subscribe(
       (response: any) => {
@@ -972,32 +747,26 @@ export class AgregarInstalacionComponent implements OnInit {
     );
   }
 
-  submit() {
-    this.submitButton = 'Cargando...';
-    this.loading = true;
-    if (this.idInstalacion) this.actualizar();
-    else this.agregar();
-  }
-
   async agregar() {
     this.submitButton = 'Cargando...';
     this.loading = true;
 
-    const etiquetas: any = {
-      idValidador: 'Validador',
-      idContador: 'Contador',
-      idVehiculo: 'Vehículo',
-      idCliente: 'Cliente'
-    };
-    const requeridos = ['idValidador', 'idContador', 'idVehiculo', 'idCliente'];
-    const raw = this.instalacionesForm.getRawValue();
-    const camposFaltantes: string[] = requeridos
-      .filter((k) => !raw[k])
-      .map((k) => etiquetas[k] || k);
-
-    if (camposFaltantes.length > 0) {
+    if (this.instalacionesForm.invalid) {
       this.submitButton = 'Guardar';
       this.loading = false;
+
+      const etiquetas: any = {
+        idValidador: 'Validador',
+        idContador: 'Contador',
+        idVehiculo: 'Vehículo',
+        idCliente: 'Cliente'
+      };
+      const camposFaltantes: string[] = [];
+      Object.keys(this.instalacionesForm.controls).forEach((key) => {
+        const control = this.instalacionesForm.get(key);
+        if (control?.invalid && control.errors?.['required'])
+          camposFaltantes.push(etiquetas[key] || key);
+      });
 
       const lista = camposFaltantes
         .map(
@@ -1012,15 +781,18 @@ export class AgregarInstalacionComponent implements OnInit {
         type: 'warning',
         title: '¡Faltan campos obligatorios!',
         message: `<p style="text-align:center;font-size:15px;margin-bottom:16px;color:white">
-          Los siguientes <strong>campos obligatorios</strong> están vacíos.<br>Por favor complétalos antes de continuar:
-        </p><div style="max-height:350px;overflow-y:auto;">${lista}</div>`,
+          Los siguientes <strong>campos obligatorios</strong> están vacíos.<br>
+          Por favor complétalos antes de continuar:
+        </p>
+        <div style="max-height:350px;overflow-y:auto;">${lista}</div>`,
         confirmText: 'Entendido',
         backdropClose: false
       });
       return;
     }
 
-    const payload = this.instalacionesForm.getRawValue();
+    const payload = this.getNumericFormPayload();
+
     this.instService.agregarInstalacion(payload).subscribe(
       () => {
         this.submitButton = 'Guardar';
@@ -1055,71 +827,16 @@ export class AgregarInstalacionComponent implements OnInit {
   async actualizar() {
     this.submitButton = 'Cargando...';
     this.loading = true;
-    const etiquetas: any = {
-      idValidador: 'Validador',
-      idContador: 'Contador',
-      idVehiculo: 'Vehículo',
-      idCliente: 'Cliente'
-    };
-    const requeridos = ['idValidador', 'idContador', 'idVehiculo', 'idCliente'];
-    const raw = this.instalacionesForm.getRawValue();
 
-    // COALESCE: usa lo actual, o lo ÚLTIMO ENVIADO si esta vez no cambiaste ese lado
-    const _estatusValAnt =
-      this.estatusValidadorAnterior ??
-      this.lastSubmittedMeta.estatusValidadorAnterior;
-    const _comentVal =
-      this.comentariosValidador ??
-      this.lastSubmittedMeta.comentariosValidador ??
-      null;
-
-    const _estatusConAnt =
-      this.estatusContadorAnterior ??
-      this.lastSubmittedMeta.estatusContadorAnterior;
-    const _comentCon =
-      this.comentariosContador ??
-      this.lastSubmittedMeta.comentariosContador ??
-      null;
+    const base = this.getNumericFormPayload();
 
     const payload = {
-      idValidador: this.toNumOrNull(raw.idValidador),
-      idContador: this.toNumOrNull(raw.idContador),
-      idVehiculo: this.toNumOrNull(raw.idVehiculo),
-      idCliente: this.toNumOrNull(raw.idCliente) ?? this.idClienteUser,
-      estatus: this.toNumOrNull(raw.estatus) ?? 1,
-      estatusValidadorAnterior: _estatusValAnt ?? null,
-      estatusContadorAnterior: _estatusConAnt ?? null,
-      comentariosValidador: _comentVal,
-      comentariosContador: _comentCon
+      ...base,
+      estatusValidadorAnterior: this.estatusValidadorAnterior ?? null,
+      comentariosValidador: this.comentariosValidador ?? null,
+      estatusContadorAnterior: this.estatusContadorAnterior ?? null,
+      comentariosContador: this.comentariosContador ?? null
     };
-
-    const camposFaltantes: string[] = requeridos
-      .filter((k) => !raw[k])
-      .map((k) => etiquetas[k] || k);
-    if (camposFaltantes.length > 0) {
-      this.submitButton = 'Actualizar';
-      this.loading = false;
-
-      const lista = camposFaltantes
-        .map(
-          (campo, i) => `
-        <div style="padding:8px 12px;border-left:4px solid #d9534f;background:#caa8a8;text-align:center;margin-bottom:8px;border-radius:4px;">
-          <strong style="color:#b02a37;">${i + 1}. ${campo}</strong>
-        </div>`
-        )
-        .join('');
-
-      await this.alerts.open({
-        type: 'warning',
-        title: '¡Faltan campos obligatorios!',
-        message: `<p style="text-align:center;font-size:15px;margin-bottom:16px;color:white">
-          Los siguientes <strong>campos obligatorios</strong> están vacíos.<br>Por favor complétalos antes de continuar:
-        </p><div style="max-height:350px;overflow-y:auto;">${lista}</div>`,
-        confirmText: 'Entendido',
-        backdropClose: false
-      });
-      return;
-    }
 
     this.instService
       .actualizarInstalacion(this.idInstalacion, payload)
@@ -1127,22 +844,6 @@ export class AgregarInstalacionComponent implements OnInit {
         () => {
           this.submitButton = 'Actualizar';
           this.loading = false;
-
-          // Actualizar "lo último enviado" para futuras actualizaciones parciales
-          this.lastSubmittedMeta = {
-            estatusValidadorAnterior: payload.estatusValidadorAnterior,
-            comentariosValidador: payload.comentariosValidador,
-            estatusContadorAnterior: payload.estatusContadorAnterior,
-            comentariosContador: payload.comentariosContador
-          };
-
-          // Una vez enviado, puedes limpiar los "de esta sesión" si quieres:
-          // (así forzamos a que si no modificas de nuevo, se use el lastSubmittedMeta)
-          this.estatusValidadorAnterior = null;
-          this.comentariosValidador = null;
-          this.estatusContadorAnterior = null;
-          this.comentariosContador = null;
-
           this.alerts.open({
             type: 'success',
             title: '¡Operación Exitosa!',
@@ -1161,14 +862,20 @@ export class AgregarInstalacionComponent implements OnInit {
             type: 'error',
             title: '¡Ops!',
             message: msg,
-            confirmText: 'Confirmar',
+            confirmText: 'Aceptar',
             backdropClose: false
           });
         }
       );
   }
 
-  // ---------- Varios ----------
+  submit(): void {
+    this.submitButton = 'Cargando...';
+    this.loading = true;
+    if (this.idInstalacion) this.actualizar();
+    else this.agregar();
+  }
+
   compareId = (a: any, b: any) =>
     a != null && b != null && Number(a) === Number(b);
   trackId = (_: number, item: any) => Number(item?.id);
@@ -1209,10 +916,10 @@ export class AgregarInstalacionComponent implements OnInit {
     return statusLine;
   }
 
-  // Alertas secuenciales
   private delay(ms = 0): Promise<void> {
     return new Promise((r) => setTimeout(r, ms));
   }
+
   private async mostrarErroresServiciosSecuencial(
     mensajes: string[]
   ): Promise<void> {
@@ -1335,7 +1042,6 @@ export class AgregarInstalacionComponent implements OnInit {
     });
   }
 
-  // Fusiona listas por id
   private mergeUniqueByIdPreferFilled(
     primary: any[] = [],
     secondary: any[] = [],

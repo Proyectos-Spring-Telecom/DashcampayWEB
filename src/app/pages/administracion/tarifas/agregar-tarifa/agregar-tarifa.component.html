@@ -1,6 +1,6 @@
 <vex-page-layout @fadeInRight>
   <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
-      [class.px-6]="layoutCtrl.value === 'fullwidth'">
+    [class.px-6]="layoutCtrl.value === 'fullwidth'">
     <div class="card mt-4">
       <div class="container-fluid p-4">
         <div class="bg-app-bar appbar px-6 h-16 border-b sticky top-0 left-0 flex items-center z-10">
@@ -57,9 +57,9 @@
                   <i class="fa fa-coins"></i><span>Tarifa Base</span>
                 </label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput type="text" class="form-control" formControlName="tarifaBase"
-                    placeholder="Ej: 10.00" inputmode="decimal" (keydown)="moneyKeydown($event)"
-                    (input)="moneyInput($event)" (paste)="moneyPaste($event)" (blur)="moneyBlur($event)" />
+                  <input matInput type="text" class="form-control" formControlName="tarifaBase" placeholder="Ej: 10.00"
+                    inputmode="decimal" (focus)="onTarifaFocus()" (blur)="onTarifaBlur()"
+                    (keypress)="allowDecimal($event)" />
                 </mat-form-field>
               </div>
 
@@ -68,8 +68,8 @@
                   <i class="fa fa-road"></i><span>Distancia Base Km</span>
                 </label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput type="text" class="form-control" formControlName="distanciaBaseKm" placeholder="120.5"
-              (focus)="onDistanciaFocus()" (blur)="onDistanciaBlur()" (keypress)="allowOnlyNumbers($event)" />
+                  <input matInput type="text" class="form-control" formControlName="distanciaBaseKm" placeholder="120"
+                    (focus)="onDistanciaFocus()" (blur)="onDistanciaBlur()" (keypress)="allowOnlyNumbers($event)" />
                 </mat-form-field>
               </div>
 
@@ -78,9 +78,9 @@
                   <i class="fa fa-ruler-horizontal"></i><span>Incremento Por Metros</span>
                 </label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput type="text" class="form-control" formControlName="incrementoCadaMetros" placeholder="10.25"
-              inputmode="decimal" (focus)="onIncrementoFocus()" (blur)="onIncrementoBlur()"
-              (keypress)="allowOnlyNumbers($event)" />
+                  <input matInput type="text" class="form-control" formControlName="incrementoCadaMetros"
+                    placeholder="10" inputmode="decimal" (focus)="onIncrementoFocus()" (blur)="onIncrementoBlur()"
+                    (keypress)="allowOnlyNumbers($event)" />
                 </mat-form-field>
               </div>
 
@@ -90,8 +90,8 @@
                 </label>
                 <mat-form-field appearance="fill" class="w-100">
                   <input matInput type="text" class="form-control" formControlName="costoAdicional" placeholder="50.00"
-              inputmode="decimal" (focus)="onCostoFocus()" (blur)="onCostoBlur()"
-              (keypress)="allowOnlyNumbers($event)" />
+                    inputmode="decimal" (focus)="onCostoFocus()" (blur)="onCostoBlur()"
+                    (keypress)="allowOnlyNumbers($event)" />
                 </mat-form-field>
               </div>
 

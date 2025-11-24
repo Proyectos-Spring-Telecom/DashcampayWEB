@@ -1,4 +1,10 @@
-import { Component, DestroyRef, inject, OnInit, ViewChild } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  inject,
+  OnInit,
+  ViewChild
+} from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -13,9 +19,26 @@ import { VehiculosService } from 'src/app/pages/services/vehiculos.service';
   selector: 'vex-lista-vehiculos',
   templateUrl: './lista-vehiculos.component.html',
   styleUrl: './lista-vehiculos.component.scss',
-  animations: [fadeInRight400ms],
+  animations: [fadeInRight400ms]
 })
 export class ListaVehiculosComponent implements OnInit {
+  estadoLabel: Record<number, string> = {
+    0: 'Inactivo',
+    1: 'Disponible',
+    2: 'Asignado',
+    3: 'En mantenimiento',
+    4: 'Dañado',
+    5: 'Retirado'
+  };
+
+  estadoClass: Record<number, string> = {
+    0: 'ea-inactivo',
+    1: 'ea-disponible',
+    2: 'ea-asignado',
+    3: 'ea-mantenimiento',
+    4: 'ea-danado',
+    5: 'ea-retirado'
+  };
 
   layoutCtrl = new UntypedFormControl('fullwidth');
   isLoading: boolean = false;
@@ -24,24 +47,28 @@ export class ListaVehiculosComponent implements OnInit {
   public showFilterRow: boolean;
   public showHeaderFilter: boolean;
   public loadingVisible: boolean = false;
-  public mensajeAgrupar: string = 'Arrastre un encabezado de columna aquí para agrupar por esa columna';
+  public mensajeAgrupar: string =
+    'Arrastre un encabezado de columna aquí para agrupar por esa columna';
   public loading!: boolean;
   public loadingMessage: string = 'Cargando...';
   public paginaActual: number = 1;
   public totalRegistros: number = 0;
   public pageSize: number = 20;
   public totalPaginas: number = 0;
-  @ViewChild(DxDataGridComponent, { static: false }) dataGrid!: DxDataGridComponent;
+  @ViewChild(DxDataGridComponent, { static: false })
+  dataGrid!: DxDataGridComponent;
   public autoExpandAllGroups: boolean = true;
   isGrouped: boolean = false;
   public paginaActualData: any[] = [];
   public filtroActivo: string = '';
 
-  constructor(private vehiService: VehiculosService,
+  constructor(
+    private vehiService: VehiculosService,
     private alerts: AlertsService,
-    private router: Router,         // para navegar
+    private router: Router, // para navegar
     private route: ActivatedRoute,
-    private sanitizer: DomSanitizer,) {
+    private sanitizer: DomSanitizer
+  ) {
     this.showFilterRow = true;
     this.showHeaderFilter = true;
   }
@@ -70,14 +97,9 @@ export class ListaVehiculosComponent implements OnInit {
           const rows: any[] = Array.isArray(resp?.data) ? resp.data : [];
           const meta = resp?.paginated || {};
           const totalRegistros =
-            toNum(meta.total) ??
-            toNum(resp?.total) ??
-            rows.length;
+            toNum(meta.total) ?? toNum(resp?.total) ?? rows.length;
 
-          const paginaActual =
-            toNum(meta.page) ??
-            toNum(resp?.page) ??
-            page;
+          const paginaActual = toNum(meta.page) ?? toNum(resp?.page) ?? page;
 
           const totalPaginas =
             toNum(meta.lastPage) ??
@@ -86,8 +108,11 @@ export class ListaVehiculosComponent implements OnInit {
           const dataTransformada = rows.map((item: any) => ({
             ...item,
             estatusTexto:
-              item?.estatus === 1 ? 'Activo' :
-                item?.estatus === 0 ? 'Inactivo' : null
+              item?.estatus === 1
+                ? 'Activo'
+                : item?.estatus === 0
+                  ? 'Inactivo'
+                  : null
           }));
           this.totalRegistros = totalRegistros;
           this.paginaActual = paginaActual;
@@ -135,21 +160,30 @@ export class ListaVehiculosComponent implements OnInit {
     try {
       const colsOpt = grid?.option('columns');
       if (Array.isArray(colsOpt) && colsOpt.length) columnas = colsOpt;
-    } catch { }
-    if (!columnas.length && grid?.getVisibleColumns) columnas = grid.getVisibleColumns();
+    } catch {}
+    if (!columnas.length && grid?.getVisibleColumns)
+      columnas = grid.getVisibleColumns();
 
     const dataFields: string[] = columnas
       .map((c: any) => c?.dataField)
       .filter((df: any) => typeof df === 'string' && df.trim().length > 0);
 
     const getByPath = (obj: any, path: string) =>
-      !obj || !path ? undefined : path.split('.').reduce((acc, k) => acc?.[k], obj);
+      !obj || !path
+        ? undefined
+        : path.split('.').reduce((acc, k) => acc?.[k], obj);
 
     const dataFiltrada = (this.paginaActualData || []).filter((row: any) => {
-      const hitCols = dataFields.some((df) => norm(getByPath(row, df)).includes(q));
+      const hitCols = dataFields.some((df) =>
+        norm(getByPath(row, df)).includes(q)
+      );
 
       const estNum = Number(row?.estatus);
-      const estText = Number.isFinite(estNum) ? (estNum === 1 ? 'activo' : 'inactivo') : '';
+      const estText = Number.isFinite(estNum)
+        ? estNum === 1
+          ? 'activo'
+          : 'inactivo'
+        : '';
       const estHits =
         estText.includes(q) ||
         ('activo'.startsWith(q) && estNum === 1) ||
@@ -173,7 +207,6 @@ export class ListaVehiculosComponent implements OnInit {
     grid?.option('dataSource', dataFiltrada);
   }
 
-
   onPageIndexChanged(e: any) {
     const pageIndex = e.component.pageIndex();
     this.paginaActual = pageIndex + 1;
@@ -185,8 +218,10 @@ export class ListaVehiculosComponent implements OnInit {
   }
 
   actualizarVehiculo(idVehiculo: number) {
-    this.router.navigateByUrl('/administracion/vehiculos/editar-vehiculo/' + idVehiculo);
-  };
+    this.router.navigateByUrl(
+      '/administracion/vehiculos/editar-vehiculo/' + idVehiculo
+    );
+  }
 
   async activar(rowData: any) {
     const res = await this.alerts.open({
@@ -196,7 +231,7 @@ export class ListaVehiculosComponent implements OnInit {
       showCancel: true,
       confirmText: 'Confirmar',
       cancelText: 'Cancelar',
-      backdropClose: false,
+      backdropClose: false
     });
 
     if (res !== 'confirm') return;
@@ -208,7 +243,7 @@ export class ListaVehiculosComponent implements OnInit {
           title: '¡Confirmación Realizada!',
           message: 'El vehículo ha sido activado.',
           confirmText: 'Confirmar',
-          backdropClose: false,
+          backdropClose: false
         });
         this.setupDataSource();
         this.dataGrid.instance.refresh();
@@ -219,7 +254,7 @@ export class ListaVehiculosComponent implements OnInit {
           title: '¡Ops!',
           message: String(error),
           confirmText: 'Confirmar',
-          backdropClose: false,
+          backdropClose: false
         });
       }
     );
@@ -233,7 +268,7 @@ export class ListaVehiculosComponent implements OnInit {
       showCancel: true,
       confirmText: 'Confirmar',
       cancelText: 'Cancelar',
-      backdropClose: false,
+      backdropClose: false
     });
 
     if (res !== 'confirm') return;
@@ -245,7 +280,7 @@ export class ListaVehiculosComponent implements OnInit {
           title: '¡Confirmación Realizada!',
           message: 'El vehículo ha sido desactivado.',
           confirmText: 'Confirmar',
-          backdropClose: false,
+          backdropClose: false
         });
         this.setupDataSource();
         this.dataGrid.instance.refresh();
@@ -256,7 +291,7 @@ export class ListaVehiculosComponent implements OnInit {
           title: '¡Ops!',
           message: String(error),
           confirmText: 'Confirmar',
-          backdropClose: false,
+          backdropClose: false
         });
       }
     );
@@ -271,13 +306,15 @@ export class ListaVehiculosComponent implements OnInit {
   }
 
   toggleExpandGroups() {
-    const groupedColumns = this.dataGrid.instance.getVisibleColumns()
-      .filter(col => (col.groupIndex ?? -1) >= 0);
+    const groupedColumns = this.dataGrid.instance
+      .getVisibleColumns()
+      .filter((col) => (col.groupIndex ?? -1) >= 0);
     if (groupedColumns.length === 0) {
       this.alerts.open({
         type: 'info',
         title: '¡Ops!',
-        message: 'Debes arrastar un encabezado de una columna para expandir o contraer grupos.',
+        message:
+          'Debes arrastar un encabezado de una columna para expandir o contraer grupos.',
         backdropClose: false
       });
     } else {
@@ -294,7 +331,6 @@ export class ListaVehiculosComponent implements OnInit {
   }
 
   agregarVehiculo() {
-    this.router.navigateByUrl('/administracion/vehiculos/agregar-vehiculo')
+    this.router.navigateByUrl('/administracion/vehiculos/agregar-vehiculo');
   }
-
 }
