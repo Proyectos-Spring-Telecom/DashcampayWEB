@@ -19,7 +19,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatInputModule } from '@angular/material/input';
-import { DxDataGridModule } from 'devextreme-angular';
+import { DxChartModule, DxDataGridModule } from 'devextreme-angular';
 import { HasPermissionDirective } from '../../services/haspermission.directive';
 
 
@@ -46,7 +46,8 @@ import { HasPermissionDirective } from '../../services/haspermission.directive';
     MatDialogModule,
     MatInputModule,
     DxDataGridModule,
-    HasPermissionDirective
+    HasPermissionDirective,
+    DxChartModule
   ]
 })
 export class BitacoraViajesModule { }

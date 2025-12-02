@@ -19,7 +19,6 @@ export class BitacoraViajesComponent implements OnInit {
 
   layoutCtrl = new UntypedFormControl('fullwidth');
   public mensajeAgrupar: string = 'Arrastre un encabezado de columna aquí para agrupar por esa columna';
-  public listaModulos: any;
   public showFilterRow: boolean;
   public showHeaderFilter: boolean;
   public loading!: boolean;
@@ -34,6 +33,63 @@ export class BitacoraViajesComponent implements OnInit {
   isGrouped: boolean = false;
   public paginaActualData: any[] = [];
   public filtroActivo: string = '';
+  public listaModuloss: any;
+
+
+public listaModulos = [
+  { id: 1,  diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 4, salidas: 1, fhRegistro: new Date(2025, 10, 26, 6, 0, 0) },
+  { id: 2,  diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 5, salidas: 2, fhRegistro: new Date(2025, 10, 26, 6, 17, 0) },
+  { id: 3,  diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 6, salidas: 3, fhRegistro: new Date(2025, 10, 26, 6, 39, 0) },
+  { id: 4,  diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 7, salidas: 4, fhRegistro: new Date(2025, 10, 26, 7, 2, 0) },
+  { id: 5,  diferencia: 2, contadora: 'AMG-1003-GHI', entradas: 3, salidas: 1, fhRegistro: new Date(2025, 10, 26, 7, 21, 0) },
+  { id: 6,  diferencia: 2, contadora: 'AMG-1003-GHI', entradas: 4, salidas: 2, fhRegistro: new Date(2025, 10, 26, 7, 47, 0) },
+  { id: 7,  diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 4, salidas: 1, fhRegistro: new Date(2025, 10, 26, 8, 5, 0) },
+  { id: 8,  diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 5, salidas: 2, fhRegistro: new Date(2025, 10, 26, 8, 33, 0) },
+  { id: 9,  diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 6, salidas: 3, fhRegistro: new Date(2025, 10, 26, 8, 56, 0) },
+  { id: 10, diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 7, salidas: 4, fhRegistro: new Date(2025, 10, 26, 9, 14, 0) },
+  { id: 11, diferencia: 2, contadora: 'AMG-1003-GHI', entradas: 3, salidas: 1, fhRegistro: new Date(2025, 10, 26, 9, 37, 0) },
+  { id: 12, diferencia: 2, contadora: 'AMG-1003-GHI', entradas: 4, salidas: 2, fhRegistro: new Date(2025, 10, 26, 10, 1, 0) },
+  { id: 13, diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 4, salidas: 1, fhRegistro: new Date(2025, 10, 26, 10, 26, 0) },
+  { id: 14, diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 5, salidas: 2, fhRegistro: new Date(2025, 10, 26, 10, 49, 0) },
+  { id: 15, diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 6, salidas: 3, fhRegistro: new Date(2025, 10, 26, 11, 5, 0) },
+  { id: 16, diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 7, salidas: 4, fhRegistro: new Date(2025, 10, 26, 11, 32, 0) },
+  { id: 17, diferencia: 2, contadora: 'AMG-1003-GHI', entradas: 3, salidas: 1, fhRegistro: new Date(2025, 10, 26, 11, 57, 0) },
+  { id: 18, diferencia: 2, contadora: 'AMG-1003-GHI', entradas: 4, salidas: 2, fhRegistro: new Date(2025, 10, 26, 12, 19, 0) },
+  { id: 19, diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 4, salidas: 1, fhRegistro: new Date(2025, 10, 26, 12, 43, 0) },
+  { id: 20, diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 5, salidas: 2, fhRegistro: new Date(2025, 10, 26, 13, 8, 0) },
+  { id: 21, diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 6, salidas: 3, fhRegistro: new Date(2025, 10, 26, 13, 27, 0) },
+  { id: 22, diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 7, salidas: 4, fhRegistro: new Date(2025, 10, 26, 13, 51, 0) },
+  { id: 23, diferencia: 2, contadora: 'AMG-1003-GHI', entradas: 3, salidas: 1, fhRegistro: new Date(2025, 10, 26, 14, 16, 0) },
+  { id: 24, diferencia: 2, contadora: 'AMG-1003-GHI', entradas: 4, salidas: 2, fhRegistro: new Date(2025, 10, 26, 14, 39, 0) },
+  { id: 25, diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 4, salidas: 1, fhRegistro: new Date(2025, 10, 26, 15, 4, 0) },
+  { id: 26, diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 5, salidas: 2, fhRegistro: new Date(2025, 10, 26, 15, 29, 0) },
+  { id: 27, diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 6, salidas: 3, fhRegistro: new Date(2025, 10, 26, 15, 53, 0) },
+  { id: 28, diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 7, salidas: 4, fhRegistro: new Date(2025, 10, 26, 16, 18, 0) },
+  { id: 29, diferencia: 2, contadora: 'AMG-1003-GHI', entradas: 3, salidas: 1, fhRegistro: new Date(2025, 10, 26, 16, 44, 0) },
+  { id: 30, diferencia: 2, contadora: 'AMG-1003-GHI', entradas: 4, salidas: 2, fhRegistro: new Date(2025, 10, 26, 17, 10, 0) }
+];
+
+
+customizeTooltip(info: any) {
+  const fecha = info.argument as Date;
+  const hora = fecha.toLocaleTimeString('es-MX', {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
+  const datos = info.point.data;
+
+  return {
+    text:
+      'Hora: ' + hora +
+      '\nValidador: ' + datos.contadora +
+      '\nEntradas: ' + datos.entradas +
+      '\nSalidas: ' + datos.salidas +
+      '\nDiferencia: ' + datos.diferencia
+  };
+}
+
+
 
 
   constructor(
@@ -148,7 +204,7 @@ export class BitacoraViajesComponent implements OnInit {
   setupDataSource() {
     this.loading = true;
 
-    this.listaModulos = new CustomStore({
+    this.listaModuloss = new CustomStore({
       key: 'id',
       load: async (loadOptions: any) => {
         const take = Number(loadOptions?.take) || this.pageSize || 10;

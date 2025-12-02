@@ -35,19 +35,52 @@
             <dxo-header-filter [visible]="showHeaderFilter"></dxo-header-filter>
             <dxo-grouping [autoExpandAll]="true"></dxo-grouping>
             <dxi-column dataField="diferencia" caption="Diferencia" alignment="center"></dxi-column>
-                            <dxi-column dataField="" caption="Contadora" alignment="center"></dxi-column>
-                            <dxi-column dataField="entradas" caption="Entradas" alignment="center"></dxi-column>
-                            <dxi-column dataField="salidas" caption="Salidas" alignment="center"></dxi-column>
-                            <dxi-column dataField="fhRegistro" caption="Fecha y Hora" alignment="center"
-                                cellTemplate="fechaTemplate">
-                                <div *dxTemplate="let data of 'fechaTemplate'">
-                                    {{ data.value | date: 'dd/MM/yyyy HH:mm' : 'UTC' }}
-                                </div>
-                            </dxi-column>
-                            <dxo-export [enabled]="false" [allowExportSelectedData]="true"
-                                [texts]="{ exportAll: 'Exportar todos los datos a Excel', exportSelectedRows: 'Exportar filas seleccionadas a Excel' }">
-                            </dxo-export>
+            <dxi-column dataField="contadora" caption="Contadora" alignment="center"></dxi-column>
+            <dxi-column dataField="entradas" caption="Entradas" alignment="center"></dxi-column>
+            <dxi-column dataField="salidas" caption="Salidas" alignment="center"></dxi-column>
+            <dxi-column dataField="fhRegistro" caption="Fecha y Hora" alignment="center" cellTemplate="fechaTemplate">
+  <div *dxTemplate="let data of 'fechaTemplate'">
+    {{ data.value | date: 'dd/MM/yyyy HH:mm' }}
+  </div>
+</dxi-column>
+
+            <dxo-export [enabled]="false" [allowExportSelectedData]="true"
+              [texts]="{ exportAll: 'Exportar todos los datos a Excel', exportSelectedRows: 'Exportar filas seleccionadas a Excel' }">
+            </dxo-export>
           </dx-data-grid>
+        </section>
+
+        <section class="mt-5 table-shell">
+          <dx-chart
+  [dataSource]="listaModulos"
+  title="Flujo de Pasajeros por Validador"
+>
+  <dxo-common-series-settings
+    argumentField="fhRegistro"
+    type="line"
+  ></dxo-common-series-settings>
+
+  <dxi-series valueField="entradas" name="Entradas"></dxi-series>
+  <dxi-series valueField="salidas"  name="Salidas"></dxi-series>
+  <dxi-series valueField="diferencia" name="Diferencia"></dxi-series>
+
+  <dxo-argument-axis argumentType="datetime">
+    <dxo-label format="shortTime"></dxo-label>
+  </dxo-argument-axis>
+
+  <dxo-legend
+    [visible]="true"
+    position="outside"
+    horizontalAlignment="center"
+    verticalAlignment="bottom"
+  ></dxo-legend>
+
+  <dxo-tooltip
+    [enabled]="true"
+    [customizeTooltip]="customizeTooltip"
+  ></dxo-tooltip>
+</dx-chart>
+
         </section>
       </div>
     </div>

@@ -142,7 +142,7 @@ export class NavigationLoaderService {
             type: 'link',
             label: 'Perfil Pasajero',
             route: '/administracion/perfil-pasajero',
-            icon: 'mat:groups'
+            icon: 'mat:description'
           }
         ]
       },
