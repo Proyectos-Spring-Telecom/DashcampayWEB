@@ -80,6 +80,69 @@
                 </mat-form-field>
               </div>
 
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label"><i class="fa fa-tachometer-alt"></i><span>Rendimiento x Litros</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput type="number" placeholder="Rendimiento x Litros" formControlName="km" (keypress)="allowOnlyNumbers($event)" />
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-gas-pump"></i>
+                  <span>Tipo de Combustible</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-select
+                    placeholder="Tipo de Combustible"
+                    formControlName="idCombustible">
+                    <mat-option [value]="null">— Seleccione —</mat-option>
+                    <mat-option *ngFor="let tipo of listaTiposCombustible" [value]="tipo.id">
+                      {{ tipo.nombre || tipo.nombreCombustible || tipo.nombreTipoCombustible }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label"><i class="fa fa-flask"></i><span>Capacidad de Combustible</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput type="number" placeholder="Capacidad de Combustible" formControlName="capacidadLitros" (keypress)="allowOnlyNumbers($event)" />
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label"><i class="fa fa-chair"></i><span>Pasajeros Sentados</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput type="number" placeholder="Pasajeros Sentados" formControlName="pasajerosSentados" (keypress)="allowOnlyNumbers($event)" />
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label"><i class="fa fa-users"></i><span>Pasajeros Parados</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput type="number" placeholder="Pasajeros Parados" formControlName="pasajerosParados" (keypress)="allowOnlyNumbers($event)" />
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label"><i class="fa fa-calendar-check"></i><span>Fecha de Expedición</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput [matDatepicker]="fechaExpedicionPicker" placeholder="dd/mm/aaaa" formControlName="fechaExpedicion" />
+                  <mat-datepicker-toggle matIconSuffix [for]="fechaExpedicionPicker"></mat-datepicker-toggle>
+                  <mat-datepicker #fechaExpedicionPicker></mat-datepicker>
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label"><i class="fa fa-calendar-times"></i><span>Fecha de Expiración</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput [matDatepicker]="fechaExpiracionPicker" placeholder="dd/mm/aaaa" formControlName="fechaExpiracion" />
+                  <mat-datepicker-toggle matIconSuffix [for]="fechaExpiracionPicker"></mat-datepicker-toggle>
+                  <mat-datepicker #fechaExpiracionPicker></mat-datepicker>
+                </mat-form-field>
+              </div>
+
               <div class="row g-3 uploads-skin mt-2">
                 <div class="col-12">
                   <div class="section-head">

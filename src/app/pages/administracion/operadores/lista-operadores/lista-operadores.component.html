@@ -56,16 +56,6 @@
                         <dxo-header-filter [visible]="showHeaderFilter"></dxo-header-filter>
                         <dxo-grouping [autoExpandAll]="true"></dxo-grouping>
                         <dxi-column caption="Acciones" cellTemplate="Acciones" alignment="center" [width]="180"></dxi-column>
-                        <dxi-column caption="Licencia de Conducir" [width]="150" alignment="center" [allowSorting]="false"
-                            [allowFiltering]="false" cellTemplate="licen">
-                        </dxi-column>
-                        <div *dxTemplate="let f of 'licen'">
-                            <button class="btn-graphite"  [disabled]="!f?.data?.licencia"
-                                (click)="f?.data?.licencia && irAVerDocumento(f.data.licencia, 'Licencia de Conducir', f.data)"
-                                aria-label="Ver Licencia">
-                                <i class="fa fa-file-pdf-o btn__icon"></i>
-                            </button>
-                        </div>
                         <dxi-column caption="Identificación" [width]="150" alignment="center" [allowSorting]="false"
                             [allowFiltering]="false" cellTemplate="ident">
                         </dxi-column>
@@ -97,7 +87,6 @@
                             </button>
                         </div>
                         <dxi-column dataField="NombreCompleto" caption="Nombre" alignment="center" dataType="string" [width]="320"></dxi-column>
-                        <dxi-column dataField="numeroLicencia" caption="Número Licencia" alignment="center" dataType="string" [width]="200"></dxi-column>
                         <dxi-column dataField="userNameUsuario" caption="Correo Electrónico" alignment="center" dataType="string"></dxi-column>
                         <dxi-column dataField="telefonoUsuario" caption="Teléfono" alignment="center" dataType="string"></dxi-column>
                         <dxi-column dataField="FechaNacimientoTexto" caption="Fecha de Nacimiento" alignment="center" dataType="string" [width]="150"></dxi-column>

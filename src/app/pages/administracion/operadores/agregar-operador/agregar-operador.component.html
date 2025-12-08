@@ -25,21 +25,6 @@
                                 </div>
                                 <div class="section-bar"></div>
                             </div>
-                            <div class="col-12 col-md-6 col-lg-4" *ngIf="showCliente">
-                                <label class="form-label">
-                                    <i class="fa fa-building"></i><span>Cliente</span>
-                                </label>
-                                <mat-form-field appearance="fill" class="w-100">
-                                    <mat-select placeholder="Selecciona un cliente"
-                                            [value]="selectedClienteId"
-                                            (selectionChange)="onClienteChange($event.value)">
-                                    <mat-option *ngFor="let c of listaClientes" [value]="c.id">
-                                        {{ c.nombre || c.Nombre || c.razonSocial || c.RazonSocial || ('Cliente ' + c.id) }}
-                                    </mat-option>
-                                    </mat-select>
-                                </mat-form-field>
-                            </div>
-
                             <div class="col-12 col-md-6 col-lg-4">
                                 <label class="form-label"><i class="fa fa-id-card"></i><span>Número de
                                         Licencia</span></label>
@@ -51,8 +36,9 @@
                                 <label class="form-label"><i class="fa fa-calendar-day"></i><span>Fecha de
                                         Nacimiento</span></label>
                                 <mat-form-field appearance="fill" class="w-100">
-                                    <input matInput type="date" placeholder="Fecha de Nacimiento"
-                                        formControlName="fechaNacimiento" />
+                                    <input matInput [matDatepicker]="fechaNacimientoPicker" placeholder="dd/mm/aaaa" formControlName="fechaNacimiento" />
+                                    <mat-datepicker-toggle matIconSuffix [for]="fechaNacimientoPicker"></mat-datepicker-toggle>
+                                    <mat-datepicker #fechaNacimientoPicker></mat-datepicker>
                                 </mat-form-field>
                             </div>
                             <div class="col-12 col-md-6 col-lg-4">
@@ -80,6 +66,43 @@
                                     </mat-error>
                                 </mat-form-field>
 
+                            </div>
+                            <div class="col-12 col-md-6 col-lg-4">
+                                <label class="form-label"><i class="fa fa-calendar-alt"></i><span>Vigencia (Expedición - Expiración)</span></label>
+                                <mat-form-field appearance="fill" class="w-100">
+                                    <mat-date-range-input [rangePicker]="vigenciaPicker" [separator]="'—'" formGroupName="vigencia">
+                                        <input matStartDate placeholder="dd/mm/aaaa" formControlName="start" />
+                                        <input matEndDate placeholder="dd/mm/aaaa" formControlName="end" />
+                                    </mat-date-range-input>
+                                    <mat-datepicker-toggle matIconSuffix [for]="vigenciaPicker"></mat-datepicker-toggle>
+                                    <mat-date-range-picker #vigenciaPicker></mat-date-range-picker>
+                                </mat-form-field>
+                            </div>
+                            <div class="col-12 col-md-6 col-lg-4">
+                                <label class="form-label">
+                                    <i class="fa fa-id-badge"></i><span>Categoría de Licencia</span>
+                                </label>
+                                <mat-form-field appearance="fill" class="w-100">
+                                    <mat-select placeholder="Categoría de Licencia" formControlName="idCategoriaLicencia">
+                                        <mat-option [value]="null">— Seleccione —</mat-option>
+                                        <mat-option *ngFor="let categoria of listaCategoriasLicencia" [value]="categoria.id">
+                                            {{ categoria.nombre || categoria.nombreCategoriaLicencia || categoria.nombreCategoria }}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
+                            </div>
+                            <div class="col-12 col-md-6 col-lg-4">
+                                <label class="form-label">
+                                    <i class="fa fa-certificate"></i><span>Tipo de Licencia</span>
+                                </label>
+                                <mat-form-field appearance="fill" class="w-100">
+                                    <mat-select placeholder="Tipo de Licencia" formControlName="idTipoLicencia">
+                                        <mat-option [value]="null">— Seleccione —</mat-option>
+                                        <mat-option *ngFor="let tipo of listaTiposLicencia" [value]="tipo.id">
+                                            {{ tipo.nombre || tipo.nombreTipoLicencia || tipo.nombreTipo }}
+                                        </mat-option>
+                                    </mat-select>
+                                </mat-form-field>
                             </div>
                             <div class="row g-3 uploads-skin mt-2 form-skin-lite">
                                 <div class="col-12">
@@ -247,6 +270,94 @@
 
                                     <mat-error *ngIf="operadorForm.get('antecedentesNoPenales')?.hasError('invalid')">
                                         Archivo no permitido (solo PDF).
+                                    </mat-error>
+                                </div>
+
+                                <div class="col-12 col-md-6 col-lg-4">
+                                    <label class="form-label">
+                                        <i class="fa fa-camera"></i><span>Foto</span>
+                                    </label>
+
+                                    <div class="dropzone" [class.dragging]="fotoDragging" (click)="openFotoFilePicker()"
+                                        (dragover)="onFotoDragOver($event)" (dragleave)="onFotoDragLeave($event)"
+                                        (drop)="onFotoDrop($event)">
+
+                                        <div class="dz-body" *ngIf="!fotoPreviewUrl">
+                                            <mat-icon class="dz-icon">image</mat-icon>
+                                            <div class="dz-title">Arrastra y suelta o haz clic</div>
+                                        </div>
+
+                                        <div class="dz-preview" *ngIf="fotoPreviewUrl"
+                                            (click)="$event.stopPropagation()">
+                                            <img [src]="fotoPreviewUrl!" alt="Vista previa" class="img-fluid rounded" />
+                                        </div>
+
+                                        <button mat-stroked-button type="button" class="dz-action"
+                                            (click)="$event.stopPropagation(); openFotoFilePicker()">
+                                            <mat-icon>upload</mat-icon> Seleccionar
+                                        </button>
+
+                                        <button mat-stroked-button color="warn" type="button" class="dz-clear"
+                                            *ngIf="fotoPreviewUrl || fotoFileName"
+                                            (click)="$event.stopPropagation(); clearFotoFile($event)">
+                                            <mat-icon>close</mat-icon> Quitar
+                                        </button>
+
+                                        <mat-progress-bar *ngIf="uploadingFoto" mode="indeterminate"></mat-progress-bar>
+
+                                        <div class="dz-filename" *ngIf="fotoFileName">{{ fotoFileName }}</div>
+                                        <input #fotoFileInput type="file" class="d-none" accept="image/*"
+                                            (change)="onFotoFileSelected($event)">
+                                    </div>
+
+                                    <mat-error *ngIf="operadorForm.get('foto')?.hasError('invalid')">
+                                        Solo se permiten imágenes.
+                                    </mat-error>
+                                    <mat-error *ngIf="operadorForm.get('foto')?.hasError('required')">
+                                        La foto es obligatoria.
+                                    </mat-error>
+                                </div>
+
+                                <div class="col-12 col-md-6 col-lg-4">
+                                    <label class="form-label">
+                                        <i class="fa fa-file-medical"></i><span>Certificado Médico</span>
+                                    </label>
+
+                                    <div class="dropzone" [class.dragging]="certificadoDragging" (click)="openCertificadoFilePicker()"
+                                        (dragover)="onCertificadoDragOver($event)" (dragleave)="onCertificadoDragLeave($event)"
+                                        (drop)="onCertificadoDrop($event)">
+
+                                        <div class="dz-body" *ngIf="!certificadoFileName">
+                                            <mat-icon class="dz-icon">description</mat-icon>
+                                            <div class="dz-title">Arrastra y suelta o haz clic</div>
+                                        </div>
+
+                                        <div class="dz-file" *ngIf="certificadoFileName">
+                                            <mat-icon>insert_drive_file</mat-icon>
+                                            <span class="ms-1">{{ certificadoFileName }}</span>
+                                        </div>
+
+                                        <button mat-stroked-button type="button" class="dz-action"
+                                            (click)="openCertificadoFilePicker()">
+                                            <mat-icon>upload</mat-icon> Seleccionar
+                                        </button>
+                                        <button mat-stroked-button color="warn" type="button" class="dz-clear"
+                                            *ngIf="certificadoFileName" (click)="clearCertificadoFile($event)">
+                                            <mat-icon>close</mat-icon> Quitar
+                                        </button>
+
+                                        <mat-progress-bar *ngIf="uploadingCertificado"
+                                            mode="indeterminate"></mat-progress-bar>
+
+                                        <input #certificadoFileInput type="file" class="d-none" accept="application/pdf"
+                                            (change)="onCertificadoFileSelected($event)">
+                                    </div>
+
+                                    <mat-error *ngIf="operadorForm.get('certificadoMedico')?.hasError('invalid')">
+                                        Archivo no permitido (solo PDF).
+                                    </mat-error>
+                                    <mat-error *ngIf="operadorForm.get('certificadoMedico')?.hasError('required')">
+                                        El certificado médico es obligatorio.
                                     </mat-error>
                                 </div>
                             </div>

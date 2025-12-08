@@ -68,6 +68,12 @@ export class NavigationLoaderService {
           },
           {
             type: 'link',
+            label: 'Tipos de Pasajero',
+            route: '/administracion/tipos-pasajero',
+            icon: 'mat:category',
+          },
+          {
+            type: 'link',
             label: 'Punto de Venta',
             route: '/administracion/punto-venta',
             icon: 'mat:storefront',

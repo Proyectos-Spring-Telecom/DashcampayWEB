@@ -48,7 +48,7 @@
             <dxo-filter-row [visible]="showFilterRow"></dxo-filter-row>
             <dxo-header-filter [visible]="showHeaderFilter"></dxo-header-filter>
             <dxo-grouping [autoExpandAll]="true"></dxo-grouping>
-            <dxi-column caption="Acciones" cellTemplate="Acciones" alignment="center" [width]="180"></dxi-column>
+            <dxi-column caption="Acciones" cellTemplate="Acciones" alignment="center" [width]="250"></dxi-column>
             <dxi-column dataField="marca" caption="Marca" alignment="center" dataType="string"></dxi-column>
             <dxi-column dataField="modelo" caption="Modelo" alignment="center" dataType="string"></dxi-column>
             <dxi-column caption="Estado Actual" alignment="center" [width]="170" cellTemplate="estadoActualTpl">
@@ -89,6 +89,11 @@
 
                 <button *ngIf="row.data.estatus === 1" class="btn-desactive" (click)="desactivar(row.data)">
                   <mat-icon class="btn__icon">block</mat-icon>
+                </button>
+              </div>
+              <div>
+                <button class="btn-exchange" (click)="intercambiar(row.data)">
+                  <mat-icon class="btn__icon">swap_horiz</mat-icon>
                 </button>
               </div>
             </div>

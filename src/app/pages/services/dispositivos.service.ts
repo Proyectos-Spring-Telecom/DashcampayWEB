@@ -46,4 +46,12 @@ export class DispositivosService {
       catchError(error => throwError(() => error))
     );
   }
+
+  actualizarEstado(id: number, estado: number): Observable<any> {
+    const url = `${this.apiUrl}/actualizar/estado/${id}`;
+    const body = { estadoActual: estado };
+    return this.http.patch(url, body).pipe(
+      catchError(error => throwError(() => error))
+    );
+  }
 }

@@ -737,6 +737,47 @@
   }
 }
 
+.btn-exchange {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 0.9rem;
+  background-color: #60a5fa;
+  color: #fff;
+  font-weight: 500;
+  font-size: 14px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+
+  &:hover {
+    background-color: #3b82f6;
+  }
+
+  &:active {
+    transform: scale(0.97);
+    background-color: #3b82f6;
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px #3b82f6;
+  }
+
+  &:disabled {
+    background-color: #93c5fd;
+    cursor: not-allowed;
+    opacity: 0.8;
+  }
+
+  .btn__icon {
+    font-size: 22px;
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
 /* Violeta */
 .btn-violet {
   display: inline-flex;

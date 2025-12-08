@@ -33,6 +33,7 @@ export class AgregarVehiculoComponent implements OnInit {
   public listaOperadores: any;
   listaDispositivos: any;
   public listaClientes: any;
+  public listaTiposCombustible: any;
 
   constructor(
     private route: Router,
@@ -50,6 +51,7 @@ export class AgregarVehiculoComponent implements OnInit {
     this.obtenerOperadores();
     this.obtenerDispositivos();
     this.obtenerClientes();
+    this.obtenerTiposCombustible();
     this.initForm();
     this.activatedRouted.params.subscribe((params) => {
       this.idVehiculo = params['idVehiculo'];
@@ -66,6 +68,20 @@ export class AgregarVehiculoComponent implements OnInit {
         ...c,
         id: Number(c?.id ?? c?.Id ?? c?.ID)
       }));
+    });
+  }
+
+  obtenerTiposCombustible() {
+    this.vehiService.obtenerTiposCombustible().subscribe({
+      next: (response: any) => {
+        this.listaTiposCombustible = (response.data || response || []).map((tipo: any) => ({
+          ...tipo,
+          id: Number(tipo?.id ?? tipo?.Id ?? tipo?.ID ?? tipo?.idCombustible ?? tipo?.IdCombustible)
+        }));
+      },
+      error: (error: unknown) => {
+        console.error('Error al obtener tipos de combustible:', error);
+      }
     });
   }
 
@@ -159,6 +175,48 @@ export class AgregarVehiculoComponent implements OnInit {
           'IdCliente',
           'IDCliente'
         ]);
+        const km = get(raw, ['km', 'Km', 'KM']);
+        const idComb = get(raw, [
+          'idCombustible',
+          'idcombustible',
+          'IdCombustible',
+          'IDCombustible'
+        ]);
+        const capacidad = get(raw, [
+          'capacidadLitros',
+          'capacidadlitros',
+          'CapacidadLitros',
+          'capacidad'
+        ]);
+        const pasajerosSent = get(raw, [
+          'pasajerosSentados',
+          'pasajerossentados',
+          'PasajerosSentados',
+          'pasajerosSentados'
+        ]);
+        const pasajerosPar = get(raw, [
+          'pasajerosParados',
+          'pasajerosparados',
+          'PasajerosParados',
+          'pasajerosParados'
+        ]);
+        const fechaExp = get(raw, [
+          'fechaExpedicion',
+          'FechaExpedicion',
+          'fechaExpedicion'
+        ]);
+        const fechaExpir = get(raw, [
+          'fechaExpiracion',
+          'FechaExpiracion',
+          'fechaExpiracion'
+        ]);
+
+        const fechaExpedicionFormatted = fechaExp
+          ? fechaExp.split('T')[0]
+          : null;
+        const fechaExpiracionFormatted = fechaExpir
+          ? fechaExpir.split('T')[0]
+          : null;
 
         this.vehiculosForm.patchValue({
           marca: marca ?? '',
@@ -172,7 +230,14 @@ export class AgregarVehiculoComponent implements OnInit {
           inspeccionMecanica: inspeccionMecanica ?? '',
           foto: foto ?? null,
           estatus: est != null && !Number.isNaN(Number(est)) ? Number(est) : 1,
-          idCliente: idCli != null && idCli !== '' ? Number(idCli) : null
+          idCliente: idCli != null && idCli !== '' ? Number(idCli) : null,
+          km: km != null && !Number.isNaN(Number(km)) ? Number(km) : null,
+          idCombustible: idComb != null && idComb !== '' ? Number(idComb) : null,
+          capacidadLitros: capacidad != null && !Number.isNaN(Number(capacidad)) ? Number(capacidad) : null,
+          pasajerosSentados: pasajerosSent != null && !Number.isNaN(Number(pasajerosSent)) ? Number(pasajerosSent) : null,
+          pasajerosParados: pasajerosPar != null && !Number.isNaN(Number(pasajerosPar)) ? Number(pasajerosPar) : null,
+          fechaExpedicion: fechaExpedicionFormatted,
+          fechaExpiracion: fechaExpiracionFormatted
         });
       });
   }
@@ -190,7 +255,14 @@ export class AgregarVehiculoComponent implements OnInit {
       inspeccionMecanica: ['', Validators.required],
       foto: ['', Validators.required],
       estatus: [1, Validators.required],
-      idCliente: [null, Validators.required]
+      idCliente: [null, Validators.required],
+      km: [null, Validators.required],
+      idCombustible: [null, Validators.required],
+      capacidadLitros: [null, Validators.required],
+      pasajerosSentados: [null, Validators.required],
+      pasajerosParados: [null, Validators.required],
+      fechaExpedicion: [null, Validators.required],
+      fechaExpiracion: [null, Validators.required]
       // idOperador: ['', Validators.required],
       // idDispositivo: ['', Validators.required],
     });
@@ -226,6 +298,13 @@ export class AgregarVehiculoComponent implements OnInit {
     permisoConcesion: 'Permiso de Concesión',
     inspeccionMecanica: 'Inspección Mecánica',
     foto: 'Foto',
+    km: 'Rendimiento x Litros',
+    idCombustible: 'Tipo de Combustible',
+    capacidadLitros: 'Capacidad de Combustible',
+    pasajerosSentados: 'Pasajeros Sentados',
+    pasajerosParados: 'Pasajeros Parados',
+    fechaExpedicion: 'Fecha de Expedición',
+    fechaExpiracion: 'Fecha de Expiración',
   };
 
   const camposFaltantes: string[] = [];
@@ -259,7 +338,15 @@ export class AgregarVehiculoComponent implements OnInit {
 
     this.vehiculosForm.removeControl('id');
     const raw = this.vehiculosForm.getRawValue();
-    const payload = { ...raw, ano: Number(raw.ano) };
+    const payload = { 
+      ...raw, 
+      ano: Number(raw.ano),
+      km: raw.km != null ? Number(raw.km) : null,
+      idCombustible: raw.idCombustible != null ? Number(raw.idCombustible) : null,
+      capacidadLitros: raw.capacidadLitros != null ? Number(raw.capacidadLitros) : null,
+      pasajerosSentados: raw.pasajerosSentados != null ? Number(raw.pasajerosSentados) : null,
+      pasajerosParados: raw.pasajerosParados != null ? Number(raw.pasajerosParados) : null
+    };
 
     this.vehiService.agregarVehiculo(payload).subscribe(
       () => {
@@ -308,6 +395,13 @@ export class AgregarVehiculoComponent implements OnInit {
     permisoConcesion: 'Permiso de Concesión',
     inspeccionMecanica: 'Inspección Mecánica',
     foto: 'Foto',
+    km: 'Rendimiento x Litros',
+    idCombustible: 'Tipo de Combustible',
+    capacidadLitros: 'Capacidad de Combustible',
+    pasajerosSentados: 'Pasajeros Sentados',
+    pasajerosParados: 'Pasajeros Parados',
+    fechaExpedicion: 'Fecha de Expedición',
+    fechaExpiracion: 'Fecha de Expiración',
   };
 
   const camposFaltantes: string[] = [];
@@ -341,7 +435,15 @@ export class AgregarVehiculoComponent implements OnInit {
 
 
     const raw = this.vehiculosForm.getRawValue();
-    const payload = { ...raw, ano: Number(raw.ano) };
+    const payload = { 
+      ...raw, 
+      ano: Number(raw.ano),
+      km: raw.km != null ? Number(raw.km) : null,
+      idCombustible: raw.idCombustible != null ? Number(raw.idCombustible) : null,
+      capacidadLitros: raw.capacidadLitros != null ? Number(raw.capacidadLitros) : null,
+      pasajerosSentados: raw.pasajerosSentados != null ? Number(raw.pasajerosSentados) : null,
+      pasajerosParados: raw.pasajerosParados != null ? Number(raw.pasajerosParados) : null
+    };
 
     this.vehiService.actualizarVehiculo(this.idVehiculo, payload).subscribe(
       () => {

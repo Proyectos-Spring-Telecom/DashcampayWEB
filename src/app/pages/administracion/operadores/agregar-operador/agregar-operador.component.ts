@@ -31,6 +31,8 @@ export class AgregarOperadorComponent implements OnInit {
   public selectedClienteId: number | null = null;
   selectedFileName: string = '';
   previewUrl: string | ArrayBuffer | null = null;
+  listaCategoriasLicencia: any[] = [];
+  listaTiposLicencia: any[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -49,6 +51,8 @@ export class AgregarOperadorComponent implements OnInit {
 
   ngOnInit(): void {
     this.initForm();
+    this.obtenerCategoriasLicencia();
+    this.obtenerTiposLicencia();
 
     if (this.showCliente) {
       this.obtenerClientes();
@@ -149,24 +153,53 @@ export class AgregarOperadorComponent implements OnInit {
 
       const numeroLicencia = get(raw, ['numeroLicencia', 'NumeroLicencia']);
       const fechaNacimientoRaw = get(raw, ['fechaNacimiento', 'FechaNacimiento']);
+      const fechaExpedicionRaw = get(raw, ['fechaExpedicion', 'FechaExpedicion']);
+      const fechaVencimientoRaw = get(raw, ['fechaVencimiento', 'FechaVencimiento', 'fechaExpiracion', 'FechaExpiracion']);
       const idUsuario = get(raw, ['idUsuario', 'IdUsuario']);
       const estatus = get(raw, ['estatus', 'Estatus']);
+      const idCategoriaLicencia = get(raw, ['idCategoriaLicencia', 'IdCategoriaLicencia']);
+      const idTipoLicencia = get(raw, ['idTipoLicencia', 'IdTipoLicencia']);
       const identificacion = get(raw, ['identificacion', 'Identificacion']);
       const comprobanteDomicilio = get(raw, ['comprobanteDomicilio', 'ComprobanteDomicilio']);
+      const foto = get(raw, ['foto', 'Foto']);
+      const certificadoMedico = get(raw, ['certificadoMedico', 'CertificadoMedico']);
       const antecedentesNoPenales = get(raw, ['antecedentesNoPenales', 'AntecedentesNoPenales']);
       const licencia = get(raw, ['licencia', 'Licencia']);
 
+      // Cargar preview de foto si existe
+      if (typeof foto === 'string' && /\.(png|jpe?g|webp|gif|bmp)(\?.*)?$/i.test(foto)) {
+        this.fotoPreviewUrl = foto;
+        this.fotoFileName = foto.split('/').pop() || '';
+      } else {
+        this.fotoPreviewUrl = null;
+        this.fotoFileName = null;
+      }
+
       const fechaNacimiento = fechaNacimientoRaw
-        ? fechaNacimientoRaw.split('T')[0]
+        ? new Date(fechaNacimientoRaw.split('T')[0])
+        : null;
+      const fechaExpedicion = fechaExpedicionRaw
+        ? fechaExpedicionRaw.split('T')[0]
+        : null;
+      const fechaVencimiento = fechaVencimientoRaw
+        ? fechaVencimientoRaw.split('T')[0]
         : null;
 
       this.operadorForm.patchValue({
         numeroLicencia: numeroLicencia ?? '',
         fechaNacimiento,
+        vigencia: {
+          start: fechaExpedicion ? new Date(fechaExpedicion) : null,
+          end: fechaVencimiento ? new Date(fechaVencimiento) : null
+        },
         idUsuario: idUsuario != null ? Number(idUsuario) : null,
         estatus: estatus != null ? Number(estatus) : 1,
+        idCategoriaLicencia: idCategoriaLicencia != null ? Number(idCategoriaLicencia) : null,
+        idTipoLicencia: idTipoLicencia != null ? Number(idTipoLicencia) : null,
         identificacion: identificacion ?? null,
         comprobanteDomicilio: comprobanteDomicilio ?? null,
+        foto: foto ?? null,
+        certificadoMedico: certificadoMedico ?? null,
         antecedentesNoPenales: antecedentesNoPenales ?? null,
         licencia: licencia ?? null,
       });
@@ -184,6 +217,34 @@ export class AgregarOperadorComponent implements OnInit {
         this.operadorForm.patchValue({ idUsuario: null });
       }
 
+    });
+  }
+
+  obtenerCategoriasLicencia() {
+    this.operService.obtenerCategoriasLicencia().subscribe({
+      next: (response: any) => {
+        this.listaCategoriasLicencia = (response.data || response || []).map((c: any) => ({
+          ...c,
+          id: Number(c?.id ?? c?.Id ?? c?.ID ?? c?.idCategoriaLicencia ?? c?.IdCategoriaLicencia)
+        }));
+      },
+      error: (error: unknown) => {
+        console.error('Error al obtener categorías de licencia:', error);
+      }
+    });
+  }
+
+  obtenerTiposLicencia() {
+    this.operService.obtenerTiposLicencia().subscribe({
+      next: (response: any) => {
+        this.listaTiposLicencia = (response.data || response || []).map((t: any) => ({
+          ...t,
+          id: Number(t?.id ?? t?.Id ?? t?.ID ?? t?.idTipoLicencia ?? t?.IdTipoLicencia)
+        }));
+      },
+      error: (error: unknown) => {
+        console.error('Error al obtener tipos de licencia:', error);
+      }
     });
   }
 
@@ -208,8 +269,16 @@ export class AgregarOperadorComponent implements OnInit {
     this.operadorForm = this.fb.group({
       numeroLicencia: ['', Validators.required],
       fechaNacimiento: ['', Validators.required],
+      vigencia: this.fb.group({
+        start: [null, Validators.required],
+        end: [null, Validators.required]
+      }),
+      idCategoriaLicencia: [null, Validators.required],
+      idTipoLicencia: [null, Validators.required],
       identificacion: ['', Validators.required],
       comprobanteDomicilio: ['', Validators.required],
+      foto: ['', Validators.required],
+      certificadoMedico: ['', Validators.required],
       antecedentesNoPenales: ['', Validators.required],
       estatus: [1, Validators.required],
       licencia: ['', Validators.required],
@@ -238,10 +307,15 @@ export class AgregarOperadorComponent implements OnInit {
       const etiquetas: any = {
         numeroLicencia: 'Número de Licencia',
         fechaNacimiento: 'Fecha de Nacimiento',
+        vigencia: 'Vigencia (Expedición - Expiración)',
+        idCategoriaLicencia: 'Categoría de Licencia',
+        idTipoLicencia: 'Tipo de Licencia',
         idUsuario: 'Usuario',
         licencia: 'Licencia de Conducir',
         identificacion: 'Identificación',
         comprobanteDomicilio: 'Comprobante de Domicilio',
+        foto: 'Foto',
+        certificadoMedico: 'Certificado Médico',
         antecedentesNoPenales: 'Antecedentes No Penales',
       };
 
@@ -250,6 +324,14 @@ export class AgregarOperadorComponent implements OnInit {
         const control = this.operadorForm.get(key);
         if (control?.invalid && control.errors?.['required']) {
           camposFaltantes.push(etiquetas[key] || key);
+        }
+        // Validar el FormGroup anidado de vigencia
+        if (key === 'vigencia' && control instanceof FormGroup) {
+          const vigenciaStart = control.get('start');
+          const vigenciaEnd = control.get('end');
+          if (vigenciaStart?.invalid || vigenciaEnd?.invalid) {
+            camposFaltantes.push(etiquetas['vigencia'] || 'Vigencia');
+          }
         }
       });
 
@@ -277,7 +359,20 @@ export class AgregarOperadorComponent implements OnInit {
     }
 
     this.operadorForm.removeControl('id');
-    this.operService.agregarOperador(this.operadorForm.value).subscribe(
+    const formValue = this.operadorForm.value;
+    const vigencia = formValue.vigencia || {};
+    const fechaNacimiento = formValue.fechaNacimiento instanceof Date 
+      ? formValue.fechaNacimiento.toISOString().split('T')[0] 
+      : formValue.fechaNacimiento;
+    const payload = {
+      ...formValue,
+      fechaNacimiento,
+      fechaExpedicion: vigencia.start ? vigencia.start.toISOString().split('T')[0] : null,
+      fechaVencimiento: vigencia.end ? vigencia.end.toISOString().split('T')[0] : null
+    };
+    delete payload.idCliente;
+    delete payload.vigencia;
+    this.operService.agregarOperador(payload).subscribe(
       () => {
         this.submitButton = 'Guardar';
         this.loading = false;
@@ -315,10 +410,15 @@ export class AgregarOperadorComponent implements OnInit {
       const etiquetas: any = {
         numeroLicencia: 'Número de Licencia',
         fechaNacimiento: 'Fecha de Nacimiento',
+        vigencia: 'Vigencia (Expedición - Expiración)',
+        idCategoriaLicencia: 'Categoría de Licencia',
+        idTipoLicencia: 'Tipo de Licencia',
         idUsuario: 'Usuario',
         licencia: 'Licencia de Conducir',
         identificacion: 'Identificación',
         comprobanteDomicilio: 'Comprobante de Domicilio',
+        foto: 'Foto',
+        certificadoMedico: 'Certificado Médico',
         antecedentesNoPenales: 'Antecedentes No Penales',
       };
 
@@ -327,6 +427,14 @@ export class AgregarOperadorComponent implements OnInit {
         const control = this.operadorForm.get(key);
         if (control?.invalid && control.errors?.['required']) {
           camposFaltantes.push(etiquetas[key] || key);
+        }
+        // Validar el FormGroup anidado de vigencia
+        if (key === 'vigencia' && control instanceof FormGroup) {
+          const vigenciaStart = control.get('start');
+          const vigenciaEnd = control.get('end');
+          if (vigenciaStart?.invalid || vigenciaEnd?.invalid) {
+            camposFaltantes.push(etiquetas['vigencia'] || 'Vigencia');
+          }
         }
       });
 
@@ -353,8 +461,20 @@ export class AgregarOperadorComponent implements OnInit {
       return;
     }
 
-    // clona y elimina idUsuario antes de enviar (como en tu versión)
-    const payload = { ...this.operadorForm.value };
+    // clona y elimina idUsuario e idCliente antes de enviar
+    const formValue = this.operadorForm.value;
+    const vigencia = formValue.vigencia || {};
+    const fechaNacimiento = formValue.fechaNacimiento instanceof Date 
+      ? formValue.fechaNacimiento.toISOString().split('T')[0] 
+      : formValue.fechaNacimiento;
+    const payload = {
+      ...formValue,
+      fechaNacimiento,
+      fechaExpedicion: vigencia.start ? vigencia.start.toISOString().split('T')[0] : null,
+      fechaVencimiento: vigencia.end ? vigencia.end.toISOString().split('T')[0] : null
+    };
+    delete payload.idCliente;
+    delete payload.vigencia;
     this.operService.actualizarOperador(this.idOperador, payload).subscribe(
       () => {
         this.submitButton = 'Actualizar';
@@ -397,26 +517,43 @@ export class AgregarOperadorComponent implements OnInit {
   @ViewChild('identFileInput') identFileInput!: ElementRef<HTMLInputElement>;
   @ViewChild('domFileInput') domFileInput!: ElementRef<HTMLInputElement>;
   @ViewChild('antFileInput') antFileInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('licFileInput') licFileInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('fotoFileInput') fotoFileInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('certificadoFileInput') certificadoFileInput!: ElementRef<HTMLInputElement>;
 
   // ====== Estado drag & drop ======
   identDragging = false;
   domDragging = false;
   antDragging = false;
+  licDragging = false;
+  fotoDragging = false;
+  certificadoDragging = false;
 
   // ====== Estado de archivos / nombres ======
   identFileName: string | null = null;
   domFileName: string | null = null;
   antFileName: string | null = null;
+  licFileName: string | null = null;
+  licPreviewUrl: string | null = null;
+  fotoFileName: string | null = null;
+  certificadoFileName: string | null = null;
+  fotoPreviewUrl: string | null = null;
 
   // ====== Loading / processing ======
   uploadingIdent = false;
   uploadingDom = false;
   uploadingAnt = false;
+  uploadingLic = false;
+  uploadingFoto = false;
+  uploadingCertificado = false;
 
   // Evita manejar el mismo archivo dos veces por eventos consecutivos
   private processingIdent = false;
   private processingDom = false;
   private processingAnt = false;
+  private processingLic = false;
+  private processingFoto = false;
+  private processingCertificado = false;
 
   // Guard para evitar doble .click() cuando el evento burbujea (dropzone + botón)
   private openGuard = {
@@ -424,6 +561,8 @@ export class AgregarOperadorComponent implements OnInit {
     dom: false,
     ant: false,
     lic: false,
+    foto: false,
+    certificado: false,
   };
 
   // Límite MB visible desde template (no private)
@@ -461,7 +600,7 @@ export class AgregarOperadorComponent implements OnInit {
   }
 
   // ====== Guards para .click() (evita doble invocación por bubbling) ======
-  private guardOpen(kind: 'ident' | 'dom' | 'ant' | 'lic', fn: () => void) {
+  private guardOpen(kind: 'ident' | 'dom' | 'ant' | 'lic' | 'foto' | 'certificado', fn: () => void) {
     if (this.openGuard[kind]) return;
     this.openGuard[kind] = true;
     try { fn(); } finally {
@@ -652,20 +791,6 @@ export class AgregarOperadorComponent implements OnInit {
     });
   }
 
-  // Drag & drop
-  licDragging = false;
-  licPreviewUrl: string | null = null;
-
-
-  // Archivo
-  licFileName: string | null = null;
-
-  // Loading / processing
-  uploadingLic = false;
-
-  // Evita manejar doble evento
-  private processingLic = false;
-
   // ====== Licencia de conducir ======
   openLicFilePicker(): void {
     this.guardOpen('lic', () => this.licFileInput?.nativeElement.click());
@@ -736,8 +861,131 @@ export class AgregarOperadorComponent implements OnInit {
     });
   }
 
-  @ViewChild('licFileInput') licFileInput!: ElementRef<HTMLInputElement>;
+  // ================= Foto =================
+  openFotoFilePicker(): void {
+    this.guardOpen('foto', () => this.fotoFileInput?.nativeElement.click());
+  }
+  onFotoDragOver(e: DragEvent) { e.preventDefault(); this.fotoDragging = true; }
+  onFotoDragLeave(_e: DragEvent) { this.fotoDragging = false; }
+  onFotoDrop(e: DragEvent) {
+    e.preventDefault(); this.fotoDragging = false;
+    const f = e.dataTransfer?.files?.[0]; if (f) this.handleFotoFile(f);
+  }
+  onFotoFileSelected(e: Event) {
+    const f = (e.target as HTMLInputElement)?.files?.[0]; if (f) this.handleFotoFile(f);
+  }
+  clearFotoFile(e: Event) {
+    e.stopPropagation();
+    this.fotoFileName = null;
+    this.fotoPreviewUrl = null;
+    if (this.fotoFileInput) this.fotoFileInput.nativeElement.value = '';
+    this.operadorForm.patchValue({ foto: null });
+    this.operadorForm.get('foto')?.setErrors({ required: true });
+  }
+  private handleFotoFile(file: File) {
+    if (this.processingFoto) return;
+    this.processingFoto = true;
 
+    const v = this.validateFile(file, 'licencia');
+    if (v) {
+      this.operadorForm.get('foto')?.setErrors({ invalid: true });
+      this.processingFoto = false;
+      return;
+    }
 
+    this.fotoFileName = file.name;
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.fotoPreviewUrl = reader.result as string;
+      this.operadorForm.patchValue({ foto: file });
+      this.operadorForm.get('foto')?.setErrors(null);
+      this.uploadFoto(file);
+    };
+    reader.readAsDataURL(file);
+  }
+  private uploadFoto(file: File): void {
+    if (this.uploadingFoto) { this.processingFoto = false; return; }
+    this.uploadingFoto = true;
 
+    const fd = new FormData();
+    fd.append('file', file, file.name);
+    fd.append('folder', 'operadores');
+    fd.append('idModule', '9');
+
+    this.usuaService.uploadFile(fd).pipe(
+      finalize(() => {
+        this.uploadingFoto = false;
+        this.processingFoto = false;
+      })
+    ).subscribe({
+      next: (res: any) => {
+        const url = this.extractFileUrl(res);
+        if (url) {
+          this.operadorForm.patchValue({ foto: url });
+          this.fotoPreviewUrl = url;
+        }
+      },
+      error: (err: any) => console.error('[UPLOAD][foto]', err),
+    });
+  }
+
+  // ================= Certificado Médico =================
+  openCertificadoFilePicker(): void {
+    this.guardOpen('certificado', () => this.certificadoFileInput?.nativeElement.click());
+  }
+  onCertificadoDragOver(e: DragEvent) { e.preventDefault(); this.certificadoDragging = true; }
+  onCertificadoDragLeave(_e: DragEvent) { this.certificadoDragging = false; }
+  onCertificadoDrop(e: DragEvent) {
+    e.preventDefault(); this.certificadoDragging = false;
+    const f = e.dataTransfer?.files?.[0]; if (f) this.handleCertificadoFile(f);
+  }
+  onCertificadoFileSelected(e: Event) {
+    const f = (e.target as HTMLInputElement)?.files?.[0]; if (f) this.handleCertificadoFile(f);
+  }
+  clearCertificadoFile(e: Event) {
+    e.stopPropagation();
+    this.certificadoFileName = null;
+    if (this.certificadoFileInput) this.certificadoFileInput.nativeElement.value = '';
+    this.operadorForm.patchValue({ certificadoMedico: null });
+    this.operadorForm.get('certificadoMedico')?.setErrors({ required: true });
+  }
+  private handleCertificadoFile(file: File) {
+    if (this.processingCertificado) return;
+    this.processingCertificado = true;
+
+    if (!this.isAllowedPdf(file)) {
+      this.operadorForm.get('certificadoMedico')?.setErrors({ invalid: true });
+      this.processingCertificado = false;
+      return;
+    }
+
+    this.certificadoFileName = file.name;
+    this.operadorForm.patchValue({ certificadoMedico: file });
+    this.operadorForm.get('certificadoMedico')?.setErrors(null);
+    this.uploadCertificado(file);
+  }
+  private uploadCertificado(file: File): void {
+    if (this.uploadingCertificado) { this.processingCertificado = false; return; }
+    this.uploadingCertificado = true;
+
+    const fd = new FormData();
+    fd.append('file', file, file.name);
+    fd.append('folder', 'operadores');
+    fd.append('idModule', '9');
+
+    this.usuaService.uploadFile(fd).pipe(
+      finalize(() => {
+        this.uploadingCertificado = false;
+        this.processingCertificado = false;
+      })
+    ).subscribe({
+      next: (res: any) => {
+        const url = this.extractFileUrl(res);
+        if (url) {
+          this.operadorForm.patchValue({ certificadoMedico: url });
+        }
+      },
+      error: (err: any) => console.error('[UPLOAD][certificadoMedico]', err),
+    });
+  }
 }

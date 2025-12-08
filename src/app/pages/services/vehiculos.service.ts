@@ -62,4 +62,10 @@ export class VehiculosService {
       catchError(error => throwError(() => error))
     );
   }
+
+  obtenerTiposCombustible(): Observable<any> {
+    return this.http.get(`${environment.API_SECURITY}/cat-tipo-combustible/list`).pipe(
+      catchError(error => throwError(() => error))
+    );
+  }
 }

@@ -155,6 +155,21 @@ export const appRoutes: VexRoutes = [
               .then(m => m.PasajerosModule)
           },
           {
+            path: 'tipos-pasajero',
+            loadComponent: () => import('./pages/administracion/tipos-pasajero/tipos-pasajero.component')
+              .then(m => m.TiposPasajeroComponent)
+          },
+          {
+            path: 'tipos-pasajero/registrar',
+            loadComponent: () => import('./pages/administracion/tipos-pasajero/registrar-tipo-pasajero/registrar-tipo-pasajero.component')
+              .then(m => m.RegistrarTipoPasajeroComponent)
+          },
+          {
+            path: 'tipos-pasajero/editar/:id',
+            loadComponent: () => import('./pages/administracion/tipos-pasajero/registrar-tipo-pasajero/registrar-tipo-pasajero.component')
+              .then(m => m.RegistrarTipoPasajeroComponent)
+          },
+          {
             path: 'transacciones',
             loadChildren: () => import('./pages/administracion/transacciones/transacciones.module')
               .then(m => m.TransaccionesModule)
