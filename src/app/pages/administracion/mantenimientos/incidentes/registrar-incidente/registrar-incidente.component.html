@@ -1,0 +1,156 @@
+<vex-page-layout @fadeInRight>
+  <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
+    [class.px-6]="layoutCtrl.value === 'fullwidth'">
+    <div class="card mt-4">
+      <div class="container-fluid p-4">
+        <!-- Breadcrumb -->
+        <div class="bg-app-bar appbar px-6 h-16 border-b sticky top-0 left-0 flex items-center z-10">
+          <nav class="breadcrumb-simple" aria-label="Ruta de navegación">
+            <a routerLink="/administracion" class="crumb-link" routerLinkActive="active">
+              <mat-icon inline>home</mat-icon>
+              Administración
+            </a>
+            <span class="sep">/</span>
+            <span class="crumb-current" aria-current="page">Incidentes</span>
+            <span class="sep">/</span>
+            <span class="crumb-current" aria-current="page">{{ title }}</span>
+          </nav>
+        </div>
+
+        <!-- Formulario -->
+        <section class="mt-4">
+          <form [formGroup]="incidenteForm" class="form-skin-lite">
+            <div class="row g-3">
+              <div class="col-12">
+                <div class="section-head">
+                  <h5 class="mb-1">Datos del Incidente</h5>
+                </div>
+                <div class="section-bar"></div>
+              </div>
+
+              <!-- Instalación -->
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-car"></i>
+                  <span>Instalación</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-select
+                    placeholder="Seleccione una instalación"
+                    formControlName="idInstalacion">
+                    <mat-option [value]="null">— Seleccione —</mat-option>
+                    <mat-option *ngFor="let instalacion of listaInstalaciones" [value]="instalacion.id">
+                      {{ instalacion.placaVehiculo }} - Eco: {{ instalacion.numeroEconomicoVehiculo }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-error *ngIf="showRequiredMsgs && incidenteForm.get('idInstalacion')?.hasError('required')">
+                  La instalación es obligatoria.
+                </mat-error>
+              </div>
+
+              <!-- Operador -->
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-user"></i>
+                  <span>Operador</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-select
+                    placeholder="Seleccione un operador"
+                    formControlName="idOperador">
+                    <mat-option [value]="null">— Seleccione —</mat-option>
+                    <mat-option *ngFor="let operador of listaOperadores" [value]="operador.id">
+                      {{ operador.nombreUsuario || operador.nombre }} {{ operador.apellidoPaternoUsuario || operador.apellidoPaterno || '' }} {{ operador.apellidoMaternoUsuario || operador.apellidoMaterno || '' }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-error *ngIf="showRequiredMsgs && incidenteForm.get('idOperador')?.hasError('required')">
+                  El operador es obligatorio.
+                </mat-error>
+              </div>
+
+              <!-- Descripción del Incidente -->
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-file-text"></i>
+                  <span>Descripción del Incidente</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput formControlName="incidente" placeholder="Ingrese la descripción del incidente">
+                </mat-form-field>
+              </div>
+
+              <!-- Imagen del Incidente -->
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-file-image"></i>
+                  <span>Imagen del Incidente</span>
+                </label>
+                <div 
+                  class="file-upload-area"
+                  [class.dragging]="imagenDragging"
+                  (dragover)="onImagenDragOver($event)"
+                  (dragleave)="onImagenDragLeave($event)"
+                  (drop)="onImagenDrop($event)"
+                  (click)="openImagenFilePicker()">
+                  <input 
+                    #imagenInput
+                    type="file" 
+                    accept="image/*"
+                    (change)="onImagenFileSelected($event)"
+                    style="display: none;">
+                  
+                  <div *ngIf="!imagenPreviewUrl" class="file-upload-content">
+                    <mat-icon class="upload-icon">cloud_upload</mat-icon>
+                    <p class="upload-text">Arrastre una imagen aquí o haga clic para seleccionar</p>
+                    <p class="upload-hint">Formatos soportados: JPG, PNG, GIF</p>
+                  </div>
+                  
+                  <div *ngIf="imagenPreviewUrl" class="file-preview">
+                    <img [src]="imagenPreviewUrl" alt="Preview" class="preview-image">
+                    <div class="file-info">
+                      <p class="file-name">{{ imagenFileName }}</p>
+                      <button type="button" class="btn-remove" (click)="clearImagenFile($event)">
+                        <mat-icon>close</mat-icon>
+                        Eliminar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <mat-error *ngIf="showRequiredMsgs && incidenteForm.get('imagen')?.hasError('required')">
+                  La imagen es obligatoria.
+                </mat-error>
+              </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="row mt-4">
+              <div class="col-12">
+                <div class="d-flex justify-content-end gap-3">
+                  <button 
+                    type="button" 
+                    mat-raised-button 
+                    color="accent"
+                    (click)="cancelar()"
+                    [disabled]="loading">
+                    Cancelar
+                  </button>
+                  <button 
+                    type="button" 
+                    mat-raised-button 
+                    color="primary"
+                    (click)="submit()"
+                    [disabled]="loading">
+                    <mat-icon *ngIf="loading" class="spinning">refresh</mat-icon>
+                    {{ submitButton }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </form>
+        </section>
+      </div>
+    </div>
+  </vex-page-layout-content>
+</vex-page-layout>

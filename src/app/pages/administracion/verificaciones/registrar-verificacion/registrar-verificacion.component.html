@@ -1,0 +1,199 @@
+<vex-page-layout @fadeInRight>
+  <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
+    [class.px-6]="layoutCtrl.value === 'fullwidth'">
+    <div class="card mt-4">
+      <div class="container-fluid p-4">
+        <!-- Breadcrumb -->
+        <div class="bg-app-bar appbar px-6 h-16 border-b sticky top-0 left-0 flex items-center z-10">
+          <nav class="breadcrumb-simple" aria-label="Ruta de navegación">
+            <a routerLink="/administracion" class="crumb-link" routerLinkActive="active">
+              <mat-icon inline>home</mat-icon>
+              Administración
+            </a>
+            <span class="sep">/</span>
+            <span class="crumb-current" aria-current="page">Verificaciones</span>
+            <span class="sep">/</span>
+            <span class="crumb-current" aria-current="page">Registrar Verificación</span>
+          </nav>
+        </div>
+
+        <!-- Formulario -->
+        <section class="mt-4">
+          <form [formGroup]="verificacionForm" class="form-skin-lite">
+            <div class="row g-3">
+              <div class="col-12">
+                <div class="section-head">
+                  <h5 class="mb-1">Datos de la Verificación</h5>
+                </div>
+                <div class="section-bar"></div>
+              </div>
+
+              <!-- Fecha de Verificación Actual -->
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-calendar-alt"></i>
+                  <span>Fecha de Verificación Actual</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput [matDatepicker]="pickerActual" formControlName="verificacionActual" placeholder="Seleccione la fecha">
+                  <mat-datepicker-toggle matSuffix [for]="pickerActual"></mat-datepicker-toggle>
+                  <mat-datepicker #pickerActual></mat-datepicker>
+                </mat-form-field>
+                <mat-error *ngIf="showRequiredMsgs && verificacionForm.get('verificacionActual')?.hasError('required')">
+                  La fecha de verificación actual es obligatoria.
+                </mat-error>
+              </div>
+
+              <!-- Fecha de Próxima Verificación -->
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-calendar-check"></i>
+                  <span>Fecha de Próxima Verificación</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput [matDatepicker]="pickerProxima" formControlName="proximaVerificacion" placeholder="Seleccione la fecha">
+                  <mat-datepicker-toggle matSuffix [for]="pickerProxima"></mat-datepicker-toggle>
+                  <mat-datepicker #pickerProxima></mat-datepicker>
+                </mat-form-field>
+                <mat-error *ngIf="showRequiredMsgs && verificacionForm.get('proximaVerificacion')?.hasError('required')">
+                  La fecha de próxima verificación es obligatoria.
+                </mat-error>
+              </div>
+
+              <!-- Instalación -->
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-car"></i>
+                  <span>Instalación</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-select
+                    placeholder="Seleccione una instalación"
+                    formControlName="idInstalacion">
+                    <mat-option [value]="null">— Seleccione —</mat-option>
+                    <mat-option *ngFor="let instalacion of listaInstalaciones" [value]="instalacion.id">
+                      {{ instalacion.placaVehiculo }} - Eco: {{ instalacion.numeroEconomicoVehiculo }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-error *ngIf="showRequiredMsgs && verificacionForm.get('idInstalacion')?.hasError('required')">
+                  La instalación es obligatoria.
+                </mat-error>
+              </div>
+
+              <!-- Operador -->
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-user"></i>
+                  <span>Operador</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-select
+                    placeholder="Seleccione un operador"
+                    formControlName="idOperador">
+                    <mat-option [value]="null">— Seleccione —</mat-option>
+                    <mat-option *ngFor="let operador of listaOperadores" [value]="operador.id">
+                      {{ operador.nombreUsuario || operador.nombre }} {{ operador.apellidoPaternoUsuario || operador.apellidoPaterno || '' }} {{ operador.apellidoMaternoUsuario || operador.apellidoMaterno || '' }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-error *ngIf="showRequiredMsgs && verificacionForm.get('idOperador')?.hasError('required')">
+                  El operador es obligatorio.
+                </mat-error>
+              </div>
+
+              <!-- Tipo de Verificación -->
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-check-circle"></i>
+                  <span>Tipo de Verificación</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-select
+                    placeholder="Seleccione un tipo de verificación"
+                    formControlName="idTipoVerificacion">
+                    <mat-option [value]="null">— Seleccione —</mat-option>
+                    <mat-option *ngFor="let tipo of listaTiposVerificacion" [value]="tipo.id">
+                      {{ tipo.nombre || tipo.descripcion }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-error *ngIf="showRequiredMsgs && verificacionForm.get('idTipoVerificacion')?.hasError('required')">
+                  El tipo de verificación es obligatorio.
+                </mat-error>
+              </div>
+
+              <!-- Nota de Verificación (Archivo) -->
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-file-image"></i>
+                  <span>Nota de Verificación (Imagen)</span>
+                </label>
+                <div 
+                  class="file-upload-area"
+                  [class.dragging]="notaVerificacionDragging"
+                  (dragover)="onNotaVerificacionDragOver($event)"
+                  (dragleave)="onNotaVerificacionDragLeave($event)"
+                  (drop)="onNotaVerificacionDrop($event)"
+                  (click)="openNotaVerificacionFilePicker()">
+                  <input 
+                    #notaVerificacionInput
+                    type="file" 
+                    accept="image/*"
+                    (change)="onNotaVerificacionFileSelected($event)"
+                    style="display: none;">
+                  
+                  <div *ngIf="!notaVerificacionPreviewUrl" class="file-upload-content">
+                    <mat-icon class="upload-icon">cloud_upload</mat-icon>
+                    <p class="upload-text">Arrastre una imagen aquí o haga clic para seleccionar</p>
+                    <p class="upload-hint">Formatos soportados: JPG, PNG, GIF</p>
+                  </div>
+                  
+                  <div *ngIf="notaVerificacionPreviewUrl" class="file-preview">
+                    <img [src]="notaVerificacionPreviewUrl" alt="Preview" class="preview-image">
+                    <div class="file-info">
+                      <p class="file-name">{{ notaVerificacionFileName }}</p>
+                      <button type="button" class="btn-remove" (click)="clearNotaVerificacionFile($event)">
+                        <mat-icon>close</mat-icon>
+                        Eliminar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <mat-error *ngIf="showRequiredMsgs && verificacionForm.get('notaVerificacion')?.hasError('required')">
+                  La nota de verificación es obligatoria.
+                </mat-error>
+              </div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="row mt-4">
+              <div class="col-12">
+                <div class="d-flex justify-content-end gap-3">
+                  <button 
+                    type="button" 
+                    mat-raised-button 
+                    color="accent"
+                    (click)="cancelar()"
+                    [disabled]="loading">
+                    Cancelar
+                  </button>
+                  <button 
+                    type="button" 
+                    mat-raised-button 
+                    color="primary"
+                    (click)="submit()"
+                    [disabled]="loading">
+                    <mat-icon *ngIf="loading" class="spinning">refresh</mat-icon>
+                    {{ submitButton }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </form>
+        </section>
+      </div>
+    </div>
+  </vex-page-layout-content>
+</vex-page-layout>
+

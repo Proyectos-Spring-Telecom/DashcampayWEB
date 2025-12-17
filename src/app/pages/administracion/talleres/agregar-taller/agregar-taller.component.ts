@@ -1,11 +1,357 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
+import { FormBuilder, FormGroup, UntypedFormControl, Validators } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { fadeInRight400ms } from '@vex/animations/fade-in-right.animation';
+import { AlertsService } from 'src/app/pages/pages/modal/alerts.service';
+import { TalleresService } from 'src/app/pages/services/talleres.service';
+import { ClientesService } from 'src/app/pages/services/clientes.service';
+import { NgZone } from '@angular/core';
+
+declare const google: any;
 
 @Component({
   selector: 'vex-agregar-taller',
   templateUrl: './agregar-taller.component.html',
-  styleUrl: './agregar-taller.component.scss'
+  styleUrl: './agregar-taller.component.scss',
+  animations: [fadeInRight400ms]
 })
-export class AgregarTallerComponent {
+export class AgregarTallerComponent implements OnInit, AfterViewInit, OnDestroy {
+  layoutCtrl = new UntypedFormControl('fullwidth');
+  public submitButton: string = 'Guardar';
+  public loading: boolean = false;
+  public tallerForm!: FormGroup;
+  public title = 'Agregar Taller';
+  public showRequiredMsgs: boolean = false;
+  public idTaller: number | null = null;
+  public isEditMode: boolean = false;
 
+  // Listas para selects
+  public listaClientes: any[] = [];
+
+  // Mapa
+  private map: any = null;
+  private marker: any = null;
+  private geocoder: any = null;
+  private infoWindow: any = null;
+  public mapType: 'roadmap' | 'satellite' = 'roadmap';
+  public hasCoords: boolean = false;
+  public lat: number = 19.432608; // CDMX por defecto
+  public lng: number = -99.133209;
+  private readonly MAP_CENTER = { lat: 19.432608, lng: -99.133209 };
+
+  constructor(
+    private route: Router,
+    private fb: FormBuilder,
+    private talleresService: TalleresService,
+    private clientesService: ClientesService,
+    private activatedRoute: ActivatedRoute,
+    private alerts: AlertsService,
+    private ngZone: NgZone
+  ) {}
+
+  ngOnInit(): void {
+    this.obtenerClientes();
+    this.initForm();
+    
+    this.activatedRoute.params.subscribe((params) => {
+      this.idTaller = params['idTaller'] ? Number(params['idTaller']) : null;
+      if (this.idTaller) {
+        this.isEditMode = true;
+        this.title = 'Actualizar Taller';
+        this.obtenerTaller();
+      }
+    });
+  }
+
+  ngAfterViewInit(): void {
+    setTimeout(() => {
+      this.loadGoogleMaps();
+    }, 100);
+  }
+
+  ngOnDestroy(): void {
+    if (this.marker) {
+      this.marker.setMap(null);
+    }
+  }
+
+  initForm() {
+    this.tallerForm = this.fb.group({
+      idCliente: [null, Validators.required],
+      nombre: ['', Validators.required],
+      descripcion: ['', Validators.required],
+      icono: [''],
+      direccion: [''],
+      lat: [null, Validators.required],
+      lng: [null, Validators.required],
+      estatus: [1, Validators.required]
+    });
+  }
+
+  obtenerClientes() {
+    this.clientesService.obtenerClientes().subscribe({
+      next: (response: any) => {
+        this.listaClientes = (response.data || response || []).map((item: any) => ({
+          ...item,
+          id: Number(item?.id ?? item?.Id ?? item?.ID)
+        }));
+      },
+      error: (error: unknown) => {
+        console.error('Error al obtener clientes:', error);
+      }
+    });
+  }
+
+  obtenerTaller() {
+    if (!this.idTaller) return;
+    
+    this.loading = true;
+    this.talleresService.obtenerTallerPorId(this.idTaller).subscribe({
+      next: (response: any) => {
+        const data = response.data || response;
+        this.loading = false;
+        
+        // Convertir idCliente de string a número
+        const idClienteNum = Number(data.idCliente ?? data.IdCliente ?? 0);
+        
+        // Llenar el formulario
+        this.tallerForm.patchValue({
+          idCliente: Number.isFinite(idClienteNum) ? idClienteNum : null,
+          nombre: data.nombre ?? data.Nombre ?? '',
+          descripcion: data.descripcion ?? data.Descripcion ?? '',
+          icono: data.icono ?? data.Icono ?? '',
+          direccion: data.direccion ?? data.Direccion ?? '',
+          lat: data.lat ?? data.Lat ?? null,
+          lng: data.lng ?? data.Lng ?? null,
+          estatus: data.estatus ?? data.Estatus ?? 1
+        });
+
+        // Si hay coordenadas, centrar el mapa y colocar el marcador
+        if (data.lat && data.lng) {
+          this.lat = Number(data.lat);
+          this.lng = Number(data.lng);
+          this.hasCoords = true;
+          setTimeout(() => {
+            this.initMap();
+          }, 500);
+        }
+      },
+      error: (error) => {
+        this.loading = false;
+        this.alerts.open({
+          type: 'error',
+          title: '¡Ops!',
+          message: 'Ocurrió un error al cargar los datos del taller.',
+          confirmText: 'Confirmar',
+          backdropClose: false
+        });
+        console.error('Error:', error);
+        this.regresar();
+      }
+    });
+  }
+
+  private loadGoogleMaps(): Promise<void> {
+    const w = window as any;
+    if (w.google && w.google.maps) {
+      this.initMap();
+      return Promise.resolve();
+    }
+
+    return new Promise((resolve, reject) => {
+      const scriptId = 'gmaps-sdk-taller';
+      const existing = document.getElementById(scriptId) as HTMLScriptElement | null;
+      if (existing) {
+        existing.addEventListener('load', () => {
+          this.initMap();
+          resolve();
+        });
+        return;
+      }
+      const script = document.createElement('script');
+      script.id = scriptId;
+      script.src = 'https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places';
+      script.async = true;
+      script.defer = true;
+      script.onload = () => {
+        this.initMap();
+        resolve();
+      };
+      script.onerror = () => reject(new Error('No se pudo cargar Google Maps'));
+      document.head.appendChild(script);
+    });
+  }
+
+  private initMap(): void {
+    const el = document.getElementById('map-taller') as HTMLElement;
+    if (!el) return;
+
+    const center = this.hasCoords ? { lat: this.lat, lng: this.lng } : this.MAP_CENTER;
+
+    this.map = new google.maps.Map(el, {
+      center: center,
+      zoom: this.hasCoords ? 15 : 10,
+      mapTypeId: this.mapType === 'satellite' ? google.maps.MapTypeId.SATELLITE : google.maps.MapTypeId.ROADMAP
+    });
+
+    this.geocoder = new google.maps.Geocoder();
+    this.infoWindow = new google.maps.InfoWindow();
+
+    // Si hay coordenadas iniciales, colocar el marcador
+    if (this.hasCoords) {
+      this.placeMarker({ lat: this.lat, lng: this.lng });
+    }
+
+    // Listener para clicks en el mapa
+    this.map.addListener('click', (e: any) => {
+      this.ngZone.run(() => {
+        const lat = e.latLng.lat();
+        const lng = e.latLng.lng();
+        this.lat = lat;
+        this.lng = lng;
+        this.hasCoords = true;
+        this.tallerForm.patchValue({ lat, lng });
+        this.placeMarker({ lat, lng });
+        this.openInfoAt(e.latLng);
+      });
+    });
+  }
+
+  private placeMarker(position: { lat: number; lng: number }) {
+    if (this.marker) {
+      this.marker.setPosition(position);
+    } else {
+      this.marker = new google.maps.Marker({
+        position,
+        map: this.map,
+        title: 'Ubicación del taller',
+        draggable: true
+      });
+
+      // Listener para cuando se arrastra el marcador
+      this.marker.addListener('dragend', (e: any) => {
+        this.ngZone.run(() => {
+          const lat = e.latLng.lat();
+          const lng = e.latLng.lng();
+          this.lat = lat;
+          this.lng = lng;
+          this.tallerForm.patchValue({ lat, lng });
+          this.openInfoAt(e.latLng);
+        });
+      });
+    }
+    this.map.panTo(position);
+  }
+
+  private openInfoAt(latLng: any): void {
+    if (!this.geocoder) return;
+    this.geocoder.geocode({ location: latLng }, (results: any, status: string) => {
+      const address = status === 'OK' && results?.[0]?.formatted_address
+        ? results[0].formatted_address
+        : `Lat: ${latLng.lat().toFixed(6)}, Lng: ${latLng.lng().toFixed(6)}`;
+      
+      // Actualizar dirección en el formulario si está disponible
+      if (status === 'OK' && results?.[0]?.formatted_address) {
+        this.tallerForm.patchValue({ direccion: results[0].formatted_address });
+      }
+
+      const html = `
+        <div style="font-family: 'Segoe UI', sans-serif; max-width: 260px;">
+          <strong style="font-size: 14px; color: #002136">Ubicación del taller</strong>
+          <div style="font-size: 13px; color: #4a4a4a;">${address}</div>
+        </div>`;
+      this.infoWindow.setContent(html);
+      this.infoWindow.open(this.map, this.marker);
+    });
+  }
+
+  toggleMapType() {
+    this.mapType = this.mapType === 'roadmap' ? 'satellite' : 'roadmap';
+    if (this.map) {
+      this.map.setMapTypeId(
+        this.mapType === 'satellite' 
+          ? google.maps.MapTypeId.SATELLITE 
+          : google.maps.MapTypeId.ROADMAP
+      );
+    }
+  }
+
+  async submit() {
+    this.showRequiredMsgs = true;
+
+    if (this.tallerForm.invalid || !this.hasCoords) {
+      if (!this.hasCoords) {
+        this.alerts.open({
+          type: 'warning',
+          title: '¡Ops!',
+          message: 'Debes seleccionar una ubicación en el mapa haciendo clic sobre él.',
+          confirmText: 'Entendido',
+          backdropClose: false
+        });
+      } else {
+        this.alerts.open({
+          type: 'warning',
+          title: '¡Ops!',
+          message: 'Hay campos obligatorios sin completar.',
+          confirmText: 'Entendido',
+          backdropClose: false
+        });
+      }
+      return;
+    }
+
+    this.submitButton = 'Cargando...';
+    this.loading = true;
+
+    const formValue = this.tallerForm.getRawValue();
+    const payload = {
+      nombre: formValue.nombre,
+      descripcion: formValue.descripcion,
+      icono: formValue.icono || '',
+      direccion: formValue.direccion || '',
+      lat: Number(this.lat),
+      lng: Number(this.lng),
+      estatus: Number(formValue.estatus || 1),
+      idCliente: Number(formValue.idCliente)
+    };
+
+    const request = this.isEditMode && this.idTaller
+      ? this.talleresService.actualizarTaller(this.idTaller, payload)
+      : this.talleresService.agregarTaller(payload);
+
+    request.subscribe({
+      next: () => {
+        this.submitButton = 'Guardar';
+        this.loading = false;
+        this.alerts.open({
+          type: 'success',
+          title: '¡Operación Exitosa!',
+          message: this.isEditMode
+            ? 'Se actualizó el taller de manera exitosa.'
+            : 'Se registró el taller de manera exitosa.',
+          confirmText: 'Confirmar',
+          backdropClose: false
+        });
+        this.regresar();
+      },
+      error: (error) => {
+        this.submitButton = 'Guardar';
+        this.loading = false;
+        this.alerts.open({
+          type: 'error',
+          title: '¡Ops!',
+          message: this.isEditMode
+            ? 'Ocurrió un error al actualizar el taller.'
+            : 'Ocurrió un error al registrar el taller.',
+          confirmText: 'Confirmar',
+          backdropClose: false
+        });
+        console.error('Error:', error);
+      }
+    });
+  }
+
+  regresar() {
+    this.route.navigateByUrl('/administracion/talleres');
+  }
 }
-

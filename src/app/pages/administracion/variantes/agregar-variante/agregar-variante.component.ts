@@ -16,6 +16,7 @@ interface RutaUI {
   distanciaKm: number | null;
   fechaCreacion: Date | null;
   activa: boolean;
+  nombreCliente?: string | null;
   // claves que usa el mapa:
   inicio: any;
   fin: any;
@@ -48,6 +49,7 @@ export class AgregarVarianteComponent implements OnInit, AfterViewInit, OnDestro
 
   // TARIFA (Paso 3)
   tarifaForm!: FormGroup;
+  listaTiposTarifa: any[] = [];
 
   constructor(
     private variaService: VariantesService,
@@ -109,14 +111,108 @@ export class AgregarVarianteComponent implements OnInit, AfterViewInit, OnDestro
   // ==========================
   ngOnInit(): void {
     this.obtenerRutas();
+    this.obtenerTiposTarifa();
     this.tarifaForm = this.fb.group({
+      idTipoTarifa: [null, Validators.required],
       tarifaBase: [null, [Validators.required, Validators.min(0)]],
-      distanciaBaseKm: [null, [Validators.required, Validators.min(0)]],
-      incrementoCadaMetros: [null, [Validators.required, Validators.min(0)]],
-      costoAdicional: [null, [Validators.required, Validators.min(0)]],
+      distanciaBaseKm: [{value: null, disabled: true}, [Validators.min(0)]],
+      incrementoCadaMetros: [{value: null, disabled: true}, [Validators.min(0)]],
+      costoAdicional: [{value: null, disabled: true}, [Validators.min(0)]],
       estatus: [1],
       idVariante: [null, [Validators.required, Validators.min(0)]],
     });
+    
+    // Suscribirse a cambios en idTipoTarifa para habilitar/deshabilitar campos
+    this.tarifaForm.get('idTipoTarifa')?.valueChanges.subscribe((idTipoTarifa) => {
+      this.actualizarCamposSegunTipo(idTipoTarifa);
+    });
+  }
+
+  obtenerTiposTarifa(): void {
+    this.tarSerice.obtenerTiposTarifa().subscribe({
+      next: (response: any) => {
+        const data = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
+        this.listaTiposTarifa = data.map((t: any) => ({
+          id: Number(t?.id ?? t?.Id ?? t?.ID ?? 0),
+          nombre: t?.nombre ?? t?.Nombre ?? ''
+        })).filter((t: any) => Number.isFinite(t.id) && t.id > 0);
+      },
+      error: (error) => {
+        console.error('Error al obtener tipos de tarifa:', error);
+        this.listaTiposTarifa = [];
+      }
+    });
+  }
+
+  actualizarCamposSegunTipo(idTipoTarifa: number | null): void {
+    const distanciaControl = this.tarifaForm.get('distanciaBaseKm');
+    const incrementoControl = this.tarifaForm.get('incrementoCadaMetros');
+    const costoControl = this.tarifaForm.get('costoAdicional');
+
+    if (!idTipoTarifa) {
+      // Si no hay tipo seleccionado, deshabilitar todos excepto tarifaBase
+      distanciaControl?.disable({ emitEvent: false });
+      incrementoControl?.disable({ emitEvent: false });
+      costoControl?.disable({ emitEvent: false });
+      // Limpiar validadores de campos deshabilitados
+      distanciaControl?.clearValidators();
+      incrementoControl?.clearValidators();
+      costoControl?.clearValidators();
+      // Limpiar valores (habilitar temporalmente para setValue)
+      distanciaControl?.enable({ emitEvent: false });
+      incrementoControl?.enable({ emitEvent: false });
+      costoControl?.enable({ emitEvent: false });
+      distanciaControl?.setValue(null, { emitEvent: false });
+      incrementoControl?.setValue(null, { emitEvent: false });
+      costoControl?.setValue(null, { emitEvent: false });
+      distanciaControl?.disable({ emitEvent: false });
+      incrementoControl?.disable({ emitEvent: false });
+      costoControl?.disable({ emitEvent: false });
+      // Actualizar validadores
+      distanciaControl?.updateValueAndValidity({ onlySelf: true });
+      incrementoControl?.updateValueAndValidity({ onlySelf: true });
+      costoControl?.updateValueAndValidity({ onlySelf: true });
+      return;
+    }
+
+    // Buscar el tipo de tarifa para verificar si es "Fija" o "Incremental"
+    const tipoTarifa = this.listaTiposTarifa.find(t => t.id === idTipoTarifa);
+    const nombreTipo = tipoTarifa?.nombre?.toLowerCase() || '';
+
+    if (nombreTipo.includes('fija') || nombreTipo.includes('fijo')) {
+      // Tipo Fija: solo habilitar Tarifa Base, deshabilitar los demás
+      distanciaControl?.disable({ emitEvent: false });
+      incrementoControl?.disable({ emitEvent: false });
+      costoControl?.disable({ emitEvent: false });
+      // Limpiar validadores
+      distanciaControl?.clearValidators();
+      incrementoControl?.clearValidators();
+      costoControl?.clearValidators();
+      // Limpiar valores (habilitar temporalmente para setValue)
+      distanciaControl?.enable({ emitEvent: false });
+      incrementoControl?.enable({ emitEvent: false });
+      costoControl?.enable({ emitEvent: false });
+      distanciaControl?.setValue(null, { emitEvent: false });
+      incrementoControl?.setValue(null, { emitEvent: false });
+      costoControl?.setValue(null, { emitEvent: false });
+      distanciaControl?.disable({ emitEvent: false });
+      incrementoControl?.disable({ emitEvent: false });
+      costoControl?.disable({ emitEvent: false });
+    } else if (nombreTipo.includes('incremental')) {
+      // Tipo Incremental: habilitar todos los campos y hacerlos obligatorios
+      distanciaControl?.enable({ emitEvent: false });
+      incrementoControl?.enable({ emitEvent: false });
+      costoControl?.enable({ emitEvent: false });
+      // Agregar validadores requeridos
+      distanciaControl?.setValidators([Validators.required, Validators.min(0)]);
+      incrementoControl?.setValidators([Validators.required, Validators.min(0)]);
+      costoControl?.setValidators([Validators.required, Validators.min(0)]);
+    }
+    
+    // Actualizar validadores
+    distanciaControl?.updateValueAndValidity({ onlySelf: true });
+    incrementoControl?.updateValueAndValidity({ onlySelf: true });
+    costoControl?.updateValueAndValidity({ onlySelf: true });
   }
 
   regresar() { this.route.navigateByUrl('/administracion/variantes'); }
@@ -158,6 +254,7 @@ export class AgregarVarianteComponent implements OnInit, AfterViewInit, OnDestro
             distanciaKm,
             fechaCreacion: r?.fechaCreacionRuta ? new Date(r.fechaCreacionRuta) : null,
             activa: Number(r?.estatusRuta) === 1,
+            nombreCliente: r?.nombreCliente ?? null,
             inicio: (isFiniteNumber(pIni.lat) && isFiniteNumber(pIni.lng)) ? { lat: Number(pIni.lat), lng: Number(pIni.lng) } : null,
             fin: (isFiniteNumber(pFin.lat) && isFiniteNumber(pFin.lng)) ? { lat: Number(pFin.lat), lng: Number(pFin.lng) } : null,
             puntoInicio: { lat: pIni.lat, lng: pIni.lng },
@@ -648,6 +745,7 @@ agregarTarifa(): void {
   if (this.tarifaForm.invalid) {
 
     const etiquetas: Record<string, string> = {
+      idTipoTarifa: 'Tipo Tarifa',
       tarifaBase: 'Tarifa Base',
       distanciaBaseKm: 'Distancia Base KM',
       incrementoCadaMetros: 'Incremento por cada 100 m adicionales',
@@ -685,17 +783,27 @@ agregarTarifa(): void {
     return;
   }
 
-  const v = this.tarifaForm.value;
-  const payload = {
+  const v = this.tarifaForm.getRawValue();
+  const tipoTarifa = this.listaTiposTarifa.find(t => t.id === v.idTipoTarifa);
+  const nombreTipo = tipoTarifa?.nombre?.toLowerCase() || '';
+  const esFija = nombreTipo.includes('fija') || nombreTipo.includes('fijo');
+  
+  const payload: any = {
+    idTipoTarifa: this.toNum(v.idTipoTarifa),
     tarifaBase: this.toNum(v.tarifaBase),
-    distanciaBaseKm: this.toNum(v.distanciaBaseKm),
-    incrementoCadaMetros: this.toNum(v.incrementoCadaMetros),
-    costoAdicional: this.toNum(v.costoAdicional),
     estatus: this.toNum(v.estatus),
-    idVariante: this.toNum(v.idVariante), // <-- clave correcta
+    idVariante: this.toNum(v.idVariante),
   };
 
+  // Solo agregar campos adicionales si es Incremental (no Fija)
+  if (!esFija) {
+    payload.distanciaBaseKm = this.toNum(v.distanciaBaseKm);
+    payload.incrementoCadaMetros = this.toNum(v.incrementoCadaMetros);
+    payload.costoAdicional = this.toNum(v.costoAdicional);
+  }
+
   const etiquetasNum: Record<string, string> = {
+    idTipoTarifa: 'Tipo Tarifa',
     tarifaBase: 'Tarifa Base',
     distanciaBaseKm: 'Distancia Base KM',
     incrementoCadaMetros: 'Incremento por cada 100 m adicionales',

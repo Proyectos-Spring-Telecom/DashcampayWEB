@@ -22,6 +22,9 @@ export class AgregarPasajeroComponent implements OnInit {
   public showCorreo: boolean = true;
   selectedFileName: string = '';
   previewUrl: string | ArrayBuffer | null = null;
+  listaTiposPasajero: any[] = [];
+  selectedDocumentoFile: File | null = null;
+  documentoPreviewUrl: string | ArrayBuffer | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -32,7 +35,8 @@ export class AgregarPasajeroComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.initForm()
+    this.initForm();
+    this.obtenerTiposPasajero();
     this.activatedRouted.params.subscribe(
       (params) => {
         this.idPasajero = params['idPasajero'];
@@ -44,6 +48,22 @@ export class AgregarPasajeroComponent implements OnInit {
         }
       }
     )
+  }
+
+  obtenerTiposPasajero(): void {
+    this.pasajService.obtenerTiposPasajero().subscribe({
+      next: (response: any) => {
+        const data = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
+        this.listaTiposPasajero = data.map((t: any) => ({
+          id: Number(t?.id ?? t?.Id ?? t?.ID ?? 0),
+          nombre: t?.nombre ?? t?.Nombre ?? ''
+        })).filter((t: any) => Number.isFinite(t.id) && t.id > 0);
+      },
+      error: (error) => {
+        console.error('Error al obtener tipos de pasajero:', error);
+        this.listaTiposPasajero = [];
+      }
+    });
   }
 
   obtenerPasajeroID() {
@@ -60,7 +80,11 @@ export class AgregarPasajeroComponent implements OnInit {
           telefono: response.data.telefono,
           correo: response.data.correo,
           fechaNacimiento: fecha,
+          curp: response.data.curp || '',
+          numeroSerieMonedero: response.data.numeroSerieMonedero || '',
+          idTipoPasajero: response.data.idTipoPasajero || null,
         });
+        // Nota: passwordHash y documentacion no se cargan por seguridad
       }
     );
   }
@@ -80,8 +104,101 @@ export class AgregarPasajeroComponent implements OnInit {
       fechaNacimiento: ['', Validators.required],
       correo: ['', [Validators.required, Validators.email]],
       telefono: ['', Validators.required],
+      curp: ['', Validators.required],
+      numeroSerieMonedero: ['', Validators.required],
+      idTipoPasajero: [null, Validators.required],
+      passwordHash: ['', Validators.required],
+      documentacion: [null],
       estatus: [1, Validators.required],
     });
+  }
+
+  documentoDragging = false;
+
+  onDocumentoDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.documentoDragging = true;
+  }
+
+  onDocumentoDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.documentoDragging = false;
+  }
+
+  onDocumentoDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.documentoDragging = false;
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      const fileEvent = { target: { files: [files[0]] } };
+      this.onDocumentoFileSelected(fileEvent);
+    }
+  }
+
+  openDocumentoFilePicker(): void {
+    const fileInput = document.getElementById('documentacion-file') as HTMLInputElement;
+    if (fileInput) fileInput.click();
+  }
+
+  onDocumentoFileSelected(event: any): void {
+    const file = event.target?.files?.[0];
+    if (!file) return;
+
+    // Validar tipo de archivo (imagen o PDF)
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'application/pdf'];
+    if (!validTypes.includes(file.type)) {
+      this.alerts.open({
+        type: 'error',
+        title: '¡Ops!',
+        message: 'El archivo debe ser una imagen (JPG, PNG, GIF) o un PDF.',
+        confirmText: 'Entendido',
+        backdropClose: false,
+      });
+      return;
+    }
+
+    // Validar tamaño (máximo 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      this.alerts.open({
+        type: 'error',
+        title: '¡Ops!',
+        message: 'El archivo no debe exceder 5MB.',
+        confirmText: 'Entendido',
+        backdropClose: false,
+      });
+      return;
+    }
+
+    this.selectedDocumentoFile = file;
+    this.selectedFileName = file.name;
+
+    // Mostrar preview si es imagen
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.documentoPreviewUrl = e.target?.result || null;
+      };
+      reader.readAsDataURL(file);
+    } else {
+      this.documentoPreviewUrl = null;
+    }
+  }
+
+  removeDocumentoFile(event?: Event): void {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    this.selectedDocumentoFile = null;
+    this.selectedFileName = '';
+    this.documentoPreviewUrl = null;
+    this.pasajeroForm.get('documentacion')?.setValue(null);
+    const fileInput = document.getElementById('documentacion-file') as HTMLInputElement;
+    if (fileInput) fileInput.value = '';
   }
 
   submit() {
@@ -106,8 +223,12 @@ export class AgregarPasajeroComponent implements OnInit {
         apellidoMaterno: 'Apellido Materno',
         fechaNacimiento: 'Fecha de Nacimiento',
         telefono: 'Teléfono',
-        estatus: 'Estatus',
         correo: 'Correo Electrónico',
+        curp: 'CURP',
+        numeroSerieMonedero: 'Número de Serie',
+        idTipoPasajero: 'Tipo Pasajero',
+        passwordHash: 'Contraseña',
+        estatus: 'Estatus',
       };
 
       const camposFaltantes: string[] = [];
@@ -141,9 +262,27 @@ export class AgregarPasajeroComponent implements OnInit {
       return;
     }
 
-    // igual que en dispositivos: quitar 'id' antes de leer payload
-    this.pasajeroForm.removeControl('id');
-    this.pasajService.agregarPasajero(this.pasajeroForm.value).subscribe(
+    // Crear FormData para enviar el archivo
+    const formValue = this.pasajeroForm.getRawValue();
+    const formData = new FormData();
+    
+    formData.append('nombre', formValue.nombre);
+    formData.append('apellidoPaterno', formValue.apellidoPaterno);
+    formData.append('apellidoMaterno', formValue.apellidoMaterno);
+    formData.append('fechaNacimiento', this.formatDate(formValue.fechaNacimiento));
+    formData.append('telefono', formValue.telefono);
+    formData.append('correo', formValue.correo);
+    formData.append('curp', formValue.curp);
+    formData.append('numeroSerieMonedero', formValue.numeroSerieMonedero);
+    formData.append('idTipoPasajero', String(formValue.idTipoPasajero));
+    formData.append('passwordHash', formValue.passwordHash);
+    formData.append('estatus', String(formValue.estatus));
+    
+    if (this.selectedDocumentoFile) {
+      formData.append('documentacion', this.selectedDocumentoFile);
+    }
+
+    this.pasajService.agregarPasajero(formData).subscribe(
       () => {
         this.submitButton = 'Guardar';
         this.loading = false;
@@ -184,8 +323,12 @@ export class AgregarPasajeroComponent implements OnInit {
         apellidoMaterno: 'Apellido Materno',
         fechaNacimiento: 'Fecha de Nacimiento',
         telefono: 'Teléfono',
-        estatus: 'Estatus',
         correo: 'Correo Electrónico',
+        curp: 'CURP',
+        numeroSerieMonedero: 'Número de Serie',
+        idTipoPasajero: 'Tipo Pasajero',
+        passwordHash: 'Contraseña',
+        estatus: 'Estatus',
       };
 
       const camposFaltantes: string[] = [];
@@ -257,6 +400,20 @@ export class AgregarPasajeroComponent implements OnInit {
         });
       }
     );
+  }
+
+  formatDate(date: any): string {
+    if (!date) return '';
+    if (date instanceof Date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+    if (typeof date === 'string' && date.includes('T')) {
+      return date.split('T')[0];
+    }
+    return date;
   }
 
   regresar() {

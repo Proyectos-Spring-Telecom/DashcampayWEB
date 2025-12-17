@@ -1,0 +1,170 @@
+<div class="agregar-licencia-modal">
+  <div class="modal-header">
+    <nav class="breadcrumb-simple" aria-label="Ruta de navegación">
+      <span class="crumb-current" aria-current="page">
+        <mat-icon inline>add</mat-icon>
+        Agregar Licencia para: {{ data.nombreOperador }}
+      </span>
+    </nav>
+  </div>
+
+  <div class="modal-body">
+    <form [formGroup]="licenciaForm" class="form-skin-lite">
+      <div class="row g-3">
+        <!-- N° Licencia -->
+        <div class="col-12 col-md-4">
+          <label class="form-label">
+            <i class="fa fa-hashtag"></i>
+            <span>N° Licencia</span>
+          </label>
+          <mat-form-field appearance="fill" class="w-100">
+            <input matInput formControlName="numeroLicencia" placeholder="Ingrese el número de licencia">
+          </mat-form-field>
+          <mat-error *ngIf="showRequiredMsgs && licenciaForm.get('numeroLicencia')?.hasError('required')">
+            El número de licencia es obligatorio.
+          </mat-error>
+        </div>
+
+        <!-- Fecha Expedición -->
+        <div class="col-12 col-md-4">
+          <label class="form-label">
+            <i class="fa fa-calendar-alt"></i>
+            <span>Fecha Expedición</span>
+          </label>
+          <mat-form-field appearance="fill" class="w-100">
+            <input matInput [matDatepicker]="pickerExpedicion" formControlName="fechaExpedicion" placeholder="dd/mm/aaaa">
+            <mat-datepicker-toggle matSuffix [for]="pickerExpedicion"></mat-datepicker-toggle>
+            <mat-datepicker #pickerExpedicion></mat-datepicker>
+          </mat-form-field>
+          <mat-error *ngIf="showRequiredMsgs && licenciaForm.get('fechaExpedicion')?.hasError('required')">
+            La fecha de expedición es obligatoria.
+          </mat-error>
+        </div>
+
+        <!-- Fecha Vencimiento -->
+        <div class="col-12 col-md-4">
+          <label class="form-label">
+            <i class="fa fa-calendar-check"></i>
+            <span>Fecha Vencimiento</span>
+          </label>
+          <mat-form-field appearance="fill" class="w-100">
+            <input matInput [matDatepicker]="pickerVencimiento" formControlName="fechaVencimiento" placeholder="dd/mm/aaaa">
+            <mat-datepicker-toggle matSuffix [for]="pickerVencimiento"></mat-datepicker-toggle>
+            <mat-datepicker #pickerVencimiento></mat-datepicker>
+          </mat-form-field>
+          <mat-error *ngIf="showRequiredMsgs && licenciaForm.get('fechaVencimiento')?.hasError('required')">
+            La fecha de vencimiento es obligatoria.
+          </mat-error>
+        </div>
+
+        <!-- Categoría de Licencia -->
+        <div class="col-12 col-md-4">
+          <label class="form-label">
+            <i class="fa fa-tags"></i>
+            <span>Categoría de Licencia</span>
+          </label>
+          <mat-form-field appearance="fill" class="w-100">
+            <mat-select
+              placeholder="Seleccione una categoría"
+              formControlName="idCategoriaLicencia">
+              <mat-option [value]="null">— Seleccione —</mat-option>
+              <mat-option *ngFor="let categoria of listaCategoriasLicencia" [value]="categoria.id">
+                {{ categoria.nombreCategoriaLicencia || categoria.NombreCategoriaLicencia || categoria.nombre || categoria.Nombre || categoria.descripcion || categoria.Descripcion }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-error *ngIf="showRequiredMsgs && licenciaForm.get('idCategoriaLicencia')?.hasError('required')">
+            La categoría de licencia es obligatoria.
+          </mat-error>
+        </div>
+
+        <!-- Tipo de Licencia -->
+        <div class="col-12 col-md-4">
+          <label class="form-label">
+            <i class="fa fa-id-card"></i>
+            <span>Tipo de Licencia</span>
+          </label>
+          <mat-form-field appearance="fill" class="w-100">
+            <mat-select
+              placeholder="Seleccione un tipo"
+              formControlName="idTipoLicencia">
+              <mat-option [value]="null">— Seleccione —</mat-option>
+              <mat-option *ngFor="let tipo of listaTiposLicencia" [value]="tipo.id">
+                {{ tipo.nombreCatTipoLicencia || tipo.NombreCatTipoLicencia || tipo.nombreTipoLicencia || tipo.NombreTipoLicencia || tipo.nombre || tipo.Nombre || tipo.descripcion || tipo.Descripcion }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-error *ngIf="showRequiredMsgs && licenciaForm.get('idTipoLicencia')?.hasError('required')">
+            El tipo de licencia es obligatorio.
+          </mat-error>
+        </div>
+
+        <!-- Licencia (Archivo) -->
+        <div class="col-12 col-md-4">
+          <label class="form-label">
+            <i class="fa fa-file"></i>
+            <span>Licencia</span>
+          </label>
+          <div 
+            class="file-upload-area"
+            [class.dragging]="licenciaDragging"
+            (dragover)="onLicenciaDragOver($event)"
+            (dragleave)="onLicenciaDragLeave($event)"
+            (drop)="onLicenciaDrop($event)"
+            (click)="openLicenciaFilePicker()">
+            <input 
+              #licenciaInput
+              type="file" 
+              accept=".pdf,image/*"
+              (change)="onLicenciaFileSelected($event)"
+              style="display: none;">
+            
+            <div *ngIf="!licenciaPreviewUrl && !licenciaFileName" class="file-upload-content">
+              <div class="upload-icon-circle">
+                <mat-icon class="upload-icon">description</mat-icon>
+              </div>
+              <p class="upload-text">Arrastra o haz clic</p>
+              <p class="upload-hint">PDF o imagen - máx 3 MB</p>
+            </div>
+            
+            <div *ngIf="licenciaPreviewUrl || licenciaFileName" class="file-preview">
+              <img *ngIf="licenciaPreviewUrl" [src]="licenciaPreviewUrl" alt="Preview" class="preview-image">
+              <div *ngIf="!licenciaPreviewUrl" class="file-icon-preview">
+                <mat-icon class="file-icon">description</mat-icon>
+              </div>
+              <div class="file-info">
+                <p class="file-name">{{ licenciaFileName }}</p>
+                <button type="button" class="btn-remove" (click)="clearLicenciaFile($event)">
+                  <mat-icon>close</mat-icon>
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
+          <mat-error *ngIf="showRequiredMsgs && licenciaForm.get('licencia')?.hasError('required')">
+            La licencia es obligatoria.
+          </mat-error>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="modal-actions">
+    <button 
+      mat-raised-button 
+      class="btn-guardar" 
+      (click)="submit()" 
+      [disabled]="loading">
+      <mat-icon *ngIf="loading" class="spinning">refresh</mat-icon>
+      Guardar
+    </button>
+    <button 
+      mat-raised-button 
+      class="btn-cancelar" 
+      (click)="cancelar()"
+      [disabled]="loading">
+      Cancelar
+    </button>
+  </div>
+</div>
+

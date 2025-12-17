@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
+import { MantenimientosComponent } from './mantenimientos.component';
 import { ListarMantenimientoKilometrajeComponent } from './listar-mantenimiento-kilometraje/listar-mantenimiento-kilometraje.component';
 import { RegistrarMantenimientoKilometrajeComponent } from './registrar-mantenimiento-kilometraje/registrar-mantenimiento-kilometraje.component';
 import { ListarMantenimientoCombustibleComponent } from './listar-mantenimiento-combustible/listar-mantenimiento-combustible.component';
@@ -9,28 +10,51 @@ import { RegistrarMantenimientoVehicularComponent } from './registrar-mantenimie
 
 const routes: Routes = [
   {
-    path: 'mantenimiento-kilometraje',
-    component: ListarMantenimientoKilometrajeComponent
+    path: '',
+    component: MantenimientosComponent,
+    children: [
+      {
+        path: '',
+        redirectTo: 'mantenimiento-vehicular',
+        pathMatch: 'full'
+      },
+      {
+        path: 'mantenimiento-kilometraje',
+        component: ListarMantenimientoKilometrajeComponent
+      },
+      {
+        path: 'mantenimiento-combustible',
+        component: ListarMantenimientoCombustibleComponent
+      },
+      {
+        path: 'mantenimiento-vehicular',
+        component: ListarMantenimientoVehicularComponent
+      }
+    ]
+  },
+  {
+    path: 'registrar-mantenimiento-vehicular/:id',
+    component: RegistrarMantenimientoVehicularComponent
+  },
+  {
+    path: 'registrar-mantenimiento-vehicular',
+    component: RegistrarMantenimientoVehicularComponent
+  },
+  {
+    path: 'registrar-mantenimiento-kilometraje/:id',
+    component: RegistrarMantenimientoKilometrajeComponent
   },
   {
     path: 'registrar-mantenimiento-kilometraje',
     component: RegistrarMantenimientoKilometrajeComponent
   },
   {
-    path: 'mantenimiento-combustible',
-    component: ListarMantenimientoCombustibleComponent
+    path: 'registrar-mantenimiento-combustible/:id',
+    component: RegistrarMantenimientoCombustibleComponent
   },
   {
     path: 'registrar-mantenimiento-combustible',
     component: RegistrarMantenimientoCombustibleComponent
-  },
-  {
-    path: 'mantenimiento-vehicular',
-    component: ListarMantenimientoVehicularComponent
-  },
-  {
-    path: 'registrar-mantenimiento-vehicular',
-    component: RegistrarMantenimientoVehicularComponent
   }
 ];
 

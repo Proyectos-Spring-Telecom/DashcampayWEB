@@ -1,0 +1,114 @@
+.file-upload-area {
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: #f9f9f9;
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    border-color: #6C2BD9;
+    background-color: #f0f0f0;
+  }
+
+  &.dragging {
+    border-color: #6C2BD9;
+    background-color: #e8e0f5;
+  }
+}
+
+.file-upload-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.upload-icon {
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+  color: #6C2BD9;
+}
+
+.upload-text {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+}
+
+.upload-hint {
+  margin: 0;
+  font-size: 11px;
+  color: #666;
+}
+
+.file-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.preview-image {
+  max-width: 100%;
+  max-height: 150px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.file-name {
+  margin: 0;
+  font-size: 14px;
+  color: #333;
+}
+
+.btn-remove {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 16px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #c82333;
+  }
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+

@@ -205,6 +205,16 @@ export const appRoutes: VexRoutes = [
               .then(m => m.MantenimientosModule)
           },
           {
+            path: 'verificaciones',
+            loadChildren:() => import('./pages/administracion/verificaciones/verificaciones.module')
+              .then(m => m.VerificacionesModule)
+          },
+          {
+            path: 'incidentes',
+            loadChildren:() => import('./pages/administracion/incidentes/incidentes.module')
+              .then(m => m.IncidentesModule)
+          },
+          {
             path: 'permisos',
             loadChildren:() => import('./pages/administracion/permisos/permisos.module')
               .then(m => m.PermisosModule)

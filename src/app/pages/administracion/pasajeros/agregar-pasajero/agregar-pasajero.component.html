@@ -88,6 +88,94 @@
                 </mat-form-field>
               </div>
 
+              <div class="fm-group">
+                <label id="lbl-curp">
+                  <i class="fa fa-id-card doc-icon" aria-hidden="true"></i>
+                  CURP
+                </label>
+                <mat-form-field appearance="fill">
+                  <input matInput placeholder="CURP" formControlName="curp" maxlength="18"
+                    [attr.aria-labelledby]="'lbl-curp'">
+                </mat-form-field>
+              </div>
+
+              <div class="fm-group">
+                <label id="lbl-numero-serie">
+                  <i class="fa fa-barcode doc-icon" aria-hidden="true"></i>
+                  Número de Serie
+                </label>
+                <mat-form-field appearance="fill">
+                  <input matInput placeholder="Número de Serie" formControlName="numeroSerieMonedero"
+                    [attr.aria-labelledby]="'lbl-numero-serie'">
+                </mat-form-field>
+              </div>
+
+              <div class="fm-group">
+                <label id="lbl-tipo-pasajero">
+                  <i class="fa fa-users doc-icon" aria-hidden="true"></i>
+                  Tipo Pasajero
+                </label>
+                <mat-form-field appearance="fill">
+                  <mat-select formControlName="idTipoPasajero" placeholder="Seleccione un tipo"
+                    [attr.aria-labelledby]="'lbl-tipo-pasajero'">
+                    <mat-option [value]="null">— Seleccione —</mat-option>
+                    <mat-option *ngFor="let tipo of listaTiposPasajero" [value]="tipo.id">
+                      {{ tipo.nombre }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <div class="fm-group">
+                <label id="lbl-password">
+                  <i class="fa fa-lock doc-icon" aria-hidden="true"></i>
+                  Contraseña
+                </label>
+                <mat-form-field appearance="fill">
+                  <input matInput type="password" placeholder="Contraseña" formControlName="passwordHash"
+                    [attr.aria-labelledby]="'lbl-password'">
+                </mat-form-field>
+              </div>
+
+              <div class="fm-group">
+                <label id="lbl-documentacion">
+                  <i class="fa fa-file doc-icon" aria-hidden="true"></i>
+                  Documentación Oficial
+                </label>
+                <div 
+                  class="file-upload-area file-upload-small"
+                  [class.dragging]="documentoDragging"
+                  (dragover)="onDocumentoDragOver($event)"
+                  (dragleave)="onDocumentoDragLeave($event)"
+                  (drop)="onDocumentoDrop($event)"
+                  (click)="openDocumentoFilePicker()">
+                  <input 
+                    id="documentacion-file"
+                    type="file" 
+                    accept=".pdf,image/*"
+                    (change)="onDocumentoFileSelected($event)"
+                    style="display: none;">
+                  
+                  <div *ngIf="!documentoPreviewUrl && !selectedFileName" class="file-upload-content">
+                    <mat-icon class="upload-icon-small">description</mat-icon>
+                    <p class="upload-text-small">Arrastra o haz clic</p>
+                  </div>
+                  
+                  <div *ngIf="documentoPreviewUrl || selectedFileName" class="file-preview-small">
+                    <img *ngIf="documentoPreviewUrl" [src]="documentoPreviewUrl" alt="Preview" class="preview-image-small">
+                    <div *ngIf="!documentoPreviewUrl" class="file-icon-preview-small">
+                      <mat-icon class="file-icon-small">description</mat-icon>
+                    </div>
+                    <div class="file-info-small">
+                      <p class="file-name-small">{{ selectedFileName }}</p>
+                      <button type="button" class="btn-remove-small" (click)="removeDocumentoFile($event)">
+                        <mat-icon>close</mat-icon>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div class="fm-span-3 fm-actions">
                 <div class="fm-actions-right">
                   <button mat-raised-button color="primary" type="button" (click)="submit()">

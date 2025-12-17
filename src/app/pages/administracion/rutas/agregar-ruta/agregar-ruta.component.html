@@ -36,7 +36,8 @@
           && (rutaForm.get('idRegion')?.touched || rutaForm.get('idRegion')?.dirty)
       }">
                                             <option [ngValue]="null" disabled>Selecciona una zona</option>
-                                            <option *ngFor="let z of listaRegiones" [ngValue]="z.id">{{ z.nombre }}
+                                            <option *ngFor="let z of listaRegiones" [ngValue]="z.id">
+                                              {{ z.nombre }}{{ z.nombreCliente ? ' - ' + z.nombreCliente : '' }}
                                             </option>
                                         </select>
                                     </div>
@@ -61,6 +62,14 @@
                                     <div class="meta-item">
                                         <mat-icon inline>flag</mat-icon>
                                         <span><strong>Fin:</strong> {{ nombreFin || '—' }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- Cliente: muestra nombre del cliente de la zona seleccionada -->
+                                <div class="col-12 col-md-6" *ngIf="nombreClienteSeleccionado">
+                                    <div class="meta-item">
+                                        <mat-icon inline>person</mat-icon>
+                                        <span><strong>Cliente:</strong> {{ nombreClienteSeleccionado }}</span>
                                     </div>
                                 </div>
 

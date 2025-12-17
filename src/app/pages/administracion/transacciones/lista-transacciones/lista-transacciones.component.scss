@@ -297,3 +297,39 @@
   background: #dc3545;
   color: #f5d4d4;
 }
+
+// Estilos para campos de fecha más pequeños
+::ng-deep .filtro-date-field {
+  .mat-mdc-form-field-subscript-wrapper {
+    display: none;
+  }
+  
+  .mat-mdc-text-field-wrapper {
+    padding-bottom: 0 !important;
+  }
+  
+  .mat-mdc-form-field-infix {
+    min-height: 40px !important;
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+  }
+  
+  .mat-mdc-text-field-wrapper.mdc-text-field--filled {
+    height: 40px !important;
+  }
+  
+  .mat-mdc-form-field-flex {
+    align-items: center !important;
+  }
+}
+
+// Alinear botón con los inputs
+.filtro-button-wrapper {
+  display: flex;
+  align-items: flex-end;
+  height: 40px;
+  
+  button {
+    height: 40px;
+  }
+}
