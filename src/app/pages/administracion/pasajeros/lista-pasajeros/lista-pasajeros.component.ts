@@ -1,12 +1,14 @@
 import { Component, DestroyRef, inject, OnInit, ViewChild } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { fadeInRight400ms } from '@vex/animations/fade-in-right.animation';
 import { DxDataGridComponent } from 'devextreme-angular';
 import CustomStore from 'devextreme/data/custom_store';
 import { lastValueFrom } from 'rxjs';
 import { AlertsService } from 'src/app/pages/pages/modal/alerts.service';
 import { PasajerosService } from 'src/app/pages/services/pasajeros.service';
+import { MatDialog } from '@angular/material/dialog';
+import { VerLicenciaModalComponent, VerLicenciaData } from '../../operadores/ver-licencia-modal/ver-licencia-modal.component';
 
 @Component({
   selector: 'vex-lista-pasajeros',
@@ -37,7 +39,9 @@ export class ListaPasajerosComponent implements OnInit {
 
   constructor(private pasaService: PasajerosService,
     private route: Router,
+    private activatedRoute: ActivatedRoute,
     private alerts: AlertsService,
+    private dialog: MatDialog,
   ) {
     this.showFilterRow = true;
     this.showHeaderFilter = true;
@@ -74,10 +78,18 @@ export class ListaPasajerosComponent implements OnInit {
           const dataTransformada = (Array.isArray(response?.data) ? response.data : [])
             .map((item: any) => {
               const idNum = Number(item?.id ?? item?.Id ?? item?.ID);
+              const estadoSolicitud = Number(item?.estadoSolicitud ?? item?.EstadoSolicitud ?? 0);
+              const estadoSolicitudTexto = estadoSolicitud === 0 ? 'No Solicitado' : estadoSolicitud === 1 ? 'Solicitado' : '—';
               return {
                 ...item,
                 nombreCompleto: item.nombre + ' ' + item.apellidoPaterno + ' ' + item.apellidoMaterno,
                 id: Number.isFinite(idNum) ? idNum : 0,
+                curp: item?.curp ?? item?.Curp ?? '',
+                numeroSerie: item?.numeroSerie ?? item?.NumeroSerie ?? item?.numeroSerieMonedero ?? item?.NumeroSerieMonedero ?? '',
+                documentacion: item?.documentacion ?? item?.Documentacion ?? null,
+                estadoSolicitud: estadoSolicitud,
+                estadoSolicitudTexto: estadoSolicitudTexto,
+                nombreCatPasajero: item?.nombreCatPasajero ?? item?.NombreCatPasajero ?? item?.tipoPasajero?.nombreCatPasajero ?? item?.TipoPasajero?.NombreCatPasajero ?? item?.tipoPasajero?.nombre ?? item?.TipoPasajero?.Nombre ?? '—',
               };
             })
             .sort((a: any, b: any) => b.id - a.id);
@@ -229,5 +241,32 @@ export class ListaPasajerosComponent implements OnInit {
       this.autoExpandAllGroups = !this.autoExpandAllGroups;
       this.dataGrid.instance.refresh();
     }
+  }
+
+  irAVerDocumento(url: string, titulo: string, fila: any) {
+    if (!url) {
+      this.alerts.open({
+        type: 'info',
+        title: 'Información',
+        message: 'No hay documentación disponible para este pasajero.',
+        confirmText: 'Entendido'
+      });
+      return;
+    }
+
+    const data: VerLicenciaData = {
+      url: url,
+      titulo: titulo || 'Documentación Oficial'
+    };
+
+    this.dialog.open(VerLicenciaModalComponent, {
+      width: '80vw',
+      maxWidth: '1200px',
+      height: '80vh',
+      maxHeight: '800px',
+      disableClose: false,
+      data: data,
+      panelClass: 'ver-licencia-dialog'
+    });
   }
 }

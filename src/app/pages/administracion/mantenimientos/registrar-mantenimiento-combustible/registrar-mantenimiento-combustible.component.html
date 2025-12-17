@@ -1,2 +1,168 @@
-<p>registrar-mantenimiento-combustible works!</p>
+<vex-page-layout @fadeInRight>
+  <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
+    [class.px-6]="layoutCtrl.value === 'fullwidth'">
+    <div class="card mt-4">
+      <div class="container-fluid p-4">
+        <!-- Breadcrumb -->
+        <div class="bg-app-bar appbar px-6 h-16 border-b sticky top-0 left-0 flex items-center z-10">
+          <nav class="breadcrumb-simple" aria-label="Ruta de navegación">
+            <a routerLink="/administracion" class="crumb-link" routerLinkActive="active">
+              <mat-icon inline>home</mat-icon>
+              Administración
+            </a>
+            <span class="sep">/</span>
+            <span class="crumb-current" aria-current="page">Gestión Vehícular</span>
+            <span class="sep">/</span>
+            <span class="crumb-current" aria-current="page">Registrar Mantenimiento Combustible</span>
+          </nav>
+        </div>
 
+        <!-- Formulario -->
+        <section class="mt-4">
+          <form [formGroup]="mantenimientoForm" class="form-skin-lite">
+            <div class="row g-3">
+              <div class="col-12">
+                <div class="section-head">
+                  <h5 class="mb-1">Datos del Mantenimiento de Combustible</h5>
+                </div>
+                <div class="section-bar"></div>
+              </div>
+
+              <!-- Instalación -->
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-car"></i>
+                  <span>Instalación</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-select
+                    placeholder="Instalación"
+                    formControlName="idInstalacion">
+                    <mat-option [value]="null">— Seleccione —</mat-option>
+                    <mat-option *ngFor="let instalacion of listaInstalaciones" [value]="instalacion.id">
+                      {{ instalacion.placaVehiculo }} - Eco: {{ instalacion.numeroEconomicoVehiculo }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-error *ngIf="showRequiredMsgs && mantenimientoForm.get('idInstalacion')?.hasError('required')">
+                  La instalación es obligatoria.
+                </mat-error>
+              </div>
+
+              <!-- Tipo de Combustible -->
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-gas-pump"></i>
+                  <span>Tipo de Combustible</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-select
+                    placeholder="Tipo de Combustible"
+                    formControlName="idTipoCombustible">
+                    <mat-option [value]="null">— Seleccione —</mat-option>
+                    <mat-option *ngFor="let tipo of listaTiposCombustible" [value]="tipo.id">
+                      {{ tipo.nombre || tipo.descripcion || tipo.nombreTipoCombustible }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-error *ngIf="showRequiredMsgs && mantenimientoForm.get('idTipoCombustible')?.hasError('required')">
+                  El tipo de combustible es obligatorio.
+                </mat-error>
+              </div>
+
+              <!-- Operador -->
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-user-tie"></i>
+                  <span>Operador</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-select
+                    placeholder="Operador"
+                    formControlName="idOperador">
+                    <mat-option [value]="null">— Seleccione —</mat-option>
+                    <mat-option *ngFor="let operador of listaOperadores" [value]="operador.id">
+                      {{ operador.nombreUsuario || operador.nombre }} {{ operador.apellidoPaternoUsuario || operador.apellidoPaterno || '' }} {{ operador.apellidoMaternoUsuario || operador.apellidoMaterno || '' }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-error *ngIf="showRequiredMsgs && mantenimientoForm.get('idOperador')?.hasError('required')">
+                  El operador es obligatorio.
+                </mat-error>
+              </div>
+
+              <!-- Cantidad de Combustible -->
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-tint"></i>
+                  <span>Cantidad de Combustible</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput type="number" placeholder="Cantidad de Combustible" formControlName="cantidadCombustible" (keypress)="allowOnlyNumbers($event)" step="0.01" />
+                </mat-form-field>
+                <mat-error *ngIf="showRequiredMsgs && mantenimientoForm.get('cantidadCombustible')?.hasError('required')">
+                  La cantidad de combustible es obligatoria.
+                </mat-error>
+              </div>
+
+              <!-- Precio de Combustible -->
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-dollar-sign"></i>
+                  <span>Precio de Combustible</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput type="number" placeholder="Precio de Combustible" formControlName="precioCombustible" (keypress)="allowOnlyNumbers($event)" step="0.01" />
+                </mat-form-field>
+                <mat-error *ngIf="showRequiredMsgs && mantenimientoForm.get('precioCombustible')?.hasError('required')">
+                  El precio de combustible es obligatorio.
+                </mat-error>
+              </div>
+
+              <!-- Kilometraje -->
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-tachometer-alt"></i>
+                  <span>Kilometraje</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput type="number" placeholder="Kilometraje" formControlName="kilometraje" (keypress)="allowOnlyNumbers($event)" step="0.01" />
+                </mat-form-field>
+                <mat-error *ngIf="showRequiredMsgs && mantenimientoForm.get('kilometraje')?.hasError('required')">
+                  El kilometraje es obligatorio.
+                </mat-error>
+              </div>
+
+              <!-- Fecha y Hora -->
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-calendar-alt"></i>
+                  <span>Fecha y Hora</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput type="datetime-local" placeholder="Fecha y Hora" formControlName="fechaHora" step="60" />
+                </mat-form-field>
+                <mat-error *ngIf="showRequiredMsgs && mantenimientoForm.get('fechaHora')?.hasError('required')">
+                  La fecha y hora es obligatoria.
+                </mat-error>
+              </div>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="row g-3 mt-4">
+              <div class="col-12 d-flex justify-content-end gap-3">
+                <button mat-raised-button type="button" (click)="regresar()" [disabled]="loading">
+                  Cancelar
+                </button>
+                <button mat-raised-button color="primary" type="button" (click)="submit()" [disabled]="loading">
+                  <mat-icon *ngIf="!loading">save</mat-icon>
+                  {{ submitButton }}
+                </button>
+              </div>
+            </div>
+          </form>
+        </section>
+      </div>
+    </div>
+  </vex-page-layout-content>
+</vex-page-layout>

@@ -65,6 +65,26 @@
                 {{ r.data.fechaNacimiento | date: 'dd/MM/yyyy' }}
               </div>
             </dxi-column>
+            <dxi-column caption="Documentos" [width]="150" alignment="center" [allowSorting]="false"
+              [allowFiltering]="false" cellTemplate="documentos">
+            </dxi-column>
+            <div *dxTemplate="let f of 'documentos'">
+              <button class="btn-violet" [disabled]="!f?.data?.documentacion"
+                (click)="f?.data?.documentacion && irAVerDocumento(f.data.documentacion, 'Documentación Oficial', f.data)"
+                aria-label="Ver Documentación">
+                <i class="fa fa-file-pdf-o btn__icon"></i>
+              </button>
+            </div>
+            <dxi-column dataField="curp" caption="CURP" alignment="center"></dxi-column>
+            <dxi-column dataField="numeroSerie" caption="N° de Monedero" alignment="center"></dxi-column>
+            <dxi-column dataField="estadoSolicitud" caption="Estado Solicitud" alignment="center" cellTemplate="estadoSolicitud">
+              <div *dxTemplate="let f of 'estadoSolicitud'">
+                <span [ngClass]="f.data.estadoSolicitud === 1 ? 'badge-status activo' : 'badge-status inactivo'">
+                  {{ f.data.estadoSolicitudTexto }}
+                </span>
+              </div>
+            </dxi-column>
+            <dxi-column dataField="nombreCatPasajero" caption="Tipo Pasajero" alignment="center"></dxi-column>
             <dxi-column dataField="estatus" caption="Estatus" alignment="center" cellTemplate="est">
               <div *dxTemplate="let f of 'est'">
                 <span [ngClass]="f.data.estatus === 1 ? 'badge-status activo' : 'badge-status inactivo'">

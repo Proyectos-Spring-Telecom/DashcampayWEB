@@ -7,6 +7,8 @@ import CustomStore from 'devextreme/data/custom_store';
 import { lastValueFrom } from 'rxjs';
 import { AlertsService } from 'src/app/pages/pages/modal/alerts.service';
 import { DispositivosService } from 'src/app/pages/services/dispositivos.service';
+import { MatDialog } from '@angular/material/dialog';
+import { CambiarEstadoModalComponent, CambiarEstadoData } from '../cambiar-estado-modal/cambiar-estado-modal.component';
 
 @Component({
   selector: 'vex-lista-dispositivos',
@@ -54,9 +56,12 @@ export class ListaDispositivosComponent {
   public paginaActualData: any[] = [];
   public filtroActivo: string = '';
 
-  constructor(private disService: DispositivosService,
+  constructor(
+    private disService: DispositivosService,
     private alerts: AlertsService,
-    private route: Router,) {
+    private route: Router,
+    private dialog: MatDialog
+  ) {
     this.showFilterRow = true;
     this.showHeaderFilter = true;
   }
@@ -331,5 +336,46 @@ export class ListaDispositivosComponent {
 
   agregarValidador() {
     this.route.navigateByUrl('/administracion/validadores/agregar-validador')
+  }
+
+  intercambiar(rowData: any) {
+    const data: CambiarEstadoData = {
+      numeroSerie: rowData.numeroSerie || 'N/A',
+      estadoActual: rowData.estadoActual || 0,
+      tipoDispositivo: 'validador'
+    };
+
+    const dialogRef = this.dialog.open(CambiarEstadoModalComponent, {
+      width: '450px',
+      disableClose: true,
+      data: data
+    });
+
+    dialogRef.afterClosed().subscribe((nuevoEstado: number | undefined) => {
+      if (nuevoEstado !== undefined && nuevoEstado !== null) {
+        this.disService.actualizarEstado(rowData.id || rowData.Id, nuevoEstado).subscribe({
+          next: () => {
+            this.alerts.open({
+              type: 'success',
+              title: '¡Estado Actualizado!',
+              message: `El estado del dispositivo ha sido actualizado correctamente.`,
+              confirmText: 'Confirmar',
+              backdropClose: false
+            });
+            this.obtenerDispositivos();
+            this.dataGrid.instance.refresh();
+          },
+          error: (error) => {
+            this.alerts.open({
+              type: 'error',
+              title: '¡Ops!',
+              message: String(error),
+              confirmText: 'Confirmar',
+              backdropClose: false
+            });
+          }
+        });
+      }
+    });
   }
 }

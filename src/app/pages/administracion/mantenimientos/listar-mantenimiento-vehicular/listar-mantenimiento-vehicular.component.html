@@ -1,2 +1,155 @@
-<p>listar-mantenimiento-vehicular works!</p>
+<div class="px-6">
+  <div class="bg-app-bar appbar px-6 h-16 border-b sticky top-0 left-0 flex items-center z-10">
+    <div class="flex items-center">
+      <mat-icon svgIcon="mat:time_to_leave" class="mr-2"></mat-icon>
+      <span class="body-1">Administra y consulta el mantenimiento preventivo y correctivo de tus unidades: servicios, revisiones, talleres y estatus de cada vehículo.</span>
+    </div>
 
+    <div class="flex-grow"></div>
+
+    <div class="flex gap-3 actions-bar">
+      <button mat-raised-button color="primary" type="button" class="btn-soft textGenerico"
+        (click)="toggleExpandGroups()" matTooltip="Expandir / Contraer grupos">
+        <mat-icon svgIcon="mat:compare_arrows"></mat-icon>
+        <span class="btn-text">{{ autoExpandAllGroups ? 'Contraer' : 'Expandir' }}</span>
+      </button>
+
+      <button mat-raised-button color="accent" type="button" class="btn-soft textGenerico"
+        (click)="limpiarCampos()" matTooltip="Limpiar filtros">
+        <mat-icon svgIcon="mat:restore"></mat-icon>
+        <span class="btn-text">Limpiar</span>
+      </button>
+
+      <button (click)="agregarRegistro()" mat-raised-button color="warn" type="button"
+        class="btn-soft textGenerico" matTooltip="Agregar">
+        <mat-icon>add</mat-icon>
+        <span class="btn-text">Agregar</span>
+      </button>
+    </div>
+  </div>
+
+  <section class="mt-5 table-shell">
+    <dx-data-grid 
+      id="gridContainer" 
+      [columnHidingEnabled]="true" 
+      [showBorders]="true"
+      [showColumnLines]="true" 
+      [showRowLines]="true" 
+      [rowAlternationEnabled]="true"
+      [dataSource]="listaMantenimientos" 
+      [keyExpr]="'id'" 
+      [width]="'100%'"
+      (onOptionChanged)="onGridOptionChanged($event)">
+      <dxo-search-panel [visible]="true" [width]="200" placeholder="Buscar..."></dxo-search-panel>
+      <dxo-paging [pageSize]="20"></dxo-paging>
+      <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[20]" [showInfo]="true"></dxo-pager>
+      <dxo-group-panel [emptyPanelText]="mensajeAgrupar" [visible]="true"></dxo-group-panel>
+      <dxo-filter-row [visible]="showFilterRow"></dxo-filter-row>
+      <dxo-header-filter [visible]="showHeaderFilter"></dxo-header-filter>
+      <dxo-grouping [autoExpandAll]="autoExpandAllGroups"></dxo-grouping>
+      
+      <dxi-column caption="Acciones" cellTemplate="Acciones" alignment="center" [width]="250"></dxi-column>
+      
+      <dxi-column caption="Nota de Servicio" cellTemplate="notaServicio" alignment="center" [width]="150" [allowSorting]="false" [allowFiltering]="false"></dxi-column>
+      
+      <dxi-column dataField="imagenVehiculo" caption="Imagen" cellTemplate="imagen" alignment="center" [width]="150"></dxi-column>
+      
+      <dxi-column dataField="placaVehiculo" caption="Instalación" alignment="center" [width]="150"></dxi-column>
+      
+      <dxi-column dataField="nombreEstatus" caption="Estatus Vehicular" alignment="center" cellTemplate="estatusVehicular" [width]="250"></dxi-column>
+      
+      <dxi-column dataField="servicioDescripcion" caption="Servicio" alignment="center" [width]="200"></dxi-column>
+      
+      <dxi-column dataField="fechaInicio" caption="Fecha Inicio" alignment="center" cellTemplate="fechaInicio" [width]="180"></dxi-column>
+      
+      <dxi-column dataField="fechaFinal" caption="Fecha Final" alignment="center" cellTemplate="fechaFinal" [width]="180"></dxi-column>
+      
+      <dxi-column dataField="nombreTaller" caption="Taller" alignment="center" [width]="150"></dxi-column>
+      
+      <dxi-column dataField="costo" caption="Costo" alignment="center" [width]="120" dataType="number" [format]="{ type: 'currency', currency: 'MXN', precision: 2 }"></dxi-column>
+      
+      <dxi-column dataField="encargado" caption="Encargado" alignment="center" [width]="150"></dxi-column>
+      
+      <dxi-column dataField="fhRegistro" caption="Fecha Registro" alignment="center" cellTemplate="fechaRegistro" [width]="180"></dxi-column>
+      
+      <dxi-column dataField="estatus" caption="Estatus" alignment="center" cellTemplate="estatus" [width]="150"></dxi-column>
+      
+      <div *dxTemplate="let row of 'Acciones'" class="d-flex gap-3 justify-content-center">
+        <div>
+          <button class="btn-edit" (click)="editarRegistro(row.data.id)">
+            <mat-icon class="btn__icon">edit</mat-icon>
+          </button>
+        </div>
+        <div>
+          <button 
+            *ngIf="row.data.estatus === 0" 
+            class="btn-active" 
+            (click)="activar(row.data)" 
+            matTooltip="Activar">
+            <mat-icon class="btn__icon">check_circle</mat-icon>
+          </button>
+          <button 
+            *ngIf="row.data.estatus === 1" 
+            class="btn-desactive" 
+            (click)="desactivar(row.data)" 
+            matTooltip="Desactivar">
+            <mat-icon class="btn__icon">block</mat-icon>
+          </button>
+        </div>
+        <div>
+          <button class="btn-active" (click)="refrescarRegistro(row.data)" matTooltip="Cambiar Estado">
+            <mat-icon class="btn__icon">swap_horiz</mat-icon>
+          </button>
+        </div>
+      </div>
+      
+      <div *dxTemplate="let f of 'notaServicio'">
+        <button class="btn-violet" [disabled]="!f?.data?.notaServicio"
+          (click)="f?.data?.notaServicio && verNotaServicio(f.data.notaServicio, 'Nota de Servicio')"
+          aria-label="Ver Nota de Servicio" matTooltip="Observar">
+          <i class="fa fa-file-pdf-o btn__icon"></i>
+        </button>
+      </div>
+      
+      <div *dxTemplate="let data of 'imagen'"
+        style="display: flex; align-items: center; justify-content: center;">
+        <img *ngIf="data.value" style="max-width: 80px; max-height: 80px; border-radius: 4px;" [src]="data.value" />
+        <img *ngIf="data.value == null" style="max-width: 80px; max-height: 80px; border-radius: 4px;"
+          src="https://dashcamsys.s3.us-east-2.amazonaws.com/logos/no-image.jpeg" />
+      </div>
+      
+      <div *dxTemplate="let f of 'estatusVehicular'">
+        <span 
+          *ngIf="f.data?.idEstatus != null" 
+          class="badge-estado-mantenimiento"
+          [ngClass]="{
+            'estado-abierto': f.data.idEstatus === EstadoMantenimientoVehicular.Abierto,
+            'estado-pendiente': f.data.idEstatus === EstadoMantenimientoVehicular.Pendiente,
+            'estado-cerrado': f.data.idEstatus === EstadoMantenimientoVehicular.Cerrado,
+            'estado-cancelado': f.data.idEstatus === EstadoMantenimientoVehicular.Cancelado
+          }">
+          {{ EstadoMantenimientoVehicularLabels[f.data.idEstatus] || f.data?.nombreEstatus || '—' }}
+        </span>
+        <span *ngIf="f.data?.idEstatus == null && !f.data?.nombreEstatus && !f.value">—</span>
+      </div>
+      
+      <div *dxTemplate="let row of 'fechaInicio'">
+        {{ row.data.fechaInicio | date: 'dd/MM/yyyy HH:mm' }}
+      </div>
+      
+      <div *dxTemplate="let row of 'fechaFinal'">
+        {{ row.data.fechaFinal | date: 'dd/MM/yyyy HH:mm' }}
+      </div>
+      
+      <div *dxTemplate="let row of 'fechaRegistro'">
+        {{ row.data.fhRegistro | date: 'dd/MM/yyyy HH:mm' }}
+      </div>
+      
+      <div *dxTemplate="let f of 'estatus'">
+        <span [ngClass]="f.data.estatus === 1 ? 'badge-status activo' : 'badge-status inactivo'">
+          {{ f.data.estatus === 1 ? 'Activo' : 'Inactivo' }}
+        </span>
+      </div>
+    </dx-data-grid>
+  </section>
+</div>

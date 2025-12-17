@@ -37,6 +37,45 @@
           </div>
         </div>
 
+        <!-- Filtros de Fecha -->
+        <div class="container-fluid py-3 border-b">
+          <form [formGroup]="filtroForm" class="row g-3">
+            <div class="col-12 col-md-4 d-flex flex-column">
+              <label class="form-label">
+                <i class="fa fa-calendar"></i>
+                <span>Fecha Inicio</span>
+              </label>
+              <mat-form-field appearance="fill" class="w-100 filtro-date-field">
+                <input matInput [matDatepicker]="pickerInicio" formControlName="fechaInicio" placeholder="Seleccione fecha inicio">
+                <mat-datepicker-toggle matSuffix [for]="pickerInicio"></mat-datepicker-toggle>
+                <mat-datepicker #pickerInicio></mat-datepicker>
+              </mat-form-field>
+            </div>
+            <div class="col-12 col-md-4 d-flex flex-column">
+              <label class="form-label">
+                <i class="fa fa-calendar"></i>
+                <span>Fecha Fin</span>
+              </label>
+              <mat-form-field appearance="fill" class="w-100 filtro-date-field">
+                <input matInput [matDatepicker]="pickerFin" formControlName="fechaFin" placeholder="Seleccione fecha fin">
+                <mat-datepicker-toggle matSuffix [for]="pickerFin"></mat-datepicker-toggle>
+                <mat-datepicker #pickerFin></mat-datepicker>
+              </mat-form-field>
+            </div>
+            <div class="col-12 col-md-4 d-flex flex-column">
+              <label class="form-label" style="visibility: hidden;">
+                <span>Buscar</span>
+              </label>
+              <div class="filtro-button-wrapper">
+                <button type="button" mat-raised-button color="primary" class="btn-soft textGenerico" (click)="buscar()" matTooltip="Buscar">
+                  <mat-icon svgIcon="mat:search"></mat-icon>
+                  <span class="btn-text">Buscar</span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
         <section class="mt-5 table-shell">
           <dx-data-grid #gridContainer id="gridContainer" [columnHidingEnabled]="true" [showBorders]="true"
             [showColumnLines]="true" [showRowLines]="true" [rowAlternationEnabled]="true"
@@ -55,9 +94,16 @@
             <dxo-header-filter [visible]="showHeaderFilter"></dxo-header-filter>
             <dxo-grouping [autoExpandAll]="true"></dxo-grouping>
             <dxi-column caption="Acciones" cellTemplate="Acciones" alignment="center" [width]="200"></dxi-column>
-            <dxi-column dataField="fhRegistro" caption="Fecha" alignment="center" cellTemplate="fecActi">
+            <dxi-column dataField="fechaHoraInicio" caption="Fecha" alignment="center" cellTemplate="fecActi">
               <div *dxTemplate="let a of 'fecActi'">
-                {{ a.data.fhRegistro | date:'dd/MM/yyyy HH:mm' : '+0000' }}
+                <span *ngIf="a.data.fechaHoraInicio">
+                  {{ a.data.fechaHoraInicio | date:'dd/MM/yyyy HH:mm' : '+0000' }}
+                </span>
+                <span *ngIf="a.data.fechaHoraInicio && a.data.fechaHoraFinal" class="mx-1">—</span>
+                <span *ngIf="a.data.fechaHoraFinal">
+                  {{ a.data.fechaHoraFinal | date:'dd/MM/yyyy HH:mm' : '+0000' }}
+                </span>
+                <span *ngIf="!a.data.fechaHoraInicio && !a.data.fechaHoraFinal">—</span>
               </div>
             </dxi-column>
 
@@ -81,6 +127,7 @@
               </div>
             </dxi-column>
             <dxi-column dataField="numeroSerieMonedero" caption="N° Serie de Monedero" alignment="center"></dxi-column>
+            <dxi-column dataField="numeroSerieValidador" caption="N° Serie de Validador" alignment="center"></dxi-column>
             <dxi-column dataField="pasajero" caption="Pasajero" alignment="center"
               [customizeText]="customizePasajeroText">
             </dxi-column>
@@ -125,7 +172,17 @@
         <div class="detalle-item">
           <div class="detalle-label">Fecha</div>
           <div class="detalle-value">
-            {{ selectedTransaccion?.fecha | date:'dd/MM/yyyy HH:mm' }}
+            <span *ngIf="selectedTransaccion?.fechaHoraInicio">
+              {{ selectedTransaccion?.fechaHoraInicio | date:'dd/MM/yyyy HH:mm' }}
+            </span>
+            <span *ngIf="selectedTransaccion?.fechaHoraInicio && selectedTransaccion?.fechaHoraFinal" class="mx-1">—</span>
+            <span *ngIf="selectedTransaccion?.fechaHoraFinal">
+              {{ selectedTransaccion?.fechaHoraFinal | date:'dd/MM/yyyy HH:mm' }}
+            </span>
+            <span *ngIf="!selectedTransaccion?.fechaHoraInicio && !selectedTransaccion?.fechaHoraFinal && selectedTransaccion?.fecha">
+              {{ selectedTransaccion?.fecha | date:'dd/MM/yyyy HH:mm' }}
+            </span>
+            <span *ngIf="!selectedTransaccion?.fechaHoraInicio && !selectedTransaccion?.fechaHoraFinal && !selectedTransaccion?.fecha">—</span>
           </div>
         </div>
         <div class="detalle-item">

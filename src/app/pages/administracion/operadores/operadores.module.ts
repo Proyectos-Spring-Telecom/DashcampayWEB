@@ -24,6 +24,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';   // <-- FALT
 import { MatSelectModule } from '@angular/material/select';         // <-- FALTA
 import { MatOptionModule } from '@angular/material/core';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle'; // <-- FALTA
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
 import { DxDataGridModule } from 'devextreme-angular';
 import { ListaOperadoresComponent } from './lista-operadores/lista-operadores.component';
 import { AgregarOperadorComponent } from './agregar-operador/agregar-operador.component';
@@ -62,6 +64,8 @@ import { VerDocumentoOperadorComponent } from './ver-documento-operador/ver-docu
     MatSelectModule,       // <-- agregado
     MatOptionModule,
     MatSlideToggleModule,  // <-- agregado
+    MatDatepickerModule,
+    MatNativeDateModule,
     DxDataGridModule,
     MatProgressBarModule
   ]

@@ -19,6 +19,7 @@ import { MonederosServices } from 'src/app/pages/services/monederos.service';
 import { Router } from '@angular/router';
 import CustomStore from 'devextreme/data/custom_store';
 import { lastValueFrom } from 'rxjs';
+import { CambiarEstadoMonederoModalComponent, CambiarEstadoMonederoData } from '../cambiar-estado-monedero-modal/cambiar-estado-monedero-modal.component';
 
 @Component({
   selector: 'vex-lista-monederos',
@@ -207,6 +208,48 @@ export class ListaMonederosComponent implements OnInit {
     this.isGrouped = false;
     this.obtenerMonederos();
     this.dataGrid.instance.refresh();
+  }
+
+  editarMonedero(idMonedero: number) {
+    this.route.navigateByUrl(`/administracion/monederos/editar-monedero/${idMonedero}`);
+  }
+
+  cambiarEstado(rowData: any) {
+    const data: CambiarEstadoMonederoData = {
+      numeroSerie: rowData.numeroSerie || 'N/A',
+      idMonedero: rowData.id || 0
+    };
+    const dialogRef = this.dialog.open(CambiarEstadoMonederoModalComponent, {
+      width: '450px',
+      disableClose: true,
+      data: data
+    });
+    dialogRef.afterClosed().subscribe((idTipoPasajero: number | undefined) => {
+      if (idTipoPasajero !== undefined && idTipoPasajero !== null) {
+        this.moneService.actualizarTipoPasajero(rowData.id, idTipoPasajero).subscribe({
+          next: () => {
+            this.alerts.open({
+              type: 'success',
+              title: '¡Operación Exitosa!',
+              message: 'El tipo de pasajero del monedero se actualizó correctamente.',
+              confirmText: 'Confirmar',
+              backdropClose: false,
+            });
+            this.obtenerMonederos();
+            this.dataGrid.instance.refresh();
+          },
+          error: (error) => {
+            this.alerts.open({
+              type: 'error',
+              title: '¡Ops!',
+              message: 'Ocurrió un error al actualizar el tipo de pasajero del monedero.',
+              confirmText: 'Confirmar',
+              backdropClose: false,
+            });
+          }
+        });
+      }
+    });
   }
 
   toggleExpandGroups() {

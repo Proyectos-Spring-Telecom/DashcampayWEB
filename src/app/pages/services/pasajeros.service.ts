@@ -80,4 +80,10 @@ export class PasajerosService {
   datosUsuarioPasajero(idUsuario: number): Observable<any> {
     return this.http.get<any>(`${environment.API_SECURITY}/pasajeros/main/${idUsuario}`);
   }
+
+  obtenerTiposPasajero(): Observable<any> {
+    return this.http.get(`${environment.API_SECURITY}/catpasajero/list`).pipe(
+      catchError(error => throwError(() => error))
+    );
+  }
 }

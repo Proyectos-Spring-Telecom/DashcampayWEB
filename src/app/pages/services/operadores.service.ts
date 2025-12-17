@@ -42,4 +42,22 @@ export class OperadoresService {
       catchError(error => throwError(() => error))
     );
   }
+
+  obtenerCategoriasLicencia(): Observable<any> {
+    return this.http.get(`${environment.API_SECURITY}/catcategorialicencia/list`).pipe(
+      catchError(error => throwError(() => error))
+    );
+  }
+
+  obtenerTiposLicencia(): Observable<any> {
+    return this.http.get(`${environment.API_SECURITY}/cattipolicencia/list`).pipe(
+      catchError(error => throwError(() => error))
+    );
+  }
+
+  agregarLicencia(data: FormData): Observable<any> {
+    return this.http.post(`${environment.API_SECURITY}/licencias`, data).pipe(
+      catchError(error => throwError(() => error))
+    );
+  }
 }

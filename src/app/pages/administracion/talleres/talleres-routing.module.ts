@@ -13,6 +13,10 @@ const routes: Routes = [
     component: AgregarTallerComponent
   },
   {
+    path: 'registrar-taller',
+    component: AgregarTallerComponent
+  },
+  {
     path: 'editar-taller/:idTaller',
     component: AgregarTallerComponent,
   },

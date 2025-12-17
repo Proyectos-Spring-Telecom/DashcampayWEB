@@ -50,4 +50,12 @@ export class MonederosServices {
       catchError(error => throwError(() => error))
     );
   }
+
+  actualizarTipoPasajero(id: number, idTipoPasajero: number): Observable<any> {
+    const url = `${this.apiUrl}/tipo/pasajero/${id}`;
+    const body = { idTipoPasajero };
+    return this.http.patch(url, body).pipe(
+      catchError(error => throwError(() => error))
+    );
+  }
 }

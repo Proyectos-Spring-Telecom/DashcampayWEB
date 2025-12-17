@@ -8,6 +8,9 @@ import CustomStore from 'devextreme/data/custom_store';
 import { lastValueFrom } from 'rxjs';
 import { AlertsService } from 'src/app/pages/pages/modal/alerts.service';
 import { OperadoresService } from 'src/app/pages/services/operadores.service';
+import { MatDialog } from '@angular/material/dialog';
+import { AgregarLicenciaModalComponent, AgregarLicenciaData } from '../agregar-licencia-modal/agregar-licencia-modal.component';
+import { VerLicenciaModalComponent, VerLicenciaData } from '../ver-licencia-modal/ver-licencia-modal.component';
 
 @Component({
   selector: 'vex-lista-operadores',
@@ -43,6 +46,7 @@ export class ListaOperadoresComponent implements OnInit {
     private router: Router, private route: ActivatedRoute,
     private sanitizer: DomSanitizer,
     private alerts: AlertsService,
+    private dialog: MatDialog
   ) {
     this.showFilterRow = true;
     this.showHeaderFilter = true;
@@ -115,17 +119,24 @@ export class ListaOperadoresComponent implements OnInit {
                 item?.apellidoMaternoUsuario || ''
               ].filter(Boolean).join(' ');
 
-              const EstatusNumber = Number(item?.estatus);
+              const EstatusNumber = Number(item?.estatusOperador ?? item?.estatus);
               const EstatusTexto = Number.isFinite(EstatusNumber)
                 ? (EstatusNumber === 1 ? 'Activo' : 'Inactivo')
                 : '';
 
+              // Normalizar array de licencias
+              const licencias = Array.isArray(item?.licencias) ? item.licencias : (Array.isArray(item?.Licencias) ? item.Licencias : []);
+              
               return {
                 ...item,
 
                 // claves consistentes para el grid
                 id: Number.isFinite(idNum) ? idNum : 0,
                 Id: Number.isFinite(idNum) ? idNum : 0, // por si tu grid usa keyExpr="Id"
+
+                // Asegurar que estatus esté correctamente mapeado (1 = Activo, 0 = Inactivo)
+                estatus: Number.isFinite(EstatusNumber) ? EstatusNumber : (item?.estatusOperador != null ? Number(item.estatusOperador) : (item?.estatus != null ? Number(item.estatus) : 1)),
+                estatusOperador: Number.isFinite(EstatusNumber) ? EstatusNumber : (item?.estatusOperador != null ? Number(item.estatusOperador) : (item?.estatus != null ? Number(item.estatus) : 1)),
 
                 // ==== Campos derivados para columnas con template (sin tocar HTML) ====
                 NombreCompleto,                                   // para "Nombre"
@@ -136,6 +147,20 @@ export class ListaOperadoresComponent implements OnInit {
                 DocumentoIdentificacionTexto: item?.identificacion ?? '',
                 DocumentoComprobanteTexto: item?.comprobanteDomicilio ?? '',
                 DocumentoAntecedentesTexto: item?.antecedentesNoPenales ?? item?.antecedentesPenales ?? '',
+
+                // Array de licencias normalizado
+                licencias: licencias.map((lic: any) => ({
+                  ...lic,
+                  id: Number(lic?.id ?? lic?.Id ?? lic?.ID ?? 0),
+                  idTipoLicencia: Number(lic?.idTipoLicencia ?? lic?.IdTipoLicencia ?? lic?.idCatTipoLicencia ?? lic?.IdCatTipoLicencia ?? 0),
+                  idCategoriaLicencia: Number(lic?.idCategoriaLicencia ?? lic?.IdCategoriaLicencia ?? 0),
+                  numeroLicencia: lic?.numeroLicencia ?? lic?.NumeroLicencia ?? lic?.numero ?? '',
+                  fechaExpedicion: lic?.fechaExpedicion ?? lic?.FechaExpedicion ?? lic?.fechaExpedicion ?? null,
+                  fechaVencimiento: lic?.fechaVencimiento ?? lic?.FechaVencimiento ?? lic?.fechaVencimiento ?? null,
+                  licencia: lic?.licencia ?? lic?.Licencia ?? lic?.url ?? '',
+                  nombreTipoLicencia: lic?.tipoLicencia?.nombreCatTipoLicencia ?? lic?.tipoLicencia?.NombreCatTipoLicencia ?? lic?.tipoLicencia?.nombre ?? lic?.tipoLicencia?.Nombre ?? '',
+                  nombreCategoriaLicencia: lic?.categoriaLicencia?.nombreCategoriaLicencia ?? lic?.categoriaLicencia?.NombreCategoriaLicencia ?? lic?.categoriaLicencia?.nombre ?? lic?.categoriaLicencia?.Nombre ?? ''
+                })),
 
                 // otros mapeos que ya traías
                 tipoPersona: item?.tipoPersona == 1 ? 'Físico' : item?.tipoPersona == 2 ? 'Moral' : 'Desconocido',
@@ -265,8 +290,20 @@ export class ListaOperadoresComponent implements OnInit {
           confirmText: 'Confirmar',
           backdropClose: false,
         });
-        this.obtenerOperadores();
-        this.dataGrid.instance.refresh();
+        // Actualizar el estatus directamente en los datos locales
+        if (rowData) {
+          rowData.estatusOperador = 1;
+          rowData.estatus = 1;
+        }
+        // Forzar recarga completa del grid
+        if (this.dataGrid?.instance) {
+          this.dataGrid.instance.refresh();
+          // También recargar el CustomStore
+          setTimeout(() => {
+            this.obtenerOperadores();
+            this.dataGrid.instance.refresh();
+          }, 100);
+        }
       },
       (error) => {
         this.alerts.open({
@@ -284,7 +321,7 @@ export class ListaOperadoresComponent implements OnInit {
     const res = await this.alerts.open({
       type: 'warning',
       title: '¡Desactivar!',
-      message: `¿Está seguro que requiere desactivar el operador: <br> <strong>${rowData.nombreUsuario} ${rowData.apellidoPaternoUsuario || ' '} ${rowData.apellidoPaternoUsuario || ' '}</strong>?`,
+      message: `¿Está seguro que requiere desactivar el operador: <br> <strong>${rowData.nombreUsuario} ${rowData.apellidoPaternoUsuario || ' '} ${rowData.apellidoMaternoUsuario || ' '}</strong>?`,
       showCancel: true,
       confirmText: 'Confirmar',
       cancelText: 'Cancelar',
@@ -302,8 +339,20 @@ export class ListaOperadoresComponent implements OnInit {
           confirmText: 'Confirmar',
           backdropClose: false,
         });
-        this.obtenerOperadores();
-        this.dataGrid.instance.refresh();
+        // Actualizar el estatus directamente en los datos locales
+        if (rowData) {
+          rowData.estatusOperador = 0;
+          rowData.estatus = 0;
+        }
+        // Forzar recarga completa del grid
+        if (this.dataGrid?.instance) {
+          this.dataGrid.instance.refresh();
+          // También recargar el CustomStore
+          setTimeout(() => {
+            this.obtenerOperadores();
+            this.dataGrid.instance.refresh();
+          }, 100);
+        }
       },
       (error) => {
         this.alerts.open({
@@ -331,57 +380,32 @@ export class ListaOperadoresComponent implements OnInit {
   pdfError = false;
   pdfErrorMsg = '';
 
-  async previsualizar(url?: string, titulo?: string, _row?: any) {
-    this.pdfTitle = titulo || 'Documento';
-    this.pdfRawUrl = (url || '').trim() || null;
-    this.pdfUrlSafe = null;
-    this.pdfLoading = true;
-    this.pdfLoaded = false;
-    this.pdfError = false;
-    this.pdfErrorMsg = '';
-    this.pdfPopupVisible = true;
-    this.pdfPopupWidth = Math.min(Math.floor(window.innerWidth * 0.95), 900);
-
-    if (!this.pdfRawUrl) {
-      this.pdfError = true;
-      this.pdfLoading = false;
-      this.pdfErrorMsg = 'Este registro no tiene un PDF asignado.';
+  previsualizar(url?: string, titulo?: string, _row?: any) {
+    const urlFinal = (url || '').trim();
+    if (!urlFinal) {
+      this.alerts.open({
+        type: 'error',
+        title: 'Error',
+        message: 'No hay URL de documento disponible.',
+        confirmText: 'Entendido'
+      });
       return;
     }
 
-    try {
-      const head = await fetch(this.pdfRawUrl, { method: 'HEAD', mode: 'cors' });
-      if (!head.ok) {
-        this.pdfError = true;
-        this.pdfErrorMsg = `No se pudo acceder al archivo (HTTP ${head.status}).`;
-        this.pdfLoading = false;
-        return;
-      }
-      const ct = head.headers.get('content-type') || '';
-      if (!ct.toLowerCase().includes('pdf')) {
-        this.pdfError = true;
-        this.pdfErrorMsg = 'El recurso no es un archivo PDF.';
-        this.pdfLoading = false;
-        return;
-      }
-    } catch (e) {
-      this.pdfError = true;
-      this.pdfErrorMsg = 'El navegador bloqueó la previsualización (CORS). Intenta Abrir o Descargar.';
-      this.pdfLoading = false;
-      return;
-    }
+    const data: VerLicenciaData = {
+      url: urlFinal,
+      titulo: titulo || 'Licencia de Conducir'
+    };
 
-    const viewerParams = '#toolbar=0&navpanes=0';
-    const finalUrl = this.pdfRawUrl.includes('#') ? this.pdfRawUrl : this.pdfRawUrl + viewerParams;
-    this.pdfUrlSafe = this.sanitizer.bypassSecurityTrustResourceUrl(finalUrl);
-
-    setTimeout(() => {
-      if (!this.pdfLoaded && !this.pdfError) {
-        this.pdfError = true;
-        this.pdfLoading = false;
-        this.pdfErrorMsg = 'El visor tardó demasiado en cargar.';
-      }
-    }, 4000);
+    this.dialog.open(VerLicenciaModalComponent, {
+      width: '80vw',
+      maxWidth: '1200px',
+      height: '80vh',
+      maxHeight: '800px',
+      disableClose: false,
+      data: data,
+      panelClass: 'ver-licencia-dialog'
+    });
   }
 
   onPdfLoaded() {
@@ -442,5 +466,112 @@ export class ListaOperadoresComponent implements OnInit {
       this.autoExpandAllGroups = !this.autoExpandAllGroups;
       this.dataGrid.instance.refresh();
     }
+  }
+
+  agregarLicencia(rowData: any) {
+    const nombreCompleto = rowData.NombreCompleto || 
+      `${rowData.nombreUsuario || ''} ${rowData.apellidoPaternoUsuario || ''} ${rowData.apellidoMaternoUsuario || ''}`.trim() ||
+      'Operador';
+
+    const data: AgregarLicenciaData = {
+      idOperador: rowData.id,
+      nombreOperador: nombreCompleto
+    };
+
+    const dialogRef = this.dialog.open(AgregarLicenciaModalComponent, {
+      width: '900px',
+      maxWidth: '95vw',
+      disableClose: true,
+      data: data
+    });
+
+    dialogRef.afterClosed().subscribe((result: boolean) => {
+      if (result) {
+        // Refrescar el grid si se agregó la licencia exitosamente
+        this.obtenerOperadores();
+        this.dataGrid.instance.refresh();
+      }
+    });
+  }
+
+  verLicencia(url: string) {
+    if (!url) return;
+    window.open(url, '_blank');
+  }
+
+  getVencimientoTexto(fechaVencimiento: string | null): string {
+    if (!fechaVencimiento) return 'Fecha no disponible';
+    
+    const fechaVenc = new Date(fechaVencimiento);
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    fechaVenc.setHours(0, 0, 0, 0);
+    
+    const diffTime = fechaVenc.getTime() - hoy.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) {
+      return `Venció hace ${Math.abs(diffDays)} ${Math.abs(diffDays) === 1 ? 'día' : 'días'}`;
+    } else if (diffDays === 0) {
+      return 'Vence hoy';
+    } else if (diffDays === 1) {
+      return 'Vence mañana';
+    } else {
+      return `Vence en ${diffDays} días`;
+    }
+  }
+
+  getVencimientoClass(fechaVencimiento: string | null): string {
+    if (!fechaVencimiento) return '';
+    
+    const fechaVenc = new Date(fechaVencimiento);
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    fechaVenc.setHours(0, 0, 0, 0);
+    
+    const diffTime = fechaVenc.getTime() - hoy.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) {
+      return 'vencido';
+    } else if (diffDays <= 30) {
+      return 'por-vencer';
+    } else {
+      return 'vigente';
+    }
+  }
+
+  toDateOnly(dateStr: string | null | undefined): Date | null {
+    if (!dateStr) return null;
+    try {
+      const d = new Date(dateStr);
+      d.setHours(0, 0, 0, 0);
+      return d;
+    } catch {
+      return null;
+    }
+  }
+
+  vigenciaClase(lic: any): string {
+    const venc = this.toDateOnly(lic?.fechaVencimiento);
+    if (!venc) return 'vig-verde';
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const diffMs = venc.getTime() - hoy.getTime();
+    const dias = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    if (dias <= 7) return 'vig-rojo';
+    if (dias <= 30) return 'vig-amarillo';
+    return 'vig-verde';
+  }
+
+  validLicencias(licencias: any[] | null | undefined): any[] | null {
+    if (!Array.isArray(licencias) || licencias.length === 0) {
+      return null;
+    }
+    return licencias.filter((lic: any) => lic != null);
+  }
+
+  licenciaDiasLabel(lic: any): string {
+    return this.getVencimientoTexto(lic?.fechaVencimiento);
   }
 }

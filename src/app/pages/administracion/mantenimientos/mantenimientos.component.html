@@ -1,0 +1,55 @@
+<vex-page-layout @fadeInRight>
+  <vex-page-layout-content [class.container]="false" [class.px-6]="true" class="-mt-6">
+    <div class="card mt-4">
+      <div class="dashboard-lite p-4">
+        <!-- Breadcrumb Section -->
+        <div class="bg-app-bar appbar px-6 h-16 border-b sticky top-0 left-0 flex items-center z-10">
+          <nav class="breadcrumb-simple" aria-label="Ruta de navegación">
+            <a routerLink="/administracion" class="crumb-link">
+              <mat-icon inline>home</mat-icon>
+              Administración
+            </a>
+            <span class="sep">/</span>
+            <span class="crumb-current" aria-current="page">Gestión Vehícular</span>
+          </nav>
+        </div>
+
+        <!-- Header Section -->
+        <div class="px-6 pt-4 pb-2 bg-foreground shadow-b">
+          <h1 class="display-1 mt-0 mb-0 text-white">Gestión Vehícular</h1>
+        </div>
+
+        <!-- Tabs Navigation -->
+        <div class="px-6 pt-2 pb-2 bg-foreground">
+          <div class="flex gap-4">
+            <div
+              *ngFor="let tab of tabs"
+              (click)="setActiveTab(tab.id, tab.route)"
+              [class.active-tab]="activeTab === tab.id"
+              class="tab-item flex-1 cursor-pointer rounded-lg border-2 transition-all duration-200 p-4"
+              [class.inactive-tab]="activeTab !== tab.id">
+              <div class="flex items-center">
+                <mat-icon
+                  [svgIcon]="tab.icon"
+                  class="mr-3 text-2xl"
+                  [class.active-icon]="activeTab === tab.id"
+                  [class.inactive-icon]="activeTab !== tab.id"></mat-icon>
+                <span
+                  class="body-1"
+                  [class.active-text]="activeTab === tab.id"
+                  [class.inactive-text]="activeTab !== tab.id">
+                  {{ tab.label }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="mt-4">
+          <router-outlet></router-outlet>
+        </div>
+      </div>
+    </div>
+  </vex-page-layout-content>
+</vex-page-layout>

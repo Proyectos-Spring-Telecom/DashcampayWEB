@@ -24,6 +24,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';   // <-- FALT
 import { MatSelectModule } from '@angular/material/select';         // <-- FALTA
 import { MatOptionModule } from '@angular/material/core';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle'; // <-- FALTA
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
 import { DxDataGridModule } from 'devextreme-angular';
 import { ListaVehiculosComponent } from './lista-vehiculos/lista-vehiculos.component';
 import { AgregarVehiculoComponent } from './agregar-vehiculo/agregar-vehiculo.component';
@@ -60,6 +62,8 @@ import { VerDocumentoVehiculoComponent } from './ver-documento-vehiculo/ver-docu
     MatSelectModule,       // <-- agregado
     MatOptionModule,
     MatSlideToggleModule,  // <-- agregado
+    MatDatepickerModule,
+    MatNativeDateModule,
     DxDataGridModule,
     MatProgressBarModule
   ]

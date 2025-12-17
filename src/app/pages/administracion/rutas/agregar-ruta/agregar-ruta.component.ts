@@ -28,6 +28,7 @@ export class AgregarRutaComponent implements OnInit, OnDestroy {
   fin?: google.maps.LatLngLiteral;
   nombreInicio: string | null = null;
   nombreFin: string | null = null;
+  nombreClienteSeleccionado: string | null = null;
 
   private map!: google.maps.Map;
   private inicioMarker?: google.maps.Marker;
@@ -55,6 +56,16 @@ export class AgregarRutaComponent implements OnInit, OnDestroy {
     });
     this.obtenerRegiones();
     this.loadGoogleMaps().then(() => this.initMap()).catch(err => console.error('Error cargando Google Maps:', err));
+    
+    // Suscribirse a cambios en idRegion para actualizar nombreClienteSeleccionado
+    this.rutaForm.get('idRegion')?.valueChanges.subscribe((idRegion) => {
+      if (idRegion && this.listaRegiones) {
+        const zonaSeleccionada = this.listaRegiones.find((z: any) => z.id === idRegion);
+        this.nombreClienteSeleccionado = zonaSeleccionada?.nombreCliente || null;
+      } else {
+        this.nombreClienteSeleccionado = null;
+      }
+    });
   }
 
   ngOnDestroy(): void {

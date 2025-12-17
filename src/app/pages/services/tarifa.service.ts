@@ -43,4 +43,10 @@ export class TarifasService {
         );
     }
 
+    obtenerTiposTarifa(): Observable<any> {
+        return this.http.get(`${environment.API_SECURITY}/cat-tipo-tarifa`).pipe(
+            catchError(error => throwError(() => error))
+        );
+    }
+
 }

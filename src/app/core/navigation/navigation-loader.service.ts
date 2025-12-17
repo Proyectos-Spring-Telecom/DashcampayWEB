@@ -68,6 +68,12 @@ export class NavigationLoaderService {
           },
           {
             type: 'link',
+            label: 'Tipos de Pasajero',
+            route: '/administracion/tipos-pasajero',
+            icon: 'mat:category',
+          },
+          {
+            type: 'link',
             label: 'Punto de Venta',
             route: '/administracion/punto-venta',
             icon: 'mat:storefront',
@@ -143,6 +149,36 @@ export class NavigationLoaderService {
             label: 'Perfil Pasajero',
             route: '/administracion/perfil-pasajero',
             icon: 'mat:description'
+          }
+        ]
+      },
+      {
+        type: 'subheading',
+        label: 'Gestión Vehícular',
+        children: [
+          {
+            type: 'link',
+            label: 'Mantenimiento',
+            route: '/administracion/mantenimientos',
+            icon: 'mat:build'
+          },
+          {
+            type: 'link',
+            label: 'Verificaciones',
+            route: '/administracion/verificaciones',
+            icon: 'mat:verified_user'
+          },
+          {
+            type: 'link',
+            label: 'Incidentes',
+            route: '/administracion/incidentes',
+            icon: 'mat:warning'
+          },
+          {
+            type: 'link',
+            label: 'Talleres',
+            route: '/administracion/talleres',
+            icon: 'mat:garage'
           }
         ]
       },

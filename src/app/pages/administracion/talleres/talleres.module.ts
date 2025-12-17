@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 
 import { TalleresRoutingModule } from './talleres-routing.module';
 import { ListaTalleresComponent } from './lista-talleres/lista-talleres.component';
@@ -37,6 +38,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
   ],
   imports: [
     CommonModule,
+    RouterModule,
     TalleresRoutingModule,
     // Vex layout
     VexPageLayoutComponent,

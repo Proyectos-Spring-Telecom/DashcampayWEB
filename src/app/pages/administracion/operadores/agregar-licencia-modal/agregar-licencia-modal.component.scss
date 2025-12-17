@@ -1,0 +1,242 @@
+.agregar-licencia-modal {
+  min-width: 800px;
+  max-width: 90vw;
+  padding: 0;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.modal-header {
+  background: #f5f5f5;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 16px 24px;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+}
+
+.modal-body {
+  padding: 24px;
+  background: #fff;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.form-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+
+  i {
+    color: #6b7280;
+    font-size: 16px;
+  }
+}
+
+.date-separator {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+.file-upload-area {
+  border: 2px dashed #60a5fa;
+  border-radius: 8px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: #f9fafb;
+  min-height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    border-color: #3b82f6;
+    background-color: #f0f7ff;
+  }
+
+  &.dragging {
+    border-color: #3b82f6;
+    background-color: #e0f2fe;
+  }
+}
+
+.file-upload-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.upload-icon-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.upload-icon {
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+  color: #fff;
+}
+
+.upload-text {
+  margin: 0;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.upload-hint {
+  margin: 0;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.file-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.preview-image {
+  max-width: 200px;
+  max-height: 200px;
+  border-radius: 4px;
+  object-fit: contain;
+}
+
+.file-icon-preview {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.file-icon {
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+  color: #6b7280;
+}
+
+.file-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.file-name {
+  margin: 0;
+  font-size: 12px;
+  color: #374151;
+  word-break: break-all;
+  text-align: center;
+  font-weight: 500;
+}
+
+.btn-remove {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #dc2626;
+  }
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.btn-guardar {
+  background-color: #10b981 !important;
+  color: #fff !important;
+  flex: 1;
+  max-width: 200px;
+
+  &:hover {
+    background-color: #059669 !important;
+  }
+}
+
+.btn-cancelar {
+  background-color: #ef4444 !important;
+  color: #fff !important;
+  flex: 1;
+  max-width: 200px;
+
+  &:hover {
+    background-color: #dc2626 !important;
+  }
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+::ng-deep {
+  .mat-mdc-form-field {
+    width: 100%;
+  }
+
+  .mat-mdc-text-field-wrapper {
+    background-color: #f9fafb;
+  }
+}
+

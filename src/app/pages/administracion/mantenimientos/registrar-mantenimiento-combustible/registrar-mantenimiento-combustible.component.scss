@@ -1,0 +1,26 @@
+/* Reusa la skin general */
+.form-skin-lite {
+  /* Montserrat Regular en labels */
+  .form-label {
+    font-family: 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 400;
+  }
+}
+
+/* Angular Material input look suave (relleno gris) */
+.mat-mdc-form-field .mat-mdc-text-field-wrapper,
+.mdc-text-field--filled {
+  background: #f3f3f3 !important;
+  border-radius: 6px;
+  box-shadow: inset 0 -1px 0 rgba(0,0,0,.08);
+}
+.mat-mdc-form-field-infix { padding: 12px 12px !important; }
+
+
+
+
+
+
+
+
+

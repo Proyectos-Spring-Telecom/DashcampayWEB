@@ -1,0 +1,98 @@
+<vex-page-layout @fadeInRight>
+  <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
+    [class.px-6]="layoutCtrl.value === 'fullwidth'">
+    <div class="card mt-4">
+      <div class="container-fluid p-4">
+        <!-- Breadcrumb -->
+        <div class="bg-app-bar appbar px-6 h-16 border-b sticky top-0 left-0 flex items-center z-10">
+          <nav class="breadcrumb-simple" aria-label="Ruta de navegación">
+            <a routerLink="/administracion" class="crumb-link">
+              <mat-icon inline>home</mat-icon>
+              Administración
+            </a>
+            <span class="sep">/</span>
+            <a routerLink="/administracion/tipos-pasajero" class="crumb-link">
+              Tipos de Pasajero
+            </a>
+            <span class="sep">/</span>
+            <span class="crumb-current" aria-current="page">{{title}}</span>
+          </nav>
+        </div>
+
+        <!-- Formulario -->
+        <section class="mt-4">
+          <form [formGroup]="tipoPasajeroForm" class="form-skin-lite">
+            <div class="row g-3">
+              <div class="col-12">
+                <div class="section-head">
+                  <h5 class="mb-1">Datos Generales</h5>
+                </div>
+                <div class="section-bar"></div>
+              </div>
+
+              <!-- Nombre -->
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-tag"></i><span>Nombre</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput placeholder="Nombre del tipo de pasajero" formControlName="nombre" />
+                </mat-form-field>
+              </div>
+
+              <!-- Tipo de Descuento -->
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-percent"></i><span>Tipo de Descuento</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-select placeholder="Tipo de Descuento" formControlName="idCatTipoDescuento">
+                    <mat-option [value]="null">— Seleccione —</mat-option>
+                    <mat-option *ngFor="let tipo of listaTiposDescuento" [value]="tipo.idCatTipoDescuento || tipo.id">
+                      {{ tipo.nombreCatTipoDescuento || tipo.nombre || tipo.nombreTipoDescuento }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <!-- Cantidad -->
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-calculator"></i><span>Cantidad</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput type="number" placeholder="Cantidad" formControlName="cantidad" />
+                </mat-form-field>
+              </div>
+
+              <!-- Cliente -->
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-user-tie"></i><span>Cliente</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-select placeholder="Cliente" formControlName="idCliente" [disabled]="idRolUser >= 4">
+                    <mat-option [value]="null">— Seleccione —</mat-option>
+                    <mat-option *ngFor="let cliente of listaClientes" [value]="cliente.id">
+                      {{ cliente.nombreCliente || cliente.nombre }} {{ cliente.apellidoPaterno || '' }} {{ cliente.apellidoMaterno || '' }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <!-- Acciones -->
+              <div class="col-12 d-flex justify-content-end gap-2 pt-2">
+                <button mat-raised-button color="primary" type="submit" (click)="submit()" [disabled]="loading">
+                  <mat-icon>save</mat-icon> {{submitButton}}
+                </button>
+                <button mat-raised-button color="warn" type="button" (click)="regresar()" [disabled]="loading">
+                  <mat-icon>close</mat-icon> Cancelar
+                </button>
+              </div>
+            </div>
+          </form>
+        </section>
+      </div>
+    </div>
+  </vex-page-layout-content>
+</vex-page-layout>

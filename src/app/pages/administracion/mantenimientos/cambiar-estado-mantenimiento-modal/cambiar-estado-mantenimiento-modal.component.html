@@ -1,0 +1,32 @@
+<div class="cambiar-estado-modal">
+  <div class="modal-body">
+    <div class="icon-container">
+      <mat-icon class="question-icon">help_outline</mat-icon>
+    </div>
+    
+    <h3 class="modal-title">Cambiar estado del mantenimiento: {{ data.placaVehiculo }}</h3>
+    <p class="estado-actual">Estado actual: <strong>{{ getEstadoActualLabel() }}</strong></p>
+
+    <form [formGroup]="estadoForm" class="estado-form">
+      <label class="select-label">Selecciona el nuevo estado</label>
+      <mat-form-field appearance="fill" class="w-100">
+        <mat-select formControlName="nuevoEstado" placeholder="Seleccione...">
+          <mat-option [value]="null">— Seleccione —</mat-option>
+          <mat-option *ngFor="let estado of estados" [value]="estado.value">
+            {{ estado.label }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </form>
+  </div>
+
+  <div class="modal-actions">
+    <button mat-raised-button class="btn-aceptar" (click)="confirmar()" [disabled]="!estadoForm.valid">
+      Aceptar
+    </button>
+    <button mat-button class="btn-cancelar" (click)="cancelar()">
+      Cancelar
+    </button>
+  </div>
+</div>
+

@@ -9,6 +9,8 @@ import { AlertsService } from 'src/app/pages/pages/modal/alerts.service';
 import { ContadoraService } from 'src/app/pages/services/contadora.service';
 import { DispositivoBluevoxService } from 'src/app/pages/services/dispositivobluevox.service';
 import { UsuariosService } from 'src/app/pages/services/usuarios.service';
+import { MatDialog } from '@angular/material/dialog';
+import { CambiarEstadoModalComponent, CambiarEstadoData } from '../../dispositivos/cambiar-estado-modal/cambiar-estado-modal.component';
 
 @Component({
   selector: 'vex-lista-contadora',
@@ -55,9 +57,13 @@ export class ListaContadoraComponent implements OnInit {
   public paginaActualData: any[] = [];
   public filtroActivo: string = '';
 
-  constructor(private disBlueService: DispositivoBluevoxService,
+  constructor(
+    private disBlueService: DispositivoBluevoxService,
+    private contadoraService: ContadoraService,
     private alerts: AlertsService,
-    private route: Router,) {
+    private route: Router,
+    private dialog: MatDialog
+  ) {
     this.showFilterRow = true;
     this.showHeaderFilter = true;
   }
@@ -288,6 +294,47 @@ agregarContadora(){
       this.autoExpandAllGroups = !this.autoExpandAllGroups;
       this.dataGrid.instance.refresh();
     }
+  }
+
+  intercambiar(rowData: any) {
+    const data: CambiarEstadoData = {
+      numeroSerie: rowData.numeroSerie || 'N/A',
+      estadoActual: rowData.estadoActual || 0,
+      tipoDispositivo: 'contador'
+    };
+
+    const dialogRef = this.dialog.open(CambiarEstadoModalComponent, {
+      width: '450px',
+      disableClose: true,
+      data: data
+    });
+
+    dialogRef.afterClosed().subscribe((nuevoEstado: number | undefined) => {
+      if (nuevoEstado !== undefined && nuevoEstado !== null) {
+        this.contadoraService.actualizarEstado(rowData.id, nuevoEstado).subscribe({
+          next: () => {
+            this.alerts.open({
+              type: 'success',
+              title: '¡Estado Actualizado!',
+              message: `El estado del contador ha sido actualizado correctamente.`,
+              confirmText: 'Confirmar',
+              backdropClose: false
+            });
+            this.obtenerDispositivos();
+            this.dataGrid.instance.refresh();
+          },
+          error: (error) => {
+            this.alerts.open({
+              type: 'error',
+              title: '¡Ops!',
+              message: String(error),
+              confirmText: 'Confirmar',
+              backdropClose: false
+            });
+          }
+        });
+      }
+    });
   }
 
 }
