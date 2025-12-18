@@ -63,8 +63,20 @@
                                     </mat-select>
                                 </mat-form-field>
                             </div>
+                        </div>
 
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="section-head">
+                                    <h5 class="mb-1">Geocerca</h5>
+                                </div>
+                                <div class="section-bar"></div>
+                                <p class="text-muted mb-3">Dibuja el polígono que define el área de cobertura de la zona.</p>
+                                <div id="map" style="width: 100%; height: 500px; border-radius: 8px; border: 1px solid #dee2e6;"></div>
+                            </div>
+                        </div>
 
+                        <div class="row mt-4">
                             <!-- Acciones -->
                             <div class="col-12 d-flex justify-content-end gap-2 pt-2">
                                 <button mat-raised-button color="primary" type="submit" (click)="submit()">

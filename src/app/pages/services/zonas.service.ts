@@ -18,7 +18,7 @@ export class ZonasService {
     return this.http.get(`${environment.API_SECURITY}/zonas/list`);
   }
 
-  agregarZona(data: FormData) {
+  agregarZona(data: any) {
     return this.http.post(environment.API_SECURITY + '/zonas', data);
   }
 

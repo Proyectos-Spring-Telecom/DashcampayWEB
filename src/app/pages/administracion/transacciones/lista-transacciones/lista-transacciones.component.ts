@@ -159,8 +159,15 @@ export class ListaTransaccionesComponent implements OnInit {
   async abrirModal(raw: any) {
     const id = raw?.id ?? raw?.Id ?? null;
 
-    const latStr = raw?.latitudInicial != null ? String(raw.latitudInicial) : (raw?.LatitudInicial != null ? String(raw.LatitudInicial) : '');
-    const lngStr = raw?.longitudInicial != null ? String(raw.longitudInicial) : (raw?.LongitudInicial != null ? String(raw.LongitudInicial) : '');
+    // Intentar primero con latitudInicial/longitudInicial, si no existen usar latitudFinal/longitudFinal
+    const latInicial = raw?.latitudInicial != null ? raw.latitudInicial : (raw?.LatitudInicial != null ? raw.LatitudInicial : null);
+    const lngInicial = raw?.longitudInicial != null ? raw.longitudInicial : (raw?.LongitudInicial != null ? raw.LongitudInicial : null);
+    
+    const latFinal = raw?.latitudFinal != null ? raw.latitudFinal : (raw?.LatitudFinal != null ? raw.LatitudFinal : null);
+    const lngFinal = raw?.longitudFinal != null ? raw.longitudFinal : (raw?.LongitudFinal != null ? raw.LongitudFinal : null);
+    
+    const latStr = (latInicial != null && latInicial !== '') ? String(latInicial) : ((latFinal != null && latFinal !== '') ? String(latFinal) : '');
+    const lngStr = (lngInicial != null && lngInicial !== '') ? String(lngInicial) : ((lngFinal != null && lngFinal !== '') ? String(lngFinal) : '');
 
     const tipoRaw = (raw?.tipoTransaccion ?? raw?.tipo ?? '').toString();
     const tipoUI = tipoRaw === 'RECARGA' ? 'Recarga' : tipoRaw === 'DEBITO' ? 'Débito' : (tipoRaw || null);

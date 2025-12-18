@@ -523,20 +523,35 @@ export class AgregarInstalacionComponent implements OnInit {
             ),
             numeroSerie:
               x.numeroSerie ??
+              x.NumeroSerie ??
               x.numeroSerieBlueVox ??
+              x.NumeroSerieBlueVox ??
               x.numeroSerieContadores ??
+              x.NumeroSerieContadores ??
+              x.numeroSerieContador ??
+              x.NumeroSerieContador ??
               x.numeroSerieValidadores ??
               '',
             marca:
               x.marca ??
+              x.Marca ??
               x.marcaBlueVox ??
+              x.MarcaBlueVox ??
               x.marcaContadores ??
+              x.MarcaContadores ??
+              x.marcaContador ??
+              x.MarcaContador ??
               x.marcaValidador ??
               '',
             modelo:
               x.modelo ??
+              x.Modelo ??
               x.modeloBlueVox ??
+              x.ModeloBlueVox ??
               x.modeloContadores ??
+              x.ModeloContadores ??
+              x.modeloContador ??
+              x.ModeloContador ??
               x.modeloValidador ??
               ''
           });
@@ -755,21 +770,36 @@ export class AgregarInstalacionComponent implements OnInit {
               {
                 id: idContador,
                 numeroSerie: (
-                  raw.numeroSerieContadores ??
-                  raw.numeroSerieBlueVox ??
                   raw.numeroSerie ??
+                  raw.NumeroSerie ??
+                  raw.numeroSerieContadores ??
+                  raw.NumeroSerieContadores ??
+                  raw.numeroSerieContador ??
+                  raw.NumeroSerieContador ??
+                  raw.numeroSerieBlueVox ??
+                  raw.NumeroSerieBlueVox ??
                   ''
                 ).toString(),
                 marca: (
-                  raw.marcaContadores ??
-                  raw.marcaBlueVox ??
                   raw.marca ??
+                  raw.Marca ??
+                  raw.marcaContadores ??
+                  raw.MarcaContadores ??
+                  raw.marcaContador ??
+                  raw.MarcaContador ??
+                  raw.marcaBlueVox ??
+                  raw.MarcaBlueVox ??
                   ''
                 ).toString(),
                 modelo: (
-                  raw.modeloContadores ??
-                  raw.modeloBlueVox ??
                   raw.modelo ??
+                  raw.Modelo ??
+                  raw.modeloContadores ??
+                  raw.ModeloContadores ??
+                  raw.modeloContador ??
+                  raw.ModeloContador ??
+                  raw.modeloBlueVox ??
+                  raw.ModeloBlueVox ??
                   ''
                 ).toString()
               }
@@ -855,20 +885,35 @@ export class AgregarInstalacionComponent implements OnInit {
           ),
           numeroSerie:
             x.numeroSerie ??
+            x.NumeroSerie ??
             x.numeroSerieBlueVox ??
+            x.NumeroSerieBlueVox ??
             x.numeroSerieContadores ??
+            x.NumeroSerieContadores ??
+            x.numeroSerieContador ??
+            x.NumeroSerieContador ??
             x.numeroSerieValidadores ??
             '',
           marca:
             x.marca ??
+            x.Marca ??
             x.marcaBlueVox ??
+            x.MarcaBlueVox ??
             x.marcaContadores ??
+            x.MarcaContadores ??
+            x.marcaContador ??
+            x.MarcaContador ??
             x.marcaValidador ??
             '',
           modelo:
             x.modelo ??
+            x.Modelo ??
             x.modeloBlueVox ??
+            x.ModeloBlueVox ??
             x.modeloContadores ??
+            x.ModeloContadores ??
+            x.modeloContador ??
+            x.ModeloContador ??
             x.modeloValidador ??
             ''
         });

@@ -2,7 +2,7 @@
   [class.open]="collapsed && (collapsedOpen$ | async)" class="vex-sidenav flex flex-col">
   <div class="vex-sidenav-toolbar__container">
     <div class="sidenav-toolbar flex-none flex items-center" style="background-color: white;">
-      <img style="width: 60%;" src="../../../../assets/img/logo/DashCamPay_trasparente_large.png" alt="Logo" class="select-none flex-none" />
+      <img [src]="showLogotipo" alt="Logo" class="sidenav-logo select-none flex-none" />
       <button style="color: black;" (click)="toggleCollapse()" *ngIf="showCollapsePin$ | async"
         class="ml-auto vex-sidenav-toolbar__collapse-toggle -mr-4 leading-none flex-none hidden lg:block"
         mat-icon-button type="button">

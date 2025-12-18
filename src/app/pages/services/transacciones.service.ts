@@ -28,5 +28,9 @@ export class TransaccionesService {
     return this.http.post(environment.API_SECURITY + '/transacciones', data);
   }
 
+  agregarRecarga(data: any) {
+    return this.http.post(environment.API_SECURITY + '/transacciones/recarga', data);
+  }
+
   
 }

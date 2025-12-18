@@ -56,7 +56,7 @@
                         <dxo-filter-row [visible]="showFilterRow"></dxo-filter-row>
                         <dxo-header-filter [visible]="showHeaderFilter"></dxo-header-filter>
                         <dxo-grouping [autoExpandAll]="true"></dxo-grouping>
-                        <dxi-column caption="Acciones" cellTemplate="Acciones" alignment="center" [width]="180"></dxi-column>
+                        <dxi-column caption="Acciones" cellTemplate="Acciones" alignment="center" [width]="220"></dxi-column>
                         <dxi-column dataField="nombre" caption="Nombre Zona" alignment="center"></dxi-column>
                         <dxi-column dataField="descripcion" caption="Descripción" alignment="center"></dxi-column>
                         <dxi-column caption="Cliente" alignment="center" cellTemplate="nomCliente">
@@ -91,16 +91,21 @@
                         </dxo-export>
                         <div *dxTemplate="let row of 'Acciones'" class="d-flex gap-3 justify-content-center">
                             <div>
-                                <button class="btn-edit" (click)="actualizarZona(row.data.id)">
+                                <button class="btn-edit" (click)="actualizarZona(row.data.id)" matTooltip="Editar">
                                     <mat-icon class="btn__icon">edit</mat-icon>
                                 </button>
                             </div>
                             <div>
-                                <button *ngIf="row.data.estatus === 0" class="btn-active" (click)="activar(row.data)">
+                                <button class="btn-view" (click)="visualizarZona(row.data)" matTooltip="Visualizar zona">
+                                    <mat-icon class="btn__icon">map</mat-icon>
+                                </button>
+                            </div>
+                            <div>
+                                <button *ngIf="row.data.estatus === 0" class="btn-active" (click)="activar(row.data)" matTooltip="Activar">
                                     <mat-icon class="btn__icon">check_circle</mat-icon>
                                 </button>
                                 <button *ngIf="row.data.estatus === 1" class="btn-desactive"
-                                    (click)="desactivar(row.data)">
+                                    (click)="desactivar(row.data)" matTooltip="Desactivar">
                                     <mat-icon class="btn__icon">block</mat-icon>
                                 </button>
                             </div>
@@ -111,3 +116,44 @@
         </div>
     </vex-page-layout-content>
 </vex-page-layout>
+
+<!-- Modal para visualizar zona -->
+<div *ngIf="modalOpen" class="custom-modal-backdrop" [class.fade-out]="modalClosing || modalAnim === 'out'"
+  (click)="onBackdrop()">
+  <div class="custom-modal-content modal-large" [class.animate-in]="modalAnim === 'in'" [class.animate-out]="modalAnim === 'out'"
+    (click)="$event.stopPropagation()">
+    <div class="custom-modal-header">
+      <div class="custom-modal-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path
+            d="M12 1a4 4 0 0 1 4 4v1h2.5A2.5 2.5 0 0 1 21 8.5v10A2.5 2.5 0 0 1 18.5 21h-13A2.5 2.5 0 0 1 3 18.5v-10A2.5 2.5 0 0 1 5.5 6H8V5a4 4 0 0 1 4-4Zm0 2a2 2 0 0 0-2 2v1h4V5a2 2 0 0 0-2-2Z" />
+        </svg>
+      </div>
+      <h2>Visualizar Zona: {{ selectedZona?.nombre || '—' }}</h2>
+      <button class="custom-modal-close" (click)="cerrarModal()">
+        <span>×</span>
+      </button>
+    </div>
+    <div class="custom-modal-body">
+      <div class="detalle-grid mb-3">
+        <div class="detalle-item">
+          <div class="detalle-label">Nombre</div>
+          <div class="detalle-value">{{ selectedZona?.nombre || '—' }}</div>
+        </div>
+        <div class="detalle-item">
+          <div class="detalle-label">Descripción</div>
+          <div class="detalle-value">{{ selectedZona?.descripcion || '—' }}</div>
+        </div>
+        <div class="detalle-item">
+          <div class="detalle-label">Estatus</div>
+          <div class="detalle-value">
+            <span [ngClass]="selectedZona?.estatus === 1 ? 'badge-status activo' : 'badge-status inactivo'">
+              {{ selectedZona?.estatus === 1 ? 'Activo' : 'Inactivo' }}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div id="map-modal" style="width: 100%; height: 500px; border-radius: 8px; border: 1px solid #dee2e6; background: #f8f9fa;"></div>
+    </div>
+  </div>
+</div>

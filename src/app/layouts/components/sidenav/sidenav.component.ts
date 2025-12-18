@@ -57,6 +57,7 @@ export class SidenavComponent implements OnInit {
   public showApellidoMaterno: any;
   public showImage: any;
   public showRol: any;
+  public showLogotipo: any;
   userMenuOpen$: Observable<boolean> = of(false);
 
   items$: Observable<NavigationItem[]> = this.navigationService.items$;
@@ -78,6 +79,15 @@ export class SidenavComponent implements OnInit {
     this.showApellidoPaterno = sanitize(user.apellidoPaterno);
     this.showApellidoMaterno = sanitize(user.apellidoMaterno);
     this.showRol = user.rol.nombre;
+    
+    // Obtener logotipo del usuario/cliente
+    this.showLogotipo = 
+      user?.logotipo ??
+      user?.logotipoCliente ??
+      user?.cliente?.logotipo ??
+      user?.cliente?.Logotipo ??
+      user?.Logotipo ??
+      'assets/img/logo/DashCamPay_trasparente_large.png';
   }
 
   ngOnInit() {}
