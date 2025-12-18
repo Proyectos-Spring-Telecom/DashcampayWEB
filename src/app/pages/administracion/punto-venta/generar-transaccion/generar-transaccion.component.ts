@@ -143,11 +143,10 @@ export class GenerarTransaccionComponent implements OnInit {
     if (!this.monederoSeleccionado || !this.monto || this.monto <= 0) return;
 
     const payload = {
-      tipoTransaccion: 'RECARGA',
+      idTipoTransaccion: 1,
       monto: Number(this.monto),
-      latitud: null,
-      longitud: null,
-      fechaHora: this.toLocalISOString(),
+      latitudInicial: null,
+      longitudInicial: null,
       numeroSerieMonedero: this.getNumeroSerieMonedero(),
       numeroSerieValidador: null
     };
@@ -196,7 +195,7 @@ export class GenerarTransaccionComponent implements OnInit {
 
   agregar(payload: any) {
     this.cargando = true;
-    this.transaccionService.agregarTransaccion(payload).subscribe(
+    this.transaccionService.agregarRecarga(payload).subscribe(
       (_response: any) => {
         this.alerts.open({
           type: 'success',

@@ -1,2 +1,133 @@
-<p>registrar-mantenimiento-kilometraje works!</p>
+<vex-page-layout @fadeInRight>
+  <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
+    [class.px-6]="layoutCtrl.value === 'fullwidth'">
+    <div class="card mt-4">
+      <div class="container-fluid p-4">
+        <!-- Breadcrumb -->
+        <div class="bg-app-bar appbar px-6 h-16 border-b sticky top-0 left-0 flex items-center z-10">
+          <nav class="breadcrumb-simple" aria-label="Ruta de navegación">
+            <a routerLink="/administracion" class="crumb-link" routerLinkActive="active">
+              <mat-icon inline>home</mat-icon>
+              Administración
+            </a>
+            <span class="sep">/</span>
+            <span class="crumb-current" aria-current="page">Gestión Vehícular</span>
+            <span class="sep">/</span>
+            <span class="crumb-current" aria-current="page">Registrar Mantenimiento Kilometraje</span>
+          </nav>
+        </div>
 
+        <!-- Formulario -->
+        <section class="mt-4">
+          <form [formGroup]="mantenimientoForm" class="form-skin-lite">
+            <div class="row g-3">
+              <div class="col-12">
+                <div class="section-head">
+                  <h5 class="mb-1">Datos del Mantenimiento de Kilometraje</h5>
+                </div>
+                <div class="section-bar"></div>
+              </div>
+
+              <!-- Instalación -->
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-car"></i>
+                  <span>Instalación</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-select
+                    placeholder="Instalación"
+                    formControlName="idInstalacion">
+                    <mat-option [value]="null">— Seleccione —</mat-option>
+                    <mat-option *ngFor="let instalacion of listaInstalaciones" [value]="instalacion.id">
+                      {{ instalacion.placaVehiculo }} - Eco: {{ instalacion.numeroEconomicoVehiculo }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-error *ngIf="showRequiredMsgs && mantenimientoForm.get('idInstalacion')?.hasError('required')">
+                  La instalación es obligatoria.
+                </mat-error>
+              </div>
+
+              <!-- Kilometraje Inicial -->
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-tachometer-alt"></i>
+                  <span>Kilometraje Inicial</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput type="number" placeholder="Kilometraje Inicial" formControlName="kmInicial" (keypress)="allowOnlyNumbers($event)" />
+                </mat-form-field>
+                <mat-error *ngIf="showRequiredMsgs && mantenimientoForm.get('kmInicial')?.hasError('required')">
+                  El kilometraje inicial es obligatorio.
+                </mat-error>
+              </div>
+
+              <!-- Kilometraje Deseado -->
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-flag-checkered"></i>
+                  <span>Kilometraje Deseado</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput type="number" placeholder="Kilometraje Deseado" formControlName="kmDeseado" (keypress)="allowOnlyNumbers($event)" />
+                </mat-form-field>
+                <mat-error *ngIf="showRequiredMsgs && mantenimientoForm.get('kmDeseado')?.hasError('required')">
+                  El kilometraje deseado es obligatorio.
+                </mat-error>
+              </div>
+
+              <!-- Período -->
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-calendar-alt"></i>
+                  <span>Período</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-select
+                    placeholder="Período"
+                    formControlName="periodo">
+                    <mat-option [value]="null">— Seleccione —</mat-option>
+                    <mat-option *ngFor="let mes of listaMeses" [value]="mes.id">
+                      {{ mes.nombre }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-error *ngIf="showRequiredMsgs && mantenimientoForm.get('periodo')?.hasError('required')">
+                  El período es obligatorio.
+                </mat-error>
+              </div>
+
+              <!-- Año -->
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-calendar"></i>
+                  <span>Año</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput type="number" placeholder="Año" formControlName="anio" maxlength="4" (keypress)="allowOnlyNumbers($event)" />
+                </mat-form-field>
+                <mat-error *ngIf="showRequiredMsgs && mantenimientoForm.get('anio')?.hasError('required')">
+                  El año es obligatorio.
+                </mat-error>
+              </div>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="row g-3 mt-4">
+              <div class="col-12 d-flex justify-content-end gap-3">
+                <button mat-raised-button type="button" (click)="regresar()" [disabled]="loading">
+                  Cancelar
+                </button>
+                <button mat-raised-button color="primary" type="button" (click)="submit()" [disabled]="loading">
+                  <mat-icon *ngIf="!loading">save</mat-icon>
+                  {{ submitButton }}
+                </button>
+              </div>
+            </div>
+          </form>
+        </section>
+      </div>
+    </div>
+  </vex-page-layout-content>
+</vex-page-layout>

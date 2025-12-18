@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
 import { Router } from '@angular/router';
 import { fadeInRight400ms } from '@vex/animations/fade-in-right.animation';
@@ -8,13 +8,15 @@ import { lastValueFrom } from 'rxjs';
 import { AlertsService } from 'src/app/pages/pages/modal/alerts.service';
 import { ZonasService } from 'src/app/pages/services/zonas.service';
 
+declare const google: any;
+
 @Component({
   selector: 'vex-lista-zonas',
   templateUrl: './lista-zonas.component.html',
   styleUrl: './lista-zonas.component.scss',
   animations: [fadeInRight400ms],
 })
-export class ListaZonasComponent implements OnInit {
+export class ListaZonasComponent implements OnInit, AfterViewInit, OnDestroy {
 
   layoutCtrl = new UntypedFormControl('fullwidth');
   @ViewChild(DxDataGridComponent, { static: false }) dataGrid!: DxDataGridComponent;
@@ -37,6 +39,16 @@ export class ListaZonasComponent implements OnInit {
   public listaVehiculos: any;
   public listaClientes: any;
   isGrouped: boolean = false;
+
+  // Modal y mapa
+  modalOpen = false;
+  modalClosing = false;
+  modalAnim: 'in' | 'out' = 'in';
+  selectedZona: any = null;
+  private map?: any;
+  private polygon?: any;
+  private readonly defaultCenter = { lat: 19.2826, lng: -99.6557 };
+  private readonly defaultZoom = 13;
 
   constructor(
     private zonService: ZonasService,
@@ -252,6 +264,204 @@ export class ListaZonasComponent implements OnInit {
 
   agregarVehiculo() {
     this.route.navigateByUrl('/administracion/vehiculos/agregar-vehiculo')
+  }
+
+  async visualizarZona(rowData: any) {
+    this.selectedZona = rowData;
+    this.modalOpen = true;
+    this.modalAnim = 'in';
+    this.modalClosing = false;
+
+    // Obtener los datos completos de la zona
+    this.zonService.obtenerZona(rowData.id).subscribe({
+      next: (response: any) => {
+        const data = Array.isArray(response?.data) ? response.data[0] : response?.data;
+        if (data) {
+          this.selectedZona = { ...rowData, ...data };
+          setTimeout(() => this.initMapModal(), 100);
+        }
+      },
+      error: (err) => {
+        console.error('Error al obtener zona:', err);
+        setTimeout(() => this.initMapModal(), 100);
+      }
+    });
+  }
+
+  ngAfterViewInit(): void {
+    // No necesitamos cargar maps aquí, se carga cuando se abre el modal
+  }
+
+  ngOnDestroy(): void {
+    if (this.polygon) {
+      this.polygon.setMap(null);
+    }
+    if (this.map) {
+      this.map = null;
+    }
+  }
+
+  cerrarModal() {
+    this.modalAnim = 'out';
+    this.modalClosing = true;
+    setTimeout(() => {
+      this.modalOpen = false;
+      this.selectedZona = null;
+      if (this.polygon) {
+        this.polygon.setMap(null);
+        this.polygon = undefined;
+      }
+      if (this.map) {
+        this.map = null;
+      }
+    }, 300);
+  }
+
+  onBackdrop() {
+    this.cerrarModal();
+  }
+
+  private async initMapModal() {
+    await this.loadGoogleMaps();
+    await new Promise(requestAnimationFrame);
+    
+    const el = document.getElementById('map-modal');
+    if (!el) return;
+
+    if (!(window as any).google?.maps?.Map) {
+      el.innerHTML = `
+        <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#e9ecef;">
+          <div style="text-align:center;">
+            <div style="font-size:42px;">⚠️</div>
+            <div style="font-weight:600;margin-top:8px;color:#333;">Google Maps no ha cargado</div>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    this.map = new google.maps.Map(el, {
+      center: this.defaultCenter,
+      zoom: this.defaultZoom,
+      mapTypeControl: false,
+      fullscreenControl: false,
+      streetViewControl: false,
+    });
+
+    // Dibujar polígono si existe geocerca
+    const gxAny: any =
+      this.selectedZona?.geocerca ??
+      this.selectedZona?.poligono ??
+      this.selectedZona?.polygon ??
+      this.selectedZona?.coordenadas ??
+      null;
+
+    const path = this.extractPathFromGeo(gxAny);
+    if (Array.isArray(path) && path.length >= 3) {
+      this.drawPolygonFromPath(path);
+      this.fitToPolygon();
+    } else {
+      // Si no hay geocerca, centrar en la ubicación por defecto
+      this.map.setCenter(this.defaultCenter);
+      this.map.setZoom(this.defaultZoom);
+    }
+  }
+
+  private extractPathFromGeo(gx: any): Array<{ lat: number; lng: number }> {
+    if (!gx) return [];
+
+    if (
+      gx.type === 'FeatureCollection' &&
+      Array.isArray(gx.features) &&
+      gx.features.length
+    ) {
+      const geom = gx.features[0]?.geometry;
+      return this.extractPathFromGeo(geom);
+    }
+
+    if (gx.type === 'Feature' && gx.geometry) {
+      return this.extractPathFromGeo(gx.geometry);
+    }
+
+    if (gx.type === 'Polygon' && Array.isArray(gx.coordinates)) {
+      const ring = gx.coordinates[0] || [];
+      return ring
+        .map((p: any) =>
+          Array.isArray(p) && p.length >= 2
+            ? { lat: Number(p[1]), lng: Number(p[0]) }
+            : null
+        )
+        .filter(Boolean) as Array<{ lat: number; lng: number }>;
+    }
+
+    if (Array.isArray(gx)) {
+      return gx
+        .map((p: any) => ({ lat: Number(p?.lat), lng: Number(p?.lng) }))
+        .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng));
+    }
+
+    return [];
+  }
+
+  private drawPolygonFromPath(path: Array<{ lat: number; lng: number }>): void {
+    if (!this.map || !Array.isArray(path) || path.length < 3) return;
+
+    if (this.polygon) {
+      this.polygon.setMap(null);
+      this.polygon = undefined;
+    }
+
+    this.polygon = new google.maps.Polygon({
+      paths: path,
+      fillColor: '#1E88E5',
+      fillOpacity: 0.15,
+      strokeColor: '#1E88E5',
+      strokeOpacity: 0.9,
+      strokeWeight: 2,
+      editable: false,
+      draggable: false,
+      map: this.map,
+      zIndex: 10,
+    });
+  }
+
+  private fitToPolygon(): void {
+    if (!this.map || !this.polygon) return;
+    const bounds = new google.maps.LatLngBounds();
+    this.polygon.getPath().forEach((ll: any) => bounds.extend(ll));
+    this.map.fitBounds(bounds);
+  }
+
+  private loadGoogleMaps(): Promise<void> {
+    if ((window as any).google?.maps?.Map) {
+      return Promise.resolve();
+    }
+
+    const existing = Array.from(document.getElementsByTagName('script')).find((s) =>
+      s.src.includes('maps.googleapis.com/maps/api/js')
+    ) as HTMLScriptElement | undefined;
+
+    if (existing) {
+      if ((window as any).google?.maps) {
+        return Promise.resolve();
+      }
+      return new Promise<void>((resolve, reject) => {
+        existing.addEventListener('load', () => resolve());
+        existing.addEventListener('error', () =>
+          reject(new Error('No se pudo cargar Google Maps'))
+        );
+      });
+    }
+
+    return new Promise<void>((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBpLS8xONczrVarb5aZz-mXj1hBMLxhQpU&v=weekly`;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error('No se pudo cargar Google Maps'));
+      document.head.appendChild(script);
+    });
   }
 
 }

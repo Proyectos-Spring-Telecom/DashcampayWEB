@@ -1,2 +1,229 @@
-<p>registrar-mantenimiento-vehicular works!</p>
+<vex-page-layout @fadeInRight>
+  <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
+    [class.px-6]="layoutCtrl.value === 'fullwidth'">
+    <div class="card mt-4">
+      <div class="container-fluid p-4">
+        <!-- Breadcrumb -->
+        <div class="bg-app-bar appbar px-6 h-16 border-b sticky top-0 left-0 flex items-center z-10">
+          <nav class="breadcrumb-simple" aria-label="Ruta de navegación">
+            <a routerLink="/administracion" class="crumb-link" routerLinkActive="active">
+              <mat-icon inline>home</mat-icon>
+              Administración
+            </a>
+            <span class="sep">/</span>
+            <span class="crumb-current" aria-current="page">Gestión Vehícular</span>
+            <span class="sep">/</span>
+            <span class="crumb-current" aria-current="page">Registrar Mantenimiento</span>
+          </nav>
+        </div>
 
+        <!-- Formulario -->
+        <section class="mt-4">
+          <form [formGroup]="mantenimientoForm" class="form-skin-lite">
+            <div class="row g-3">
+              <div class="col-12">
+                <div class="section-head">
+                  <h5 class="mb-1">Datos del Mantenimiento</h5>
+                </div>
+                <div class="section-bar"></div>
+              </div>
+
+              <!-- Instalación -->
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-car"></i>
+                  <span>Instalación</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-select
+                    placeholder="Instalación"
+                    formControlName="idInstalacion">
+                    <mat-option [value]="null">— Seleccione —</mat-option>
+                    <mat-option *ngFor="let instalacion of listaInstalaciones" [value]="instalacion.id">
+                      {{ instalacion.placaVehiculo }} - Eco: {{ instalacion.numeroEconomicoVehiculo }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-error *ngIf="showRequiredMsgs && mantenimientoForm.get('idInstalacion')?.hasError('required')">
+                  La instalación es obligatoria.
+                </mat-error>
+              </div>
+
+              <!-- Referencia -->
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-bookmark"></i>
+                  <span>Referencia</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-select
+                    placeholder="Referencia"
+                    formControlName="idReferencia">
+                    <mat-option [value]="null">— Seleccione —</mat-option>
+                    <mat-option *ngFor="let referencia of listaReferencias" [value]="referencia.id">
+                      {{ referencia.nombre || referencia.descripcion || referencia.nombreReferencia }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-error *ngIf="showRequiredMsgs && mantenimientoForm.get('idReferencia')?.hasError('required')">
+                  La referencia es obligatoria.
+                </mat-error>
+              </div>
+
+              <!-- Taller -->
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-wrench"></i>
+                  <span>Taller</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-select
+                    placeholder="Taller"
+                    formControlName="idTaller">
+                    <mat-option [value]="null">— Seleccione —</mat-option>
+                    <mat-option *ngFor="let taller of listaTalleres" [value]="taller.id">
+                      {{ taller.nombre }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-error *ngIf="showRequiredMsgs && mantenimientoForm.get('idTaller')?.hasError('required')">
+                  El taller es obligatorio.
+                </mat-error>
+              </div>
+
+              <!-- Fecha Inicio del Servicio -->
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-calendar-alt"></i>
+                  <span>Fecha Inicio del Servicio</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput [matDatepicker]="fechaInicioPicker" placeholder="dd/mm/aaaa" formControlName="fechaInicio" />
+                  <mat-datepicker-toggle matIconSuffix [for]="fechaInicioPicker"></mat-datepicker-toggle>
+                  <mat-datepicker #fechaInicioPicker></mat-datepicker>
+                </mat-form-field>
+                <mat-error *ngIf="showRequiredMsgs && mantenimientoForm.get('fechaInicio')?.hasError('required')">
+                  La fecha de inicio es obligatoria.
+                </mat-error>
+              </div>
+
+              <!-- Fecha Final del Servicio -->
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-calendar-check"></i>
+                  <span>Fecha Final del Servicio</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput [matDatepicker]="fechaFinalPicker" placeholder="dd/mm/aaaa" formControlName="fechaFinal" />
+                  <mat-datepicker-toggle matIconSuffix [for]="fechaFinalPicker"></mat-datepicker-toggle>
+                  <mat-datepicker #fechaFinalPicker></mat-datepicker>
+                </mat-form-field>
+                <mat-error *ngIf="showRequiredMsgs && mantenimientoForm.get('fechaFinal')?.hasError('required')">
+                  La fecha final es obligatoria.
+                </mat-error>
+              </div>
+
+              <!-- Costo -->
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-dollar-sign"></i>
+                  <span>Costo</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput type="number" placeholder="Costo" formControlName="costo" (keypress)="allowOnlyNumbers($event)" />
+                </mat-form-field>
+                <mat-error *ngIf="showRequiredMsgs && mantenimientoForm.get('costo')?.hasError('required')">
+                  El costo es obligatorio.
+                </mat-error>
+              </div>
+
+              <!-- Encargado -->
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-user-tie"></i>
+                  <span>Encargado</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput placeholder="Encargado" formControlName="encargado" />
+                </mat-form-field>
+                <mat-error *ngIf="showRequiredMsgs && mantenimientoForm.get('encargado')?.hasError('required')">
+                  El encargado es obligatorio.
+                </mat-error>
+              </div>
+
+              <!-- Descripción del Servicio -->
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-file-alt"></i>
+                  <span>Descripción del Servicio</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput placeholder="Descripción del servicio realizado" formControlName="servicioDescripcion" />
+                </mat-form-field>
+                <mat-error *ngIf="showRequiredMsgs && mantenimientoForm.get('servicioDescripcion')?.hasError('required')">
+                  La descripción es obligatoria.
+                </mat-error>
+              </div>
+
+              <!-- Nota de Servicio -->
+              <div class="col-12 col-md-6 col-lg-4 uploads-skin">
+                <label class="form-label">
+                  <i class="fa fa-image"></i>
+                  <span>Nota de Servicio</span>
+                </label>
+
+                <div class="dropzone" 
+                  [class.dragging]="notaServicioDragging" 
+                  (click)="openNotaServicioFilePicker()"
+                  (dragover)="onNotaServicioDragOver($event)" 
+                  (dragleave)="onNotaServicioDragLeave($event)"
+                  (drop)="onNotaServicioDrop($event)">
+
+                  <div class="dz-body" *ngIf="!notaServicioPreviewUrl">
+                    <mat-icon class="dz-icon">image</mat-icon>
+                    <div class="dz-title">Arrastra y suelta o haz clic</div>
+                  </div>
+
+                  <div class="dz-preview" *ngIf="notaServicioPreviewUrl" (click)="$event.stopPropagation()">
+                    <img [src]="notaServicioPreviewUrl!" alt="Vista previa" class="img-fluid rounded" />
+                  </div>
+
+                  <button mat-stroked-button type="button" class="dz-action" (click)="$event.stopPropagation(); openNotaServicioFilePicker()">
+                    <mat-icon>upload</mat-icon> Seleccionar
+                  </button>
+
+                  <button mat-stroked-button color="warn" type="button" class="dz-clear"
+                    *ngIf="notaServicioPreviewUrl || notaServicioFileName" 
+                    (click)="clearNotaServicioFile($event)">
+                    <mat-icon>close</mat-icon> Quitar
+                  </button>
+
+                  <div class="dz-filename" *ngIf="notaServicioFileName">{{ notaServicioFileName }}</div>
+                  <input #notaServicioInput type="file" class="d-none" accept="image/png,image/jpeg,image/webp,image/jpg"
+                    (change)="onNotaServicioFileSelected($event)">
+                </div>
+
+                <mat-error *ngIf="showRequiredMsgs && mantenimientoForm.get('notaServicio')?.hasError('required')">
+                  La nota de servicio es obligatoria.
+                </mat-error>
+              </div>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="row g-3 mt-4">
+              <div class="col-12 d-flex justify-content-end gap-3">
+                <button mat-raised-button type="button" (click)="regresar()" [disabled]="loading">
+                  Cancelar
+                </button>
+                <button mat-raised-button color="primary" type="button" (click)="submit()" [disabled]="loading">
+                  <mat-icon *ngIf="!loading">save</mat-icon>
+                  {{ submitButton }}
+                </button>
+              </div>
+            </div>
+          </form>
+        </section>
+      </div>
+    </div>
+  </vex-page-layout-content>
+</vex-page-layout>

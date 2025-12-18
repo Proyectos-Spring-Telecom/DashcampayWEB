@@ -55,7 +55,7 @@
             <dxo-filter-row [visible]="showFilterRow"></dxo-filter-row>
             <dxo-header-filter [visible]="showHeaderFilter"></dxo-header-filter>
             <dxo-grouping [autoExpandAll]="true"></dxo-grouping>
-            <dxi-column caption="Acciones" cellTemplate="Acciones" alignment="center" [width]="250"></dxi-column>
+            <dxi-column caption="Acciones" cellTemplate="Acciones" alignment="center" [width]="350"></dxi-column>
             <dxi-column dataField="numeroSerie" caption="NumeroSerie" alignment="center"></dxi-column>
             <dxi-column dataField="fechaActivacion" caption="Fecha Activación" alignment="center"
               cellTemplate="fecActi">
@@ -81,12 +81,11 @@
             </dxi-column>
 
             <div *dxTemplate="let monedero of 'Acciones'" class="d-flex gap-3 justify-content-center">
-              <!-- <div *appHasPermission="'79'">
-                                    <button valueExpr="id" id="actualizarButton" class="btnAcciones"
-                                        (click)="actualizarMonederos(monedero.data.id)">
-                                        <i class="fa fa-edit"></i>
-                                    </button>
-                                </div> -->
+              <div>
+                <button class="btn-edit" (click)="editarMonedero(monedero.data.id)" matTooltip="Editar">
+                  <mat-icon class="btn__icon">edit</mat-icon>
+                </button>
+              </div>
               <div>
                 <button class="btn-active" (click)="abrirModal('recarga', monedero.data)">
                   + Recarga
@@ -95,6 +94,11 @@
               <div style="margin-left: 5px;">
                 <button class="btn-desactive" (click)="abrirModal('debito', monedero.data)">
                   - Debito
+                </button>
+              </div>
+              <div>
+                <button class="btn-sync" (click)="cambiarEstado(monedero.data)" matTooltip="Cambiar Estado">
+                  <mat-icon class="btn__icon">sync</mat-icon>
                 </button>
               </div>
             </div>

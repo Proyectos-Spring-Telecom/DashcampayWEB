@@ -10,8 +10,14 @@ export class TransaccionesService {
 
   constructor(private http: HttpClient) { }
 
-  obtenerTransaccionesData(page: number, pageSize: number): Observable<any> {
-		return this.http.get(`${environment.API_SECURITY}/transacciones/${page}/${pageSize}`);
+  obtenerTransaccionesData(page: number, limit: number, fechaInicio: string | null = null, fechaFin: string | null = null): Observable<any> {
+		const body = {
+			page,
+			limit,
+			fechaInicio,
+			fechaFin
+		};
+		return this.http.post(`${environment.API_SECURITY}/transacciones/paginado`, body);
 	}
 
   obtenerTransaccion(): Observable<any> {
@@ -20,6 +26,10 @@ export class TransaccionesService {
   
   agregarTransaccion(data: any) {
     return this.http.post(environment.API_SECURITY + '/transacciones', data);
+  }
+
+  agregarRecarga(data: any) {
+    return this.http.post(environment.API_SECURITY + '/transacciones/recarga', data);
   }
 
   

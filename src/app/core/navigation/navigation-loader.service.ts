@@ -154,6 +154,36 @@ export class NavigationLoaderService {
       },
       {
         type: 'subheading',
+        label: 'Gestión Vehícular',
+        children: [
+          {
+            type: 'link',
+            label: 'Mantenimiento',
+            route: '/administracion/mantenimientos',
+            icon: 'mat:build'
+          },
+          {
+            type: 'link',
+            label: 'Verificaciones',
+            route: '/administracion/verificaciones',
+            icon: 'mat:verified_user'
+          },
+          {
+            type: 'link',
+            label: 'Incidentes',
+            route: '/administracion/incidentes',
+            icon: 'mat:warning'
+          },
+          {
+            type: 'link',
+            label: 'Talleres',
+            route: '/administracion/talleres',
+            icon: 'mat:garage'
+          }
+        ]
+      },
+      {
+        type: 'subheading',
         label: 'Administración',
         children: [
           {

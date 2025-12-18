@@ -1,0 +1,59 @@
+<div class="ver-licencia-modal">
+  <div class="modal-header">
+    <div class="header-content">
+      <div class="icon-circle">
+        <mat-icon>description</mat-icon>
+      </div>
+      <div class="header-text">
+        <h2 class="modal-title">{{ data.titulo || 'Licencia de Conducir' }}</h2>
+      </div>
+    </div>
+    <button mat-icon-button class="close-button" (click)="cerrar()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div class="modal-body">
+    <div class="viewer-body" [class.image-mode]="esImagen" *ngIf="urlSanitizada || urlImgSanitizada; else sinDoc">
+      <ng-container *ngIf="esImagen; else pdfView">
+        <div class="img-stage">
+          <img [src]="urlImgSanitizada" alt="Licencia" />
+        </div>
+      </ng-container>
+
+      <ng-template #pdfView>
+        <object [data]="urlSanitizada" type="application/pdf" width="100%" height="100%">
+          <iframe [src]="urlSanitizada" width="100%" height="100%" frameborder="0"></iframe>
+          <div class="pdf-fallback">
+            No se puede mostrar el PDF aquí.
+            <a *ngIf="data.url" [href]="data.url" target="_blank" rel="noopener">Abrir en nueva pestaña</a>
+          </div>
+        </object>
+      </ng-template>
+    </div>
+
+    <ng-template #sinDoc>
+      <div class="empty-state">No se puede mostrar el documento.</div>
+    </ng-template>
+  </div>
+
+  <div class="modal-actions">
+    <button
+      type="button"
+      mat-raised-button
+      color="accent"
+      (click)="cerrar()">
+      Cerrar
+    </button>
+    <button
+      type="button"
+      mat-raised-button
+      color="primary"
+      (click)="abrirNuevaPestana()"
+      *ngIf="data.url">
+      <mat-icon>open_in_new</mat-icon>
+      Abrir
+    </button>
+  </div>
+</div>
+

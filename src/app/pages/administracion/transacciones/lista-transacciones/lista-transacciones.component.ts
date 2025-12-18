@@ -1,5 +1,5 @@
 import { Component, DestroyRef, inject, OnInit, ViewChild } from '@angular/core';
-import { UntypedFormControl } from '@angular/forms';
+import { FormBuilder, FormGroup, UntypedFormControl } from '@angular/forms';
 import { Router } from '@angular/router';
 import { fadeInRight400ms } from '@vex/animations/fade-in-right.animation';
 import { DxDataGridComponent } from 'devextreme-angular';
@@ -45,14 +45,26 @@ export class ListaTransaccionesComponent implements OnInit {
   public totalPaginas: number = 0;
   public paginaActualData: any[] = [];
   public filtroActivo: string = '';
+  filtroForm!: FormGroup;
+  fechaInicio: string | null = null;
+  fechaFin: string | null = null;
 
   constructor(
     private tranService: TransaccionesService,
     private alerts: AlertsService,
-    private route: Router
+    private route: Router,
+    private fb: FormBuilder
   ) {
     this.showFilterRow = true;
     this.showHeaderFilter = true;
+    this.initFiltroForm();
+  }
+
+  initFiltroForm() {
+    this.filtroForm = this.fb.group({
+      fechaInicio: [null],
+      fechaFin: [null]
+    });
   }
 
   ngOnInit(): void {
@@ -66,8 +78,30 @@ export class ListaTransaccionesComponent implements OnInit {
   limpiarCampos() {
     this.dataGrid.instance.clearGrouping();
     this.isGrouped = false;
+    this.filtroForm.reset();
+    this.fechaInicio = null;
+    this.fechaFin = null;
     this.setupDataSource();
     this.dataGrid.instance.refresh();
+  }
+
+  buscar() {
+    const formValue = this.filtroForm.getRawValue();
+    this.fechaInicio = formValue.fechaInicio ? this.formatDate(formValue.fechaInicio) : null;
+    this.fechaFin = formValue.fechaFin ? this.formatDate(formValue.fechaFin) : null;
+    this.setupDataSource();
+    if (this.dataGrid?.instance) {
+      this.dataGrid.instance.refresh();
+    }
+  }
+
+  formatDate(date: Date): string {
+    if (!date) return '';
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   toggleExpandGroups() {
@@ -125,14 +159,27 @@ export class ListaTransaccionesComponent implements OnInit {
   async abrirModal(raw: any) {
     const id = raw?.id ?? raw?.Id ?? null;
 
-    const latStr = raw?.latitud != null ? String(raw.latitud) : (raw?.Latitud != null ? String(raw.Latitud) : '');
-    const lngStr = raw?.longitud != null ? String(raw.longitud) : (raw?.Longitud != null ? String(raw.Longitud) : '');
+    // Intentar primero con latitudInicial/longitudInicial, si no existen usar latitudFinal/longitudFinal
+    const latInicial = raw?.latitudInicial != null ? raw.latitudInicial : (raw?.LatitudInicial != null ? raw.LatitudInicial : null);
+    const lngInicial = raw?.longitudInicial != null ? raw.longitudInicial : (raw?.LongitudInicial != null ? raw.LongitudInicial : null);
+    
+    const latFinal = raw?.latitudFinal != null ? raw.latitudFinal : (raw?.LatitudFinal != null ? raw.LatitudFinal : null);
+    const lngFinal = raw?.longitudFinal != null ? raw.longitudFinal : (raw?.LongitudFinal != null ? raw.LongitudFinal : null);
+    
+    const latStr = (latInicial != null && latInicial !== '') ? String(latInicial) : ((latFinal != null && latFinal !== '') ? String(latFinal) : '');
+    const lngStr = (lngInicial != null && lngInicial !== '') ? String(lngInicial) : ((lngFinal != null && lngFinal !== '') ? String(lngFinal) : '');
 
     const tipoRaw = (raw?.tipoTransaccion ?? raw?.tipo ?? '').toString();
     const tipoUI = tipoRaw === 'RECARGA' ? 'Recarga' : tipoRaw === 'DEBITO' ? 'Débito' : (tipoRaw || null);
 
     const fechaISO = raw?.fechaHora ?? raw?.FechaHora ?? null;
     const fecha = fechaISO ? new Date(fechaISO) : null;
+    
+    const fechaHoraInicioISO = raw?.fechaHoraInicio ?? null;
+    const fechaHoraInicio = fechaHoraInicioISO ? new Date(fechaHoraInicioISO) : null;
+    
+    const fechaHoraFinalISO = raw?.fechaHoraFinal ?? null;
+    const fechaHoraFinal = fechaHoraFinalISO ? new Date(fechaHoraFinalISO) : null;
 
     const montoNum =
       typeof raw?.monto === 'number' ? raw.monto
@@ -140,7 +187,7 @@ export class ListaTransaccionesComponent implements OnInit {
           : (typeof raw?.Monto === 'number' ? raw.Monto
             : Number((raw?.Monto ?? '0').toString().replace(/[^0-9.-]/g, '')) || 0));
 
-    this.selectedTransaccion = { id, fecha, tipo: tipoUI, monto: montoNum, lat: latStr, lng: lngStr };
+    this.selectedTransaccion = { id, fecha, fechaHoraInicio, fechaHoraFinal, tipo: tipoUI, monto: montoNum, lat: latStr, lng: lngStr };
 
     const latNum = parseFloat(latStr as string);
     const lngNum = parseFloat(lngStr as string);
@@ -237,7 +284,7 @@ export class ListaTransaccionesComponent implements OnInit {
 
         try {
           const resp: any = await lastValueFrom(
-            this.tranService.obtenerTransaccionesData(page, take)
+            this.tranService.obtenerTransaccionesData(page, take, this.fechaInicio, this.fechaFin)
           );
           this.loading = false;
 
@@ -252,11 +299,16 @@ export class ListaTransaccionesComponent implements OnInit {
             id: x?.id ?? null,
             tipoTransaccion: x?.tipoTransaccion ?? null,
             monto: toMoney(x?.monto),
-            latitud: x?.latitud ?? null,
-            longitud: x?.longitud ?? null,
+            latitudInicial: x?.latitudInicial ?? null,
+            longitudInicial: x?.longitudInicial ?? null,
+            latitudFinal: x?.latitudFinal ?? null,
+            longitudFinal: x?.longitudFinal ?? null,
             fechaHora: x?.fechaHora ?? null,
             fhRegistro: x?.fhRegistro ?? null,
+            fechaHoraInicio: x?.fechaHoraInicio ?? null,
+            fechaHoraFinal: x?.fechaHoraFinal ?? null,
             numeroSerieMonedero: x?.numeroSerieMonedero ?? null,
+            numeroSerieValidador: x?.numeroSerieValidador ?? null,
             numeroSerieDispositivo: x?.numeroSerieDispositivo ?? null,
             // 👇 nuevo: nombre completo del pasajero
             pasajero: fullName(

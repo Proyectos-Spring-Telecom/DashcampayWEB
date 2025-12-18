@@ -24,6 +24,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';   // <-- FALT
 import { MatSelectModule } from '@angular/material/select';         // <-- FALTA
 import { MatOptionModule } from '@angular/material/core';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle'; // <-- FALTA
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
 import { DxDataGridModule } from 'devextreme-angular';
 import { ListaTransaccionesComponent } from './lista-transacciones/lista-transacciones.component';
 import { AgregarTransaccionComponent } from './agregar-transaccion/agregar-transaccion.component';
@@ -59,6 +61,8 @@ import { AgregarTransaccionComponent } from './agregar-transaccion/agregar-trans
         MatSelectModule,       // <-- agregado
         MatOptionModule,
         MatSlideToggleModule,  // <-- agregado
+        MatDatepickerModule,
+        MatNativeDateModule,
         DxDataGridModule,
   ]
 })

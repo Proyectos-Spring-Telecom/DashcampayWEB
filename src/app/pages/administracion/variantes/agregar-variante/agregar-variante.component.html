@@ -43,6 +43,11 @@
                         <div class="meta-item"><span><strong>Fin:</strong> {{ r.destino }}</span></div>
                       </div>
                       <div class="col-6">
+                        <div class="meta-item">
+                          <span><strong>Cliente:</strong> {{ r.nombreCliente || '—' }}</span>
+                        </div>
+                      </div>
+                      <div class="col-6">
                         <div class="meta-item"><span><strong>Kilómetros:</strong> {{ r.distanciaKm | number:'1.0-1' }}
                             km</span></div>
                       </div>
@@ -142,6 +147,21 @@
               <form [formGroup]="tarifaForm" autocomplete="off" novalidate>
                 <div class="row g-3">
                   <div class="col-12 col-md-6">
+                    <label id="lbl-tipo-tarifa" class="form-label d-flex align-items-center gap-2">
+                      <i class="fa fa-tags doc-icon" aria-hidden="true"></i>
+                      Tipo Tarifa
+                    </label>
+                    <mat-form-field appearance="fill" class="w-100">
+                      <mat-select formControlName="idTipoTarifa" placeholder="Seleccione un tipo" [attr.aria-labelledby]="'lbl-tipo-tarifa'">
+                        <mat-option [value]="null">— Seleccione —</mat-option>
+                        <mat-option *ngFor="let tipo of listaTiposTarifa" [value]="tipo.id">
+                          {{ tipo.nombre }}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+
+                  <div class="col-12 col-md-6">
                     <label id="lbl-tarifa-base" class="form-label d-flex align-items-center gap-2">
                       <i class="fa fa-money-bill-alt doc-icon" aria-hidden="true"></i>
                       Tarifa Base
@@ -162,6 +182,7 @@
                     <mat-form-field appearance="fill" class="w-100">
                       <input matInput type="number" step="0.1" min="0" placeholder="Ej: 120.5"
                         formControlName="distanciaBaseKm" inputmode="decimal" [attr.aria-labelledby]="'lbl-distancia'"
+                        [disabled]="tarifaForm.get('distanciaBaseKm')?.disabled ?? false"
                         (keydown)="distanciaKeydown($event)" (input)="distanciaInput($event)"
                         (paste)="distanciaPaste($event)">
                     </mat-form-field>
@@ -175,6 +196,7 @@
                     <mat-form-field appearance="fill" class="w-100">
                       <input matInput type="number" step="0.01" min="0" placeholder="Ej: 10.25"
                         formControlName="incrementoCadaMetros" [attr.aria-labelledby]="'lbl-incremento'"
+                        [disabled]="tarifaForm.get('incrementoCadaMetros')?.disabled ?? false"
                         inputmode="decimal" (keydown)="incrementoKeydown($event)" (input)="incrementoInput($event)"
                         (paste)="incrementoPaste($event)">
                     </mat-form-field>
@@ -188,6 +210,7 @@
                     <mat-form-field appearance="fill" class="w-100">
                       <input matInput type="number" step="0.01" min="0" placeholder="Ej: 50.00"
                         formControlName="costoAdicional" [attr.aria-labelledby]="'lbl-costo-adicional'"
+                        [disabled]="tarifaForm.get('costoAdicional')?.disabled ?? false"
                         inputmode="decimal" (keydown)="costoKeydown($event)" (input)="costoInput($event)"
                         (paste)="costoPaste($event)" (blur)="costoBlur($event)">
                     </mat-form-field>
