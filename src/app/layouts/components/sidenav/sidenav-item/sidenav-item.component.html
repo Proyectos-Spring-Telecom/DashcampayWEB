@@ -72,8 +72,26 @@
   <div class="vex-sidenav-subheading" [appHasPermission]="item.permissions || []">
     {{ item.label }}
   </div>
+
   <vex-sidenav-item
     *ngFor="let subItem of visibleChildren(item)"
     [item]="subItem"
     [level]="0"></vex-sidenav-item>
+
+  <a
+    *ngIf="item.label === 'Trabajo' && showRol"
+    [appHasPermission]="[]"
+    [routerLinkActiveOptions]="{ exact: false }"
+    [routerLink]="'/administracion/perfil-pasajero'"
+    class="vex-sidenav-item"
+    matRipple
+    matRippleColor="var(--vex-sidenav-item-ripple-color)"
+    routerLinkActive="vex-sidenav-item--active">
+    <mat-icon
+      *ngIf="level === 0"
+      [svgIcon]="'mat:description'"
+      class="vex-sidenav-item__icon"></mat-icon>
+    <span class="vex-sidenav-item__label">Perfil Pasajero</span>
+  </a>
+
 </ng-container>

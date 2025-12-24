@@ -25,8 +25,8 @@
               <mat-icon svgIcon="mat:restore"></mat-icon>
               <span class="btn-text">Limpiar</span>
             </button>
-            <button (click)="agregarVariante()" mat-raised-button color="warn" type="button"
-              class="btn-soft textGenerico" matTooltip="Agregar usuario">
+            <button [appHasPermission]="['70']" (click)="agregarVariante()" mat-raised-button color="warn" type="button"
+              class="btn-soft textGenerico" matTooltip="Agregar Variante">
               <mat-icon>add</mat-icon>
               <span class="btn-text">Agregar</span>
             </button>
@@ -49,7 +49,7 @@
             <dxo-header-filter [visible]="showHeaderFilter"></dxo-header-filter>
             <dxo-grouping [autoExpandAll]="true"></dxo-grouping>
             <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[20]" [showInfo]="true"></dxo-pager>
-            <dxi-column caption="Acciones" cellTemplate="acciones" [width]="160" alignment="center"></dxi-column>
+            <dxi-column *appHasPermission="['72']" caption="Acciones" cellTemplate="acciones" [width]="160" alignment="center"></dxi-column>
             <dxi-column dataField="nombreRuta" caption="Nombre" alignment="center" [width]="200"></dxi-column>
             <dxi-column dataField="puntoInicio.direccion" caption="Punto Inicio" [width]="400" alignment="center"
               cellTemplate="cell">
@@ -89,7 +89,7 @@
                   <mat-icon class="btn__icon">place</mat-icon>
                 </button>
               </div>&nbsp;&nbsp;
-              <div>
+              <div [appHasPermission]="['72']">
                 <button class="btn-desactive" (click)="eliminarDerrotero(d.data)">
                   <mat-icon class="btn__icon">close</mat-icon>
                 </button>

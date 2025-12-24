@@ -20,10 +20,10 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';   // <-- FALTA
-import { MatSelectModule } from '@angular/material/select';         // <-- FALTA
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle'; // <-- FALTA
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { DxDataGridModule } from 'devextreme-angular';
@@ -31,6 +31,7 @@ import { ListaOperadoresComponent } from './lista-operadores/lista-operadores.co
 import { AgregarOperadorComponent } from './agregar-operador/agregar-operador.component';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { VerDocumentoOperadorComponent } from './ver-documento-operador/ver-documento-operador.component';
+import { HasPermissionDirective } from '../../services/haspermission.directive';
 
 
 @NgModule({
@@ -38,17 +39,12 @@ import { VerDocumentoOperadorComponent } from './ver-documento-operador/ver-docu
   imports: [
     CommonModule,
     OperadoresRoutingModule,
-
     VexPageLayoutComponent,
     VexPageLayoutHeaderDirective,
     VexBreadcrumbsComponent,
     VexPageLayoutContentDirective,
-
-    // Forms
     FormsModule,
     ReactiveFormsModule,
-
-    // Angular Material
     MatButtonToggleModule,
     MatButtonModule,
     MatTooltipModule,
@@ -59,15 +55,16 @@ import { VerDocumentoOperadorComponent } from './ver-documento-operador/ver-docu
     MatCheckboxModule,
     MatPaginatorModule,
     MatDialogModule,
-    MatFormFieldModule,    // <-- agregado
+    MatFormFieldModule,
     MatInputModule,
-    MatSelectModule,       // <-- agregado
+    MatSelectModule,
     MatOptionModule,
-    MatSlideToggleModule,  // <-- agregado
+    MatSlideToggleModule,
     MatDatepickerModule,
     MatNativeDateModule,
     DxDataGridModule,
-    MatProgressBarModule
+    MatProgressBarModule,
+    HasPermissionDirective
   ]
 })
 export class OperadoresModule { }

@@ -9,7 +9,7 @@ import {
 } from '@angular/core';
 import { VexLayoutService } from '@vex/services/vex-layout.service';
 import { VexConfigService } from '@vex/config/vex-config.service';
-import { filter, map, startWith, switchMap } from 'rxjs/operators';
+import { filter, map, startWith, switchMap, take } from 'rxjs/operators';
 import { NavigationService } from '../../../core/navigation/navigation.service';
 import { VexPopoverService } from '@vex/components/vex-popover/vex-popover.service';
 import { MegaMenuComponent } from './mega-menu/mega-menu.component';
@@ -77,17 +77,27 @@ export class ToolbarComponent implements OnInit {
   megaMenuOpen$: Observable<boolean> = of(false);
   private readonly destroyRef: DestroyRef = inject(DestroyRef);
 
-  // Recibimos el estado actual (lo pinta el icono)
   @Input() collapsed: boolean = false;
 
-  // Para mostrar/ocultar el botón como ya lo hacía tu sidenav
   @Input() showCollapsePin$!: Observable<boolean>;
 
-  toggleCollapse() {
+
+sidenavOpen$ = this.layoutService.sidenavOpen$;
+
+toggleCollapse() {
+  this.isDesktop$.pipe(take(1)).subscribe((isDesktop) => {
+    if (!isDesktop) {
+      this.sidenavOpen$.pipe(take(1)).subscribe((open) => {
+        open ? this.layoutService.closeSidenav() : this.layoutService.openSidenav();
+      });
+      return;
+    }
+
     this.collapsed
       ? this.layoutService.expandSidenav()
       : this.layoutService.collapseSidenav();
-  }
+  });
+}
 
   constructor(
     private readonly layoutService: VexLayoutService,

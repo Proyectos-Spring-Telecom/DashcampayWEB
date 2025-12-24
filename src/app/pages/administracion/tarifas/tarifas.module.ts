@@ -1,6 +1,5 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
 import { TarifasRoutingModule } from './tarifas-routing.module';
 import { ListaTarifasComponent } from './lista-tarifas/lista-tarifas.component';
 import { AgregarTarifaComponent } from './agregar-tarifa/agregar-tarifa.component';
@@ -8,9 +7,7 @@ import { VexPageLayoutComponent } from '@vex/components/vex-page-layout/vex-page
 import { VexPageLayoutHeaderDirective } from '@vex/components/vex-page-layout/vex-page-layout-header.directive';
 import { VexBreadcrumbsComponent } from '@vex/components/vex-breadcrumbs/vex-breadcrumbs.component';
 import { VexPageLayoutContentDirective } from '@vex/components/vex-page-layout/vex-page-layout-content.directive';
-
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -22,11 +19,12 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';   // <-- FALTA
-import { MatSelectModule } from '@angular/material/select';         // <-- FALTA
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle'; // <-- FALTA
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { DxDataGridModule } from 'devextreme-angular';
+import { HasPermissionDirective } from '../../services/haspermission.directive';
 
 
 @NgModule({
@@ -37,17 +35,12 @@ import { DxDataGridModule } from 'devextreme-angular';
   imports: [
     CommonModule,
     TarifasRoutingModule,
-    // Vex layout
     VexPageLayoutComponent,
     VexPageLayoutHeaderDirective,
     VexBreadcrumbsComponent,
     VexPageLayoutContentDirective,
-
-    // Forms
     FormsModule,
     ReactiveFormsModule,
-
-    // Angular Material
     MatButtonToggleModule,
     MatButtonModule,
     MatTooltipModule,
@@ -58,12 +51,13 @@ import { DxDataGridModule } from 'devextreme-angular';
     MatCheckboxModule,
     MatPaginatorModule,
     MatDialogModule,
-    MatFormFieldModule,    // <-- agregado
+    MatFormFieldModule,
     MatInputModule,
-    MatSelectModule,       // <-- agregado
+    MatSelectModule,
     MatOptionModule,
-    MatSlideToggleModule,  // <-- agregado
+    MatSlideToggleModule,
     DxDataGridModule,
+    HasPermissionDirective
   ]
 })
 export class TarifasModule { }

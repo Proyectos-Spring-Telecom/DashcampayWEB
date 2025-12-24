@@ -38,72 +38,76 @@
         </div>
 
         <section class="mt-5 table-shell">
-          <dx-data-grid #gridContainer id="gridContainer" [columnHidingEnabled]="true"
-                            [showBorders]="true" [showColumnLines]="true" [showRowLines]="true"
-                            [rowAlternationEnabled]="true" [dataSource]="listaTurnos" [keyExpr]="'Id'"
-                            [width]="'100%'" [remoteOperations]="{ paging: true }" [paging]="{ pageSize: pageSize }"
-                            [pager]="{ 
+          <dx-data-grid #gridContainer id="gridContainer" [columnHidingEnabled]="true" [showBorders]="true"
+            [showColumnLines]="true" [showRowLines]="true" [rowAlternationEnabled]="true" [dataSource]="listaTurnos"
+            [keyExpr]="'Id'" [width]="'100%'" [remoteOperations]="{ paging: true }" [paging]="{ pageSize: pageSize }"
+            [pager]="{ 
                                 showPageSizeSelector: true, 
                                 allowedPageSizes: [50], 
                                 showInfo: true,
                                 infoText: 'Página {0} de {1}', 
                                 visible: true 
                             }" (onPageIndexChanged)=" onPageIndexChanged($event)"
-                            (onOptionChanged)="onGridOptionChanged($event)">
-                            <dxo-search-panel [visible]="true" [width]="200" placeholder="Buscar..."></dxo-search-panel>
-                            <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[20]"
-                                [showInfo]="true"></dxo-pager>
-                            <dxo-group-panel [emptyPanelText]="mensajeAgrupar" [visible]="true"></dxo-group-panel>
-                            <dxo-filter-row [visible]="showFilterRow"></dxo-filter-row>
-                            <dxo-header-filter [visible]="showHeaderFilter"></dxo-header-filter>
-                            <dxo-grouping [autoExpandAll]="true"></dxo-grouping>
-                            <dxi-column caption="Acciones" cellTemplate="Acciones" alignment="center"></dxi-column>
-                            <dxi-column dataField="inicio" caption="Inicio del Turno" cellTemplate="fechaInicioData" alignment="center">
-                                <div *dxTemplate="let rf of 'fechaInicioData'">
-                                    {{ rf.data.inicio | date:'dd/MM/yyyy HH:mm' : '+0000' }}
-                                </div>
-                            </dxi-column>
-                            <dxi-column dataField="fin" caption="Fin del Turno" cellTemplate="fechFin" alignment="center">
-                                <div *dxTemplate="let a of 'fechFin'">
-                                    {{ a.data.fin | date:'dd/MM/yyyy HH:mm' : '+0000' }}
-                                </div>
-                            </dxi-column>
-                            <dxi-column caption="Operador" alignment="center" cellTemplate="nomOperador">
-                                <div *dxTemplate="let re of 'nomOperador'">
-                                    {{ re.data?.nombreOperador }}
-                                    {{ re.data?.apellidoPaternoOperador || '' }}
-                                    {{ re.data?.apellidoMaternoOperador || '' }}
-                                </div>
-                            </dxi-column>
-                            <dxi-column caption="Cliente" alignment="center" cellTemplate="nomCliente">
-                                <div *dxTemplate="let re of 'nomCliente'">
-                                    {{ re.data?.nombreCliente }}
-                                    {{ re.data?.apellidoPaternoCliente || '' }}
-                                    {{ re.data?.apellidoMaternoCliente || '' }}
-                                </div>
-                            </dxi-column>
-                            <dxi-column caption="Vehículo" alignment="center" cellTemplate="vehic">
-                                <div *dxTemplate="let re of 'vehic'">
-                                    {{ re.data?.placaVehiculo }}
-                                </div>
-                            </dxi-column>
-                            <dxi-column caption="Validador" alignment="center" cellTemplate="valid">
-                                <div *dxTemplate="let re of 'valid'">
-                                    {{ re.data?.numeroSerieValidador }}
-                                </div>
-                            </dxi-column>
-                            <dxi-column caption="Contadora" alignment="center" cellTemplate="contr">
-                                <div *dxTemplate="let re of 'contr'">
-                                    {{ re.data?.numeroSerieContador }}
-                                </div>
-                            </dxi-column>
-                            <dxi-column dataField="fechaCreacion" caption="Fecha Creación" alignment="center"
-                                cellTemplate="fechCreaci">
-                                <div *dxTemplate="let a of 'fechCreaci'">
-                                    {{ a.data.fechaCreacion | date:'dd/MM/yyyy HH:mm' : '+0000' }}
-                                </div>
-                            </dxi-column>
-                            <dxi-column dataField="estatus" caption="Estatus" alignment="center" cellTemplate="est">
+            (onOptionChanged)="onGridOptionChanged($event)">
+            <dxo-search-panel [visible]="true" [width]="200" placeholder="Buscar..."></dxo-search-panel>
+            <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[20]" [showInfo]="true"></dxo-pager>
+            <dxo-group-panel [emptyPanelText]="mensajeAgrupar" [visible]="true"></dxo-group-panel>
+            <dxo-filter-row [visible]="showFilterRow"></dxo-filter-row>
+            <dxo-header-filter [visible]="showHeaderFilter"></dxo-header-filter>
+            <dxo-grouping [autoExpandAll]="true"></dxo-grouping>
+            <!-- <dxi-column caption="Acciones" cellTemplate="Acciones" alignment="center"></dxi-column> -->
+            <dxi-column dataField="inicio" caption="Inicio del Turno" cellTemplate="fechaInicioData" alignment="center">
+              <div *dxTemplate="let rf of 'fechaInicioData'">
+                {{ rf.data.inicio | date:'dd/MM/yyyy HH:mm' : '+0000' }}
+              </div>
+            </dxi-column>
+            <dxi-column dataField="fin" caption="Fin del Turno" cellTemplate="fechFin" alignment="center"
+              cellTemplate="finTurno">
+              <div *dxTemplate="let r of 'finTurno'">
+                <ng-container *ngIf="r.data.fin != null && r.data.fin !== ''; else sinTurnoFin">
+                  {{ r.data.fin | date:'dd/MM/yyyy HH:mm' : '+0000' }}
+                </ng-container>
+                <ng-template #sinTurnoFin>
+                  <span class="badge-status activo">
+                    En Trayecto
+                  </span></ng-template>
+              </div>
+            </dxi-column>
+            <dxi-column caption="Operador" alignment="center" cellTemplate="nomOperador">
+              <div *dxTemplate="let re of 'nomOperador'">
+                {{ re.data?.nombreOperador }}
+                {{ re.data?.apellidoPaternoOperador || '' }}
+                {{ re.data?.apellidoMaternoOperador || '' }}
+              </div>
+            </dxi-column>
+            <dxi-column caption="Cliente" alignment="center" cellTemplate="nomCliente">
+              <div *dxTemplate="let re of 'nomCliente'">
+                {{ re.data?.nombreCliente }}
+                {{ re.data?.apellidoPaternoCliente || '' }}
+                {{ re.data?.apellidoMaternoCliente || '' }}
+              </div>
+            </dxi-column>
+            <dxi-column caption="Vehículo" alignment="center" cellTemplate="vehic">
+              <div *dxTemplate="let re of 'vehic'">
+                {{ re.data?.placaVehiculo }}
+              </div>
+            </dxi-column>
+            <dxi-column caption="Validador" alignment="center" cellTemplate="valid">
+              <div *dxTemplate="let re of 'valid'">
+                {{ re.data?.numeroSerieValidador }}
+              </div>
+            </dxi-column>
+            <dxi-column caption="Contadora" alignment="center" cellTemplate="contr">
+              <div *dxTemplate="let re of 'contr'">
+                {{ re.data?.numeroSerieContador }}
+              </div>
+            </dxi-column>
+            <dxi-column dataField="fechaCreacion" caption="Fecha Creación" alignment="center" cellTemplate="fechCreaci">
+              <div *dxTemplate="let a of 'fechCreaci'">
+                {{ a.data.fechaCreacion | date:'dd/MM/yyyy HH:mm' : '+0000' }}
+              </div>
+            </dxi-column>
+            <dxi-column dataField="estatus" caption="Estatus" alignment="center" cellTemplate="est">
               <div *dxTemplate="let f of 'est'">
                 <span [ngClass]="f.data.estatus === 1 ? 'badge-status activo' : 'badge-status inactivo'">
                   {{ f.data.estatus === 1 ? 'Activo' : 'Inactivo' }}
@@ -126,7 +130,7 @@
                 </button>
               </div>
             </div>
-                        </dx-data-grid>
+          </dx-data-grid>
         </section>
       </div>
     </div>

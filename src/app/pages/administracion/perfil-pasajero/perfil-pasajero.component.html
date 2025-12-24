@@ -1,40 +1,68 @@
 <vex-page-layout @fadeInRight>
-
     <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
         [class.px-6]="layoutCtrl.value === 'fullwidth'" class="-mt-6">
-
         <div class="card mt-4">
-
-            <div class="card-header border-0 pb-0">
+            <div class="card-header border-0 pb-0 d-flex align-items-center justify-content-between">
+                <!-- Lado izquierdo: título -->
                 <h2 class="h5 mb-0 d-flex align-items-center">
                     <i class="fas fa-wallet mr-2"></i>
                     Mi Panel Financiero
                 </h2>
+
+                <!-- Lado derecho: botones -->
+                <div class="d-flex align-items-center gap-2">
+                    <button class="btn btn-primario" (click)="onExtravio()">
+                        Extravío de Monedero
+                    </button>
+                    <!-- i -->
+                </div>
             </div>
 
             <div class="card-body">
-
                 <div class="row">
-
-                    <!-- 1. GASTO DEL MES -->
-                    <div class="col-12 col-md-6 col-lg-4 mb-4">
-                        <div class="wallet-card wallet-card-btc h-100">
+                    <div class="col-12 col-md-6 col-lg-3 mb-4">
+                        <div class="wallet-card wallet-card-user h-100" style="padding: 30px;">
                             <div class="wallet-card-header text-center">
                                 <div class="wallet-icon-wrapper">
-                                    <i class="fas fa-chart-line"></i>
+                                    <i class="fa fa-address-card" aria-hidden="true"></i>
                                 </div>
-                                <h3 class="wallet-title mb-1">Gasto del mes</h3>
-                                <p class="text-muted text-uppercase small mb-1">
-                                    {{ mesActual }}
-                                </p>
-                                <p class="wallet-amount mb-3">
-                                    {{ gastoMes | currency:'MXN':'symbol-narrow':'1.0-0' }}
+
+                                <h3 class="wallet-title mb-1">
+                                    {{ showNombre }} {{ showApellidoPaterno }}
+                                </h3>
+
+                                <p class="wallet-amount">
+                                    Monedero:
+                                    {{ informacion?.Monederos || 'Sin monedero' }}
                                 </p>
                             </div>
 
                             <div class="wallet-address d-flex align-items-center justify-content-between">
                                 <span class="wallet-address-text text-truncate">
-                                    Resumen de tus gastos mensuales
+                                    Cliente: {{ showNombreCliente || 'Sin cliente' }}
+                                </span>
+                                <i class="fas fa-id-card"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-lg-3 mb-4">
+                        <div class="wallet-card wallet-card-btc h-100">
+                            <div class="wallet-card-header text-center">
+                                <div class="wallet-icon-wrapper">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <h3 class="wallet-title mb-1">Gasto del Mes</h3>
+                                <p class="text-muted text-uppercase small mb-1">
+                                    {{ mesActualLabel || 'Sin gastos' }}
+                                </p>
+                                <p class="wallet-amount mb-3">
+                                    {{ (informacion?.TotalDebitosUltimoMes ?? 0) | currency:'$' }}
+                                </p>
+                            </div>
+                            <div class="wallet-address d-flex align-items-center justify-content-between">
+                                <span class="wallet-address-text text-truncate">
+                                    Resumen Total de tus Gastos Mensuales
                                 </span>
                                 <button type="button" class="btn btn-link btn-sm p-0 wallet-copy-btn">
                                     <i class="fas fa-arrow-right"></i>
@@ -42,9 +70,7 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- 2. SALDO -->
-                    <div class="col-12 col-md-6 col-lg-4 mb-4">
+                    <div class="col-12 col-md-6 col-lg-3 mb-4">
                         <div class="wallet-card wallet-card-eth h-100">
                             <div class="wallet-card-header text-center">
                                 <div class="wallet-icon-wrapper">
@@ -55,13 +81,12 @@
                                     Disponible
                                 </p>
                                 <p class="wallet-amount mb-3">
-                                    {{ saldoActual | currency:'MXN':'symbol-narrow':'1.2-2' }}
+                                    {{ (informacion.SaldoTotal | currency:'$') || 0 }}
                                 </p>
                             </div>
-
                             <div class="wallet-address d-flex align-items-center justify-content-between">
                                 <span class="wallet-address-text text-truncate">
-                                    Saldo actual en tu cuenta
+                                    Saldo Actual en tu Cuenta
                                 </span>
                                 <button type="button" class="btn btn-link btn-sm p-0 wallet-copy-btn">
                                     <i class="fas fa-eye"></i>
@@ -69,26 +94,23 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- 3. ÚLTIMA RECARGA -->
-                    <div class="col-12 col-md-6 col-lg-4 mb-4">
+                    <div class="col-12 col-md-6 col-lg-3 mb-4">
                         <div class="wallet-card wallet-card-ltc h-100">
                             <div class="wallet-card-header text-center">
                                 <div class="wallet-icon-wrapper">
                                     <i class="fas fa-plus-circle"></i>
                                 </div>
-                                <h3 class="wallet-title mb-1">Última recarga</h3>
+                                <h3 class="wallet-title mb-1">Última Recarga</h3>
                                 <p class="text-muted text-uppercase small mb-1">
                                     Fecha
                                 </p>
                                 <p class="wallet-amount mb-3">
-                                    {{ ultimaRecarga | date:'dd MMM yyyy' }}
+                                    {{ (informacion.UltimaRecarga | currency: '$') || 'Sin recargas' }}
                                 </p>
                             </div>
-
                             <div class="wallet-address d-flex align-items-center justify-content-between">
                                 <span class="wallet-address-text text-truncate">
-                                    Último movimiento de recarga
+                                    Último Movimiento de Recarga
                                 </span>
                                 <button type="button" class="btn btn-link btn-sm p-0 wallet-copy-btn">
                                     <i class="fas fa-history"></i>
@@ -96,49 +118,181 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
+                <div class="last-transactions mt-4 lt3">
+                    <h3 class="h6 mb-3 lt3__title">Últimos Movimientos</h3>
 
-                <div class="last-transactions mt-4">
-                    <h3 class="h6 mb-3">Últimos movimientos</h3>
+                    <div class="list-group lt3__list">
+                        <div class="lt3__empty-state"
+                            *ngIf="!loadingTx && (!paginaActualDataTx || paginaActualDataTx.length === 0)">
+                            <div class="lt3__empty-icon">
+                                <i class="fas fa-receipt"></i>
+                            </div>
+                            <div class="lt3__empty-title">
+                                Sin transacciones
+                            </div>
+                            <div class="lt3__empty-text">
+                                Aún no tienes movimientos registrados en tu cuenta.
+                            </div>
+                        </div>
 
-                    <div class="list-group">
+                        <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center lt3__item"
+                            *ngFor="let mov of paginaActualDataTx"
+                            [ngClass]="mov?.tipoTransaccion === 'RECARGA' ? 'mov-recarga' : 'mov-debito'">
 
-                        <a
-  class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-  *ngFor="let mov of movimientos"
-  [ngClass]="mov.tipo === 'Recarga' ? 'mov-recarga' : 'mov-debito'">
-
-  <div class="d-flex align-items-center">
-    <div class="transaction-icon-wrapper mr-3">
-      <i class="fas" [ngClass]="mov.tipo === 'Recarga' ? 'fa-arrow-up' : 'fa-arrow-down'"></i>
-    </div>
-
-    <div>
-      <div class="transaction-title font-weight-bold">
-        {{ mov.tipo }}
-      </div>
-      <div class="transaction-subtitle small text-muted"></div>
-    </div>
-  </div>
-
-  <div class="text-right">
-    <div class="transaction-amount font-weight-bold">
-      {{ mov.monto | currency:'MXN':'symbol-narrow':'1.2-2' }}
-    </div>
-    <div class="transaction-date small text-muted">
-      {{ mov.fecha | date:'dd MMM yyyy' }}
-    </div>
-  </div>
-</a>
+                            <div class="d-flex align-items-center lt3__left">
+                                <div class="transaction-icon-wrapper lt3__icon mr-3"
+                                    [ngClass]="mov?.tipoTransaccion === 'RECARGA' ? 'icon-recarga' : 'icon-debito'">
+                                    <i class="fas"
+                                        [ngClass]="mov?.tipoTransaccion === 'RECARGA' ? 'fa-arrow-up' : 'fa-arrow-down'"></i>
+                                </div>
 
 
+                                <div class="lt3__meta">
+                                    <div class="transaction-title lt3__type">
+                                        <span *ngIf="mov?.tipoTransaccion === 'RECARGA'">Recarga</span>
+                                        <span *ngIf="mov?.tipoTransaccion === 'DEBITO'">Débito</span>
+                                        <span
+                                            *ngIf="mov?.tipoTransaccion !== 'RECARGA' && mov?.tipoTransaccion !== 'DEBITO'">
+                                            Sin registro
+                                        </span>
+                                    </div>
+                                    <div class="transaction-subtitle lt3__sub">Movimiento</div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-items-center lt3__right">
+                                <div class="text-right mr-2">
+                                    <div class="transaction-amount lt3__amount">
+                                        <span *ngIf="mov?.monto !== null && mov?.monto !== undefined; else sinMonto">
+                                            {{
+                                            (mov?.tipoTransaccion === 'DEBITO'
+                                            ? 0 - (mov?.monto ?? 0)
+                                            : (mov?.monto ?? 0)
+                                            ) | currency:'MXN':'symbol-narrow':'1.2-2'
+                                            }}
+                                        </span>
+                                        <ng-template #sinMonto>Sin registro</ng-template>
+                                    </div>
+
+                                    <div class="transaction-date lt3__date">
+                                        <span *ngIf="mov?.fechaHoraFinal; else sinFecha">
+                                            {{ mov.fechaHoraFinal | date:'dd MMM yyyy hh:mm a' }}
+                                        </span>
+                                        <ng-template #sinFecha>Sin registro</ng-template>
+                                    </div>
+                                </div>
+
+                                <!-- Ícono marcador -->
+                                <i class="fas fa-map-marker-alt lt3__icon tx-marker icon-marker" title="Ver ubicación"
+                                    (click)="abrirModal(mov)">
+                                </i>
+
+                            </div>
+
+                        </a>
                     </div>
-                </div>
 
+                    <!-- Paginación -->
+                    <div class="d-flex align-items-center justify-content-between mt-3 tx-pagination">
+                        <div class="small text-muted">
+                            Página {{ pageIndexTx }} de {{ totalPaginasTx }}
+                        </div>
+
+                        <div class="d-flex align-items-center gap-2">
+                            <button type="button" class="btn btn-sm btn-light" (click)="prevTx()"
+                                [disabled]="pageIndexTx <= 1 || loadingTx">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+
+                            <button type="button" class="btn btn-sm" *ngFor="let p of paginasTx" (click)="irPaginaTx(p)"
+                                [disabled]="loadingTx" [ngClass]="p === pageIndexTx ? 'btn-primary' : 'btn-light'">
+                                {{ p }}
+                            </button>
+
+                            <button type="button" class="btn btn-sm btn-light" (click)="nextTx()"
+                                [disabled]="pageIndexTx >= totalPaginasTx || loadingTx">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
 
             </div>
-
         </div>
     </vex-page-layout-content>
 </vex-page-layout>
+
+<div *ngIf="modalOpen" class="custom-modal-backdrop" [class.fade-out]="modalClosing || modalAnim === 'out'"
+    (click)="onBackdrop()">
+    <div class="custom-modal-content" [class.animate-in]="modalAnim === 'in'" [class.animate-out]="modalAnim === 'out'"
+        (click)="$event.stopPropagation()">
+        <div class="custom-modal-header">
+            <div class="custom-modal-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path
+                        d="M12 1a4 4 0 0 1 4 4v1h2.5A2.5 2.5 0 0 1 21 8.5v10A2.5 2.5 0 0 1 18.5 21h-13A2.5 2.5 0 0 1 3 18.5v-10A2.5 2.5 0 0 1 5.5 6H8V5a4 4 0 0 1 4-4Zm0 2a2 2 0 0 0-2 2v1h4V5a2 2 0 0 0-2-2Z" />
+                </svg>
+            </div>
+            <h2>Id De La Transacción: {{ selectedTransaccion?.id }}</h2>
+            <button class="custom-modal-close" (click)="cerrarModal()">
+                <span>×</span>
+            </button>
+        </div>
+        <div class="custom-modal-body">
+            <div class="detalle-grid">
+                <div class="detalle-item">
+                    <div class="detalle-label">Fecha</div>
+                    <div class="detalle-value">
+                        <span *ngIf="selectedTransaccion?.fechaHoraInicio">
+                            {{ selectedTransaccion?.fechaHoraInicio | date:'dd/MM/yyyy HH:mm' }}
+                        </span>
+                        <span *ngIf="selectedTransaccion?.fechaHoraInicio && selectedTransaccion?.fechaHoraFinal"
+                            class="mx-1">—</span>
+                        <span *ngIf="selectedTransaccion?.fechaHoraFinal">
+                            {{ selectedTransaccion?.fechaHoraFinal | date:'dd/MM/yyyy HH:mm' }}
+                        </span>
+                        <span
+                            *ngIf="!selectedTransaccion?.fechaHoraInicio && !selectedTransaccion?.fechaHoraFinal && selectedTransaccion?.fecha">
+                            {{ selectedTransaccion?.fecha | date:'dd/MM/yyyy HH:mm' }}
+                        </span>
+                        <span
+                            *ngIf="!selectedTransaccion?.fechaHoraInicio && !selectedTransaccion?.fechaHoraFinal && !selectedTransaccion?.fecha">—</span>
+                    </div>
+                </div>
+                <div class="detalle-item">
+                    <div class="detalle-label">Tipo</div>
+                    <div class="detalle-value">
+                        <span *ngIf="selectedTransaccion?.tipo === 'Recarga'; else debitoTpl"
+                            class="badge-tipo is-recarga">
+                            {{ selectedTransaccion?.tipo }}
+                        </span>
+                        <ng-template #debitoTpl>
+                            <span class="badge-tipo is-debito">
+                                {{ selectedTransaccion?.tipo || '—' }}
+                            </span>
+                        </ng-template>
+                    </div>
+                </div>
+                <div class="detalle-item">
+                    <div class="detalle-label">Monto</div>
+                    <div class="detalle-value monto-destacado">
+                        {{ selectedTransaccion?.monto | currency:'MXN':'symbol-narrow':'1.2-2' }}
+                    </div>
+                </div>
+            </div>
+            <div *ngIf="hasCoords; else noMapTpl" id="map" class="trx-map"></div>
+            <ng-template #noMapTpl>
+                <div class="trx-map-empty">
+                    No hay ubicación de esta transacción.
+                </div>
+            </ng-template>
+            <div style="display: flex; justify-content: center; align-items: center;">
+                <button class="btn-success" (click)="accionPrincipal()">
+                    Confirmar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

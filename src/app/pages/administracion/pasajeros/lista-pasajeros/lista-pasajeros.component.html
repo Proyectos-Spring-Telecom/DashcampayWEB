@@ -1,7 +1,6 @@
 <vex-page-layout @fadeInRight>
-
-  <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
-    [class.px-6]="layoutCtrl.value === 'fullwidth'" class="-mt-6">
+  <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'" 
+  [class.px-6]="layoutCtrl.value === 'fullwidth'" class="-mt-6">
     <div class="card mt-4">
       <div class="dashboard-lite p-4">
         <div class="bg-app-bar appbar px-6 h-16 border-b sticky top-0 left-0 flex items-center z-10">
@@ -13,30 +12,24 @@
             <span class="sep">/</span>
             <span class="crumb-current" aria-current="page">Pasajeros</span>
           </nav>
-
           <div class="flex-grow"></div>
-
           <div class="flex gap-3 actions-bar">
             <button mat-raised-button color="primary" type="button" class="btn-soft textGenerico"
               (click)="toggleExpandGroups()" matTooltip="Expandir / Contraer grupos">
               <mat-icon svgIcon="mat:compare_arrows"></mat-icon>
               <span class="btn-text">{{ autoExpandAllGroups ? 'Contraer' : 'Expandir' }}</span>
             </button>
-
             <button mat-raised-button color="accent" type="button" class="btn-soft textGenerico"
               (click)="limpiarCampos()" matTooltip="Limpiar filtros">
               <mat-icon svgIcon="mat:restore"></mat-icon>
               <span class="btn-text">Limpiar</span>
             </button>
-
-            <button (click)="agregarPasajero()" mat-raised-button color="warn" type="button"
-              class="btn-soft textGenerico" matTooltip="Agregar usuario">
+            <button [appHasPermission]="['82']" (click)="agregarPasajero()" mat-raised-button color="warn" type="button" class="btn-soft textGenerico" matTooltip="Agregar usuario">
               <mat-icon>add</mat-icon>
               <span class="btn-text">Agregar</span>
             </button>
           </div>
         </div>
-
         <section class="mt-5 table-shell">
           <dx-data-grid #gridContainer id="gridContainer" [columnHidingEnabled]="true" [showBorders]="true"
             [showColumnLines]="true" [showRowLines]="true" [rowAlternationEnabled]="true" [dataSource]="listaPasajeros"
@@ -55,12 +48,11 @@
             <dxo-filter-row [visible]="showFilterRow"></dxo-filter-row>
             <dxo-header-filter [visible]="showHeaderFilter"></dxo-header-filter>
             <dxo-grouping [autoExpandAll]="true"></dxo-grouping>
-            <dxi-column caption="Acciones" cellTemplate="Acciones" alignment="center" [width]="180"></dxi-column>
+            <dxi-column *appHasPermission="['83','84']" caption="Acciones" cellTemplate="Acciones" alignment="center" [width]="180"></dxi-column>
             <dxi-column dataField="nombreCompleto" caption="Nombre" alignment="center"></dxi-column>
             <dxi-column dataField="correo" caption="Correo Electrónico" alignment="center"></dxi-column>
             <dxi-column dataField="telefono" caption="Teléfono" alignment="center"></dxi-column>
-            <dxi-column dataField="fechaNacimiento" cellTemplate="fecNac" caption="Fecha de Nacimiento"
-              alignment="center">
+            <dxi-column dataField="fechaNacimiento" cellTemplate="fecNac" caption="Fecha de Nacimiento" alignment="center">
               <div *dxTemplate="let r of 'fecNac'">
                 {{ r.data.fechaNacimiento | date: 'dd/MM/yyyy' }}
               </div>
@@ -96,16 +88,15 @@
               [texts]="{ exportAll: 'Exportar todos los datos a Excel', exportSelectedRows: 'Exportar filas seleccionadas a Excel' }">
             </dxo-export>
             <div *dxTemplate="let row of 'Acciones'" class="d-flex gap-3 justify-content-center">
-              <div>
+              <div [appHasPermission]="['83']">
                 <button class="btn-edit" (click)="actualizarPasajero(row.data.id)">
                   <mat-icon class="btn__icon">edit</mat-icon>
                 </button>
               </div>
-              <div>
+              <div [appHasPermission]="['84']">
                 <button *ngIf="row.data.estatus === 0" class="btn-active" (click)="activar(row.data)">
                   <mat-icon class="btn__icon">check_circle</mat-icon>
                 </button>
-
                 <button *ngIf="row.data.estatus === 1" class="btn-desactive" (click)="desactivar(row.data)">
                   <mat-icon class="btn__icon">block</mat-icon>
                 </button>

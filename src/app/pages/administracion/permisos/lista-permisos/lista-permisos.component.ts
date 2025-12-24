@@ -29,7 +29,7 @@ export class ListaPermisosComponent implements OnInit {
 
   public paginaActual: number = 1;
   public totalRegistros: number = 0;
-  public pageSize: number = 20;
+  public pageSize: number = 150;
   public totalPaginas: number = 0;
   public data!: string;
   public paginaActualData: any[] = [];

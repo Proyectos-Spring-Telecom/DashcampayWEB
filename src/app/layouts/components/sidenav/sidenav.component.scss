@@ -333,3 +333,53 @@
   fill: #fff !important;
   opacity: 1 !important;
 }
+
+.sidenav-close-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+
+  i {
+    font-size: 18px;
+    color: #0a2e57;
+  }
+
+  &:hover {
+    background-color: #356fb1;
+    transform: translateX(-2px);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+
+.sidenav-toggle-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+
+  i {
+    font-size: 18px;
+    color: #0a2e57;
+  }
+
+  &:hover {
+    background-color: #356fb1;
+    transform: translateX(-2px);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}

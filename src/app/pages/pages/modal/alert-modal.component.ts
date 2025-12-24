@@ -121,7 +121,16 @@ export class AlertModalComponent {
     this.prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
   }
+
   private unlockScroll() {
     document.body.style.overflow = this.prevOverflow || '';
+  }
+
+  onInputChange(e: Event) {
+    if (!this.state) return;
+    const v = (e.target as HTMLInputElement)?.value ?? '';
+    this.state.inputValue = v;
+    this.alerts._setInputValue(v);
+    this.cdr.markForCheck();
   }
 }

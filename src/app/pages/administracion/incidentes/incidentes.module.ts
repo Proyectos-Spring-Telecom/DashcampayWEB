@@ -19,6 +19,7 @@ import { VexPageLayoutContentDirective } from '@vex/components/vex-page-layout/v
 import { IncidentesRoutingModule } from './incidentes-routing.module';
 import { IncidentesComponent } from '../mantenimientos/incidentes/incidentes.component';
 import { RegistrarIncidenteComponent } from '../mantenimientos/incidentes/registrar-incidente/registrar-incidente.component';
+import { HasPermissionDirective } from '../../services/haspermission.directive';
 
 @NgModule({
   declarations: [
@@ -43,7 +44,8 @@ import { RegistrarIncidenteComponent } from '../mantenimientos/incidentes/regist
     MatDialogModule,
     DxDataGridModule,
     VexPageLayoutComponent,
-    VexPageLayoutContentDirective
+    VexPageLayoutContentDirective,
+    HasPermissionDirective
   ]
 })
 export class IncidentesModule { }

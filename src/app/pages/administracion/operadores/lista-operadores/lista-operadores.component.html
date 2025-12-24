@@ -1,5 +1,4 @@
 <vex-page-layout @fadeInRight>
-
     <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
         [class.px-6]="layoutCtrl.value === 'fullwidth'" class="-mt-6">
         <div class="card mt-4">
@@ -13,30 +12,25 @@
                         <span class="sep">/</span>
                         <span class="crumb-current" aria-current="page">Operadores</span>
                     </nav>
-
                     <div class="flex-grow"></div>
-
                     <div class="flex gap-3 actions-bar">
                         <button mat-raised-button color="primary" type="button" class="btn-soft textGenerico"
                             (click)="toggleExpandGroups()" matTooltip="Expandir / Contraer grupos">
                             <mat-icon svgIcon="mat:compare_arrows"></mat-icon>
                             <span class="btn-text">{{ autoExpandAllGroups ? 'Contraer' : 'Expandir' }}</span>
                         </button>
-
                         <button mat-raised-button color="accent" type="button" class="btn-soft textGenerico"
                             (click)="limpiarCampos()" matTooltip="Limpiar filtros">
                             <mat-icon svgIcon="mat:restore"></mat-icon>
                             <span class="btn-text">Limpiar</span>
                         </button>
-
-                        <button (click)="agregarOperador()" mat-raised-button color="warn" type="button"
+                        <button [appHasPermission]="['34']" (click)="agregarOperador()" mat-raised-button color="warn" type="button"
                             class="btn-soft textGenerico" matTooltip="Agregar usuario">
                             <mat-icon>add</mat-icon>
                             <span class="btn-text">Agregar</span>
                         </button>
                     </div>
                 </div>
-
                 <section class="mt-5 table-shell">
                     <dx-data-grid #gridContainer id="gridContainer" [columnHidingEnabled]="true" [showBorders]="true"
                         [showColumnLines]="true" [showRowLines]="true" [rowAlternationEnabled]="true"
@@ -56,10 +50,8 @@
                         <dxo-filter-row [visible]="showFilterRow"></dxo-filter-row>
                         <dxo-header-filter [visible]="showHeaderFilter"></dxo-header-filter>
                         <dxo-grouping [autoExpandAll]="true"></dxo-grouping>
-                        <dxi-column caption="Acciones" cellTemplate="Acciones" alignment="center" [width]="250"></dxi-column>
-                        <dxi-column caption="Identificación" [width]="150" alignment="center" [allowSorting]="false"
-                            [allowFiltering]="false" cellTemplate="ident">
-                        </dxi-column>
+                        <dxi-column *appHasPermission="['35','36']" caption="Acciones" cellTemplate="Acciones" alignment="center" [width]="250"></dxi-column>
+                        <dxi-column caption="Identificación" [width]="150" alignment="center" [allowSorting]="false" [allowFiltering]="false" cellTemplate="ident"></dxi-column>
                         <div *dxTemplate="let f of 'ident'">
                             <button class="btn-violet"  [disabled]="!f?.data?.identificacion"
                                 (click)="f?.data?.identificacion && irAVerDocumento(f.data.identificacion, 'Identificación', f.data)"
@@ -111,12 +103,12 @@
                                 exportSelectedRows: 'Exportar filas seleccionadas a Excel' }">
                         </dxo-export>
                         <div *dxTemplate="let row of 'Acciones'" class="d-flex gap-3 justify-content-center">
-                            <div>
+                            <div [appHasPermission]="['35']">
                                 <button class="btn-edit" (click)="actualizarOperador(row.data.id)">
                                     <mat-icon class="btn__icon">edit</mat-icon>
                                 </button>
                             </div>
-                            <div>
+                            <div [appHasPermission]="['36']">
                                 <button *ngIf="row.data.estatusOperador === 0" class="btn-active" (click)="activar(row.data)">
                                     <mat-icon class="btn__icon">check_circle</mat-icon>
                                 </button>

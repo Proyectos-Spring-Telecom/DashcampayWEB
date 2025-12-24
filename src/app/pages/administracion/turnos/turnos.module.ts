@@ -7,9 +7,7 @@ import { VexPageLayoutComponent } from '@vex/components/vex-page-layout/vex-page
 import { VexPageLayoutHeaderDirective } from '@vex/components/vex-page-layout/vex-page-layout-header.directive';
 import { VexBreadcrumbsComponent } from '@vex/components/vex-breadcrumbs/vex-breadcrumbs.component';
 import { VexPageLayoutContentDirective } from '@vex/components/vex-page-layout/vex-page-layout-content.directive';
-
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -21,13 +19,14 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';   // <-- FALTA
-import { MatSelectModule } from '@angular/material/select';         // <-- FALTA
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle'; // <-- FALTA
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { DxDataGridModule, DxDateBoxModule } from 'devextreme-angular';
 import { AgregarTurnoComponent } from './agregar-turno/agregar-turno.component';
 import { MatDatepickerModule } from '@angular/material/datepicker';
+import { HasPermissionDirective } from '../../services/haspermission.directive';
 
 
 @NgModule({
@@ -38,17 +37,12 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
   imports: [
     CommonModule,
     TurnosRoutingModule,
-    // Vex layout
     VexPageLayoutComponent,
     VexPageLayoutHeaderDirective,
     VexBreadcrumbsComponent,
     VexPageLayoutContentDirective,
-
-    // Forms
     FormsModule,
     ReactiveFormsModule,
-
-    // Angular Material
     MatButtonToggleModule,
     MatButtonModule,
     MatTooltipModule,
@@ -59,14 +53,15 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
     MatCheckboxModule,
     MatPaginatorModule,
     MatDialogModule,
-    MatFormFieldModule,    // <-- agregado
+    MatFormFieldModule,
     MatInputModule,
-    MatSelectModule,       // <-- agregado
+    MatSelectModule,
     MatOptionModule,
-    MatSlideToggleModule,  // <-- agregado
+    MatSlideToggleModule,
     DxDataGridModule,
     MatDatepickerModule,
-    DxDateBoxModule
+    DxDateBoxModule,
+    HasPermissionDirective
   ]
 })
 export class TurnosModule { }

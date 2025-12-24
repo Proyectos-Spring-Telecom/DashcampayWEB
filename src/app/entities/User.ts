@@ -12,4 +12,11 @@ export class User {
     imagenPerfil?: string;
     fotoPerfil?:any;
     rol: any;
+    fechaCreacion: any;
+    ultimoLogin: any;
+    telefono: any;
+    userName: any;
+    nombreCliente: any;
+    apellidoPaternoCliente: any;
+    apellidoMaternoCliente: any;
 }

@@ -153,3 +153,31 @@
 }
 @keyframes am-fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes am-fade-out { from { opacity: 1; } to { opacity: 0; } }
+
+.am-field{
+  margin-top: 15px;
+}
+
+.am-input{
+  margin-top: 10px;
+  width: 100%;
+  height: 46px;
+  padding: 0 .95rem;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  background: #f3f4f6;
+  color: #111827;
+  font-size: .95rem;
+  outline: none;
+  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+
+.am-input::placeholder{
+  color: #9ca3af;
+}
+
+.am-input:focus{
+  background: #ffffff;
+  border-color: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, .18);
+}

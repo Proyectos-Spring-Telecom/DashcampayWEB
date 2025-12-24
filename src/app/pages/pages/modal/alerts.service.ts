@@ -15,6 +15,11 @@ export interface AlertOptions {
   navigateAfterClose?: string | any[];
   navigateDelayMs?: number;
   autoCloseMs?: number;
+
+  inputEnabled?: boolean;
+  inputLabel?: string;
+  inputPlaceholder?: string;
+  inputValue?: string;
 }
 
 export interface AlertState extends Required<Pick<AlertOptions,
@@ -26,6 +31,11 @@ export interface AlertState extends Required<Pick<AlertOptions,
   autoCloseMs?: number;
   navigateAfterClose?: string | any[];
   resolver?: (r: AlertResult) => void;
+
+  inputEnabled: boolean;
+  inputLabel: string;
+  inputPlaceholder: string;
+  inputValue: string;
 }
 
 type TitlesMap = Partial<Record<AlertType, string>>;
@@ -45,6 +55,8 @@ export class AlertsService {
 
   private stateSub = new BehaviorSubject<AlertState | null>(null);
   state$ = this.stateSub.asObservable();
+
+  private lastInputValue = '';
 
   private textDefaults: AlertTextDefaults = {
     confirmText: 'Entendido',
@@ -78,6 +90,7 @@ export class AlertsService {
 
   open(opts: AlertOptions): Promise<AlertResult> {
     const type = opts.type;
+
     const state: AlertState = {
       type,
       title: opts.title ?? this.textDefaults.titles[type] ?? '',
@@ -89,7 +102,12 @@ export class AlertsService {
       navigateAfterClose: opts.navigateAfterClose,
       navigateDelayMs: opts.navigateDelayMs ?? 300,
       autoCloseMs: opts.autoCloseMs,
-      resolver: undefined
+      resolver: undefined,
+
+      inputEnabled: !!opts.inputEnabled,
+      inputLabel: opts.inputLabel ?? '',
+      inputPlaceholder: opts.inputPlaceholder ?? '',
+      inputValue: opts.inputValue ?? ''
     };
 
     const p = new Promise<AlertResult>(res => (state.resolver = res));
@@ -98,11 +116,20 @@ export class AlertsService {
     return p;
   }
 
+  _setInputValue(value: string): void {
+    if (this.current) this.current.inputValue = value ?? '';
+  }
+
   _resolve(result: AlertResult): void {
+    this.lastInputValue = this.current?.inputValue ?? '';
     if (this.current?.resolver) this.current.resolver(result);
     this.current = null;
     this.stateSub.next(null);
     setTimeout(() => this.pump(), 0);
+  }
+
+  getInputValue(): string {
+    return this.current?.inputValue ?? this.lastInputValue ?? '';
   }
 
   private pump() {

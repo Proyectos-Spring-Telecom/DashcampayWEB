@@ -55,6 +55,7 @@ export class SidenavItemComponent implements OnInit, OnChanges {
   @Input({ required: true }) level!: number;
   isOpen: boolean = false;
   isActive: boolean = false;
+  public showRol: any;
 
   isLink = this.navigationService.isLink;
   isDropdown = this.navigationService.isDropdown;
@@ -66,7 +67,8 @@ export class SidenavItemComponent implements OnInit, OnChanges {
     private router: Router,
     private cd: ChangeDetectorRef,
     private navigationService: NavigationService,
-    private auth: AuthenticationService
+    private auth: AuthenticationService,
+    private user: AuthenticationService,
   ) {
     
   }
@@ -89,6 +91,13 @@ export class SidenavItemComponent implements OnInit, OnChanges {
   }
 
   ngOnInit() {
+    const user: any = this.user.getUser();
+
+    if(user.rol.nombre == 'Pasajero'){
+      this.showRol = true
+    } else{
+      this.showRol = false;
+    }
     this.router.events
       .pipe(
         filter((event) => event instanceof NavigationEnd),

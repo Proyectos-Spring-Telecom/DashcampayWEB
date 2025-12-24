@@ -12,6 +12,7 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { Router, RouterModule } from '@angular/router';
 import { TiposPasajeroService } from '../../services/tipos-pasajero.service';
 import { AlertsService } from '../../pages/modal/alerts.service';
+import { HasPermissionDirective } from '../../services/haspermission.directive';
 
 @Component({
   selector: 'vex-tipos-pasajero',
@@ -27,7 +28,8 @@ import { AlertsService } from '../../pages/modal/alerts.service';
     MatIconModule,
     MatTooltipModule,
     MatButtonToggleModule,
-    RouterModule
+    RouterModule,
+    HasPermissionDirective
   ],
   templateUrl: './tipos-pasajero.component.html',
   styleUrl: './tipos-pasajero.component.scss',

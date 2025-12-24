@@ -77,8 +77,8 @@ export class PasajerosService {
     return this.verificarPasajero(codigo) as unknown as Observable<string>;
   }
 
-  datosUsuarioPasajero(idUsuario: number): Observable<any> {
-    return this.http.get<any>(`${environment.API_SECURITY}/pasajeros/main/${idUsuario}`);
+  datosUsuarioPasajero(): Observable<any> {
+    return this.http.get<any>(`${environment.API_SECURITY}/pasajeros/wallet`);
   }
 
   obtenerTiposPasajero(): Observable<any> {

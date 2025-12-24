@@ -1,5 +1,4 @@
 <vex-page-layout @fadeInRight>
-
     <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
         [class.px-6]="layoutCtrl.value === 'fullwidth'" class="-mt-6">
         <div class="card mt-4">
@@ -13,30 +12,25 @@
                         <span class="sep">/</span>
                         <span class="crumb-current" aria-current="page">Tarifas</span>
                     </nav>
-
                     <div class="flex-grow"></div>
-
                     <div class="flex gap-3 actions-bar">
                         <button mat-raised-button color="primary" type="button" class="btn-soft textGenerico"
                             (click)="toggleExpandGroups()" matTooltip="Expandir / Contraer grupos">
                             <mat-icon svgIcon="mat:compare_arrows"></mat-icon>
                             <span class="btn-text">{{ autoExpandAllGroups ? 'Contraer' : 'Expandir' }}</span>
                         </button>
-
                         <button mat-raised-button color="accent" type="button" class="btn-soft textGenerico"
                             (click)="limpiarCampos()" matTooltip="Limpiar filtros">
                             <mat-icon svgIcon="mat:restore"></mat-icon>
                             <span class="btn-text">Limpiar</span>
                         </button>
-
-                        <button (click)="agregarTarifa()" mat-raised-button color="warn" type="button"
-                            class="btn-soft textGenerico" matTooltip="Agregar usuario">
+                        <button [appHasPermission]="['74']" (click)="agregarTarifa()" mat-raised-button color="warn"
+                            type="button" class="btn-soft textGenerico" matTooltip="Agregar usuario">
                             <mat-icon>add</mat-icon>
                             <span class="btn-text">Agregar</span>
                         </button>
                     </div>
                 </div>
-
                 <section class="mt-5 table-shell">
                     <dx-data-grid #gridContainer id="gridContainer" [columnHidingEnabled]="true" [showBorders]="true"
                         [showColumnLines]="true" [showRowLines]="true" [rowAlternationEnabled]="true"
@@ -62,8 +56,8 @@
                         <dxo-group-panel [emptyPanelText]="mensajeAgrupar" [visible]="true"></dxo-group-panel>
                         <dxo-filter-row [visible]="showFilterRow"></dxo-filter-row>
                         <dxo-header-filter [visible]="showHeaderFilter"></dxo-header-filter>
-                        <dxi-column caption="Acciones" cellTemplate="acciones" alignment="center"
-                            [width]="150"></dxi-column>
+                        <dxi-column *appHasPermission="['75','76']" caption="Acciones" cellTemplate="acciones"
+                            alignment="center" [width]="150"></dxi-column>
                         <dxo-grouping #expand [autoExpandAll]="true"></dxo-grouping>
                         <dxi-column dataField="nombreRuta" caption="Nombre Ruta" alignment="center" dataType="string"
                             [allowSearch]="true"></dxi-column>
@@ -81,10 +75,15 @@
                         </dxi-column>
                         <dxi-column dataField="IncrementoCadaMetros" caption="Incremento por Metros" alignment="center"
                             dataType="string" [allowSearch]="true" cellTemplate="incrCadaMetros">
-                            <div *dxTemplate="let r of 'incrCadaMetros' ">
-                                {{r.data.IncrementoCadaMetros + ' ' + 'm'}}
+                            <div *dxTemplate="let r of 'incrCadaMetros'">
+                                <ng-container
+                                    *ngIf="r.data.IncrementoCadaMetros != null && r.data.IncrementoCadaMetros !== ''; else sinMetros">
+                                    {{ r.data.IncrementoCadaMetros }} m
+                                </ng-container>
+                                <ng-template #sinMetros>0 m</ng-template>
                             </div>
                         </dxi-column>
+
                         <dxi-column dataField="CostoAdicional" caption="Costo Adicional" alignment="center"
                             dataType="string" [allowSearch]="true" cellTemplate="cosAdicional">
                             <div *dxTemplate="let r of 'cosAdicional' ">
@@ -113,17 +112,16 @@
                             </div>
                         </dxi-column>
                         <div *dxTemplate="let row of 'acciones'" class="d-flex gap-3 justify-content-center">
-                            <div>
+                            <div [appHasPermission]="['75']">
                                 <button class="btn-edit" (click)="actualizarTarifa(row.data.id)">
                                     <mat-icon class="btn__icon">edit</mat-icon>
                                 </button>
                             </div>
-                            <div>
+                            <div [appHasPermission]="['76']">
                                 <button *ngIf="row.data.estatusTarifa === 0" class="btn-active"
                                     (click)="activar(row.data)">
                                     <mat-icon class="btn__icon">check_circle</mat-icon>
                                 </button>
-
                                 <button *ngIf="row.data.estatusTarifa === 1" class="btn-desactive"
                                     (click)="desactivar(row.data)">
                                     <mat-icon class="btn__icon">block</mat-icon>
