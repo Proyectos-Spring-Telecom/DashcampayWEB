@@ -23,6 +23,7 @@ import { DxDataGridModule } from 'devextreme-angular';
 import { MatOptionModule } from '@angular/material/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
+import { HasPermissionDirective } from '../../services/haspermission.directive';
 
 
 @NgModule({
@@ -54,6 +55,7 @@ import { MatSelectModule } from '@angular/material/select';
     DxDataGridModule,
     MatOptionModule,
     MatFormFieldModule,
+    HasPermissionDirective
   ]
 })
 export class PermisosModule { }

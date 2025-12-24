@@ -26,6 +26,7 @@ import { DxDataGridModule } from 'devextreme-angular';
 import { ListaVariantesComponent } from './lista-variantes/lista-variantes.component';
 import { AgregarVarianteComponent } from './agregar-variante/agregar-variante.component';
 import { GoogleMapsModule } from '@angular/google-maps';
+import { HasPermissionDirective } from '../../services/haspermission.directive';
 
 
 @NgModule({
@@ -43,7 +44,6 @@ import { GoogleMapsModule } from '@angular/google-maps';
     GoogleMapsModule,
     FormsModule,
     ReactiveFormsModule,
-
     MatButtonToggleModule,
     MatButtonModule,
     MatTooltipModule,
@@ -60,6 +60,7 @@ import { GoogleMapsModule } from '@angular/google-maps';
     MatOptionModule,
     MatSlideToggleModule,
     DxDataGridModule,
+    HasPermissionDirective
   ]
 })
 export class VariantesModule { }

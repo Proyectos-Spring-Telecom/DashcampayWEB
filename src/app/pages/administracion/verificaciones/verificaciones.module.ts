@@ -15,10 +15,10 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { DxDataGridModule } from 'devextreme-angular';
 import { VexPageLayoutComponent } from '@vex/components/vex-page-layout/vex-page-layout.component';
 import { VexPageLayoutContentDirective } from '@vex/components/vex-page-layout/vex-page-layout-content.directive';
-
 import { VerificacionesRoutingModule } from './verificaciones-routing.module';
 import { ListarVerificacionesComponent } from './listar-verificaciones/listar-verificaciones.component';
 import { RegistrarVerificacionComponent } from './registrar-verificacion/registrar-verificacion.component';
+import { HasPermissionDirective } from '../../services/haspermission.directive';
 
 @NgModule({
   declarations: [
@@ -43,7 +43,8 @@ import { RegistrarVerificacionComponent } from './registrar-verificacion/registr
     MatDialogModule,
     DxDataGridModule,
     VexPageLayoutComponent,
-    VexPageLayoutContentDirective
+    VexPageLayoutContentDirective,
+    HasPermissionDirective
   ]
 })
 export class VerificacionesModule { }

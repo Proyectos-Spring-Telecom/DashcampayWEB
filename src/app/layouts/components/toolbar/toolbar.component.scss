@@ -47,3 +47,29 @@ a {
     letter-spacing: 0.3px;
   }
 }
+
+.toolbar-toggle-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+
+  i {
+    font-size: 18px;
+    color: #0a2e57;
+  }
+
+  &:hover {
+    background-color: #95a5b8;
+    transform: scale(1.05);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}

@@ -23,6 +23,7 @@ import { ListaRutasComponent } from './lista-rutas/lista-rutas.component';
 import { AgregarRutaComponent } from './agregar-ruta/agregar-ruta.component';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
+import { HasPermissionDirective } from '../../services/haspermission.directive';
 
 
 @NgModule({
@@ -52,7 +53,8 @@ import { MatSelectModule } from '@angular/material/select';
     MatInputModule,
     DxDataGridModule,
     MatFormFieldModule,
-    MatSelectModule
+    MatSelectModule,
+    HasPermissionDirective
   ]
 })
 export class RutasModule { }

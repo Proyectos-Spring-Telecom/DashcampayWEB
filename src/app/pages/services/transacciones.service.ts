@@ -10,15 +10,17 @@ export class TransaccionesService {
 
   constructor(private http: HttpClient) { }
 
-  obtenerTransaccionesData(page: number, limit: number, fechaInicio: string | null = null, fechaFin: string | null = null): Observable<any> {
-		const body = {
-			page,
-			limit,
-			fechaInicio,
-			fechaFin
-		};
-		return this.http.post(`${environment.API_SECURITY}/transacciones/paginado`, body);
-	}
+  obtenerTransaccionesData(body: {
+      page: number;
+      limit: number;
+      fechaInicio?: string | null;
+      fechaFin?: string | null;
+    }): Observable<any> {
+      return this.http.post(
+        `${environment.API_SECURITY}/transacciones/paginado`,
+        body
+      );
+    }
 
   obtenerTransaccion(): Observable<any> {
 		return this.http.get(`${environment.API_SECURITY}/transacciones/list`);

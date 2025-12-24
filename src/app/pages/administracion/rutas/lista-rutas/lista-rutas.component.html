@@ -1,5 +1,4 @@
 <vex-page-layout @fadeInRight>
-
   <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
     [class.px-6]="layoutCtrl.value === 'fullwidth'" class="-mt-6">
     <div class="card mt-4">
@@ -13,30 +12,25 @@
             <span class="sep">/</span>
             <span class="crumb-current" aria-current="page">Rutas</span>
           </nav>
-
           <div class="flex-grow"></div>
-
           <div class="flex gap-3 actions-bar">
             <button mat-raised-button color="primary" type="button" class="btn-soft textGenerico"
               (click)="toggleExpandGroups()" matTooltip="Expandir / Contraer grupos">
               <mat-icon svgIcon="mat:compare_arrows"></mat-icon>
               <span class="btn-text">{{ autoExpandAllGroups ? 'Contraer' : 'Expandir' }}</span>
             </button>
-
             <button mat-raised-button color="accent" type="button" class="btn-soft textGenerico"
               (click)="limpiarCampos()" matTooltip="Limpiar filtros">
               <mat-icon svgIcon="mat:restore"></mat-icon>
               <span class="btn-text">Limpiar</span>
             </button>
-
-            <button mat-raised-button color="warn" (click)="agregarRuta()" type="button" class="btn-soft textGenerico"
+            <button [appHasPermission]="['66']" mat-raised-button color="warn" (click)="agregarRuta()" type="button" class="btn-soft textGenerico"
               matTooltip="Agregar usuario">
               <mat-icon>add</mat-icon>
               <span class="btn-text">Agregar</span>
             </button>
           </div>
         </div>
-
         <section class="mt-5 table-shell">
           <dx-data-grid #gridContainer id="gridContainer" [columnHidingEnabled]="true" [showBorders]="true"
             [showColumnLines]="true" [showRowLines]="true" [rowAlternationEnabled]="true" [dataSource]="listaRutas"
@@ -53,7 +47,7 @@
             <dxo-header-filter [visible]="showHeaderFilter"></dxo-header-filter>
             <dxo-grouping [autoExpandAll]="true"></dxo-grouping>
             <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[20]" [showInfo]="true"></dxo-pager>
-            <dxi-column caption="Acciones" cellTemplate="Acciones" alignment="center" [width]="180"></dxi-column>
+            <dxi-column *appHasPermission="['68']" caption="Acciones" cellTemplate="Acciones" alignment="center" [width]="180"></dxi-column>
             <dxi-column dataField="estatusRuta" caption="Estatus" alignment="center" cellTemplate="est">
               <div *dxTemplate="let f of 'est'">
                 <span [ngClass]="f.data.estatusRuta === 1 ? 'badge-status activo' : 'badge-status inactivo'">
@@ -103,7 +97,7 @@
                   <mat-icon class="btn__icon">place</mat-icon>
                 </button>
               </div>
-              <div>
+              <div [appHasPermission]="['68']">
                 <button *ngIf="row.data.estatusRuta === 0" class="btn-active" (click)="activar(row.data)">
                   <mat-icon class="btn__icon">check_circle</mat-icon>
                 </button>

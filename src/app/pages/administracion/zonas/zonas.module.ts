@@ -28,13 +28,14 @@ import { DxDataGridModule } from 'devextreme-angular';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ListaZonasComponent } from './lista-zonas/lista-zonas.component';
 import { AgregarZonaComponent } from './agregar-zona/agregar-zona.component';
-
+import { HasPermissionDirective } from '../../services/haspermission.directive';
 
 @NgModule({
   declarations: [
     ListaZonasComponent,
     AgregarZonaComponent
   ],
+
   imports: [
     CommonModule,
     ZonasRoutingModule,
@@ -60,7 +61,8 @@ import { AgregarZonaComponent } from './agregar-zona/agregar-zona.component';
     MatOptionModule,
     MatSlideToggleModule,
     DxDataGridModule,
-    MatProgressBarModule
+    MatProgressBarModule,
+    HasPermissionDirective
   ]
 })
 export class ZonasModule { }

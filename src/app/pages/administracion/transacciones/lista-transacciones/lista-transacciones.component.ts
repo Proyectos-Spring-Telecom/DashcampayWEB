@@ -48,6 +48,8 @@ export class ListaTransaccionesComponent implements OnInit {
   filtroForm!: FormGroup;
   fechaInicio: string | null = null;
   fechaFin: string | null = null;
+  fechaInicioFiltro: string | null = null;
+  fechaFinFiltro: string | null = null;
 
   constructor(
     private tranService: TransaccionesService,
@@ -278,13 +280,22 @@ export class ListaTransaccionesComponent implements OnInit {
     this.listaTransacciones = new CustomStore({
       key: 'id',
       load: async (loadOptions: any) => {
+        this.loading = true;
+
         const take = Number(loadOptions?.take) || this.pageSize || 10;
         const skip = Number(loadOptions?.skip) || 0;
         const page = Math.floor(skip / take) + 1;
 
+        const body = {
+          page,
+          limit: take,
+          fechaInicio: this.fechaInicioFiltro,
+          fechaFin: this.fechaFinFiltro
+        };
+
         try {
           const resp: any = await lastValueFrom(
-            this.tranService.obtenerTransaccionesData(page, take, this.fechaInicio, this.fechaFin)
+            this.tranService.obtenerTransaccionesData(body)
           );
           this.loading = false;
 
@@ -295,28 +306,29 @@ export class ListaTransaccionesComponent implements OnInit {
           const totalPaginas =
             toNum(meta.lastPage) ?? Math.max(1, Math.ceil(totalRegistros / take));
 
-          const dataTransformada = rows.map((x: any) => ({
-            id: x?.id ?? null,
-            tipoTransaccion: x?.tipoTransaccion ?? null,
-            monto: toMoney(x?.monto),
-            latitudInicial: x?.latitudInicial ?? null,
-            longitudInicial: x?.longitudInicial ?? null,
-            latitudFinal: x?.latitudFinal ?? null,
-            longitudFinal: x?.longitudFinal ?? null,
-            fechaHora: x?.fechaHora ?? null,
-            fhRegistro: x?.fhRegistro ?? null,
-            fechaHoraInicio: x?.fechaHoraInicio ?? null,
-            fechaHoraFinal: x?.fechaHoraFinal ?? null,
-            numeroSerieMonedero: x?.numeroSerieMonedero ?? null,
-            numeroSerieValidador: x?.numeroSerieValidador ?? null,
-            numeroSerieDispositivo: x?.numeroSerieDispositivo ?? null,
-            // 👇 nuevo: nombre completo del pasajero
-            pasajero: fullName(
-              x?.nombrePasajero,
-              x?.apellidoPaternoPasajero,
-              x?.apellidoMaternoPasajero
-            )
-          }));
+          const dataTransformada = rows.map((x: any) => {
+            const pasajero = [x?.nombrePasajero, x?.apellidoPaternoPasajero, x?.apellidoMaternoPasajero]
+              .filter(v => !!(v && String(v).trim()))
+              .join(' ')
+              .trim();
+
+            return {
+              id: x?.id ?? null,
+              Id: x?.id ?? null,
+              tipoTransaccion: x?.tipoTransaccion ?? null,
+              monto: toMoney(x?.monto),
+              latitudFinal: x?.latitudFinal ?? null,
+              longitudFinal: x?.longitudFinal ?? null,
+              fechaHoraFinal: x?.fechaHoraFinal ?? null,
+              fhRegistro: x?.fhRegistro ?? null,
+              numeroSerieMonedero: x?.numeroSerieMonedero ?? null,
+              numeroSerieValidador: x?.numeroSerieValidador ?? null,
+              pasajero: pasajero || 'Sin registro',
+              nombreCliente: x?.nombreCliente ?? null,
+              apellidoPaternoCliente: x?.apellidoPaternoCliente ?? null,
+              apellidoMaternoCliente: x?.apellidoMaternoCliente ?? null
+            };
+          });
 
           this.totalRegistros = totalRegistros;
           this.paginaActual = paginaActual;
@@ -346,18 +358,8 @@ export class ListaTransaccionesComponent implements OnInit {
       const n = Number(s);
       return Number.isFinite(n) ? Number(n.toFixed(2)) : null;
     }
-
-    // helper para concatenar y limpiar
-    function fullName(n?: any, a1?: any, a2?: any): string | null {
-      const parts = [n, a1, a2]
-        .map(v => (typeof v === 'string' ? v.trim() : ''))
-        .filter(Boolean);
-      return parts.length ? parts.join(' ') : null;
-    }
   }
 
-  // Texto “sin registro” cuando venga vacío
   customizePasajeroText = (cellInfo: any) => cellInfo?.value ? cellInfo.value : 'sin registro';
-
 
 }

@@ -29,7 +29,7 @@
                             <span class="btn-text">Limpiar</span>
                         </button>
 
-                        <button (click)="agregarZona()" mat-raised-button color="warn" type="button"
+                        <button [appHasPermission]="['62']" (click)="agregarZona()" mat-raised-button color="warn" type="button"
                             class="btn-soft textGenerico" matTooltip="Agregar usuario">
                             <mat-icon>add</mat-icon>
                             <span class="btn-text">Agregar</span>
@@ -56,7 +56,7 @@
                         <dxo-filter-row [visible]="showFilterRow"></dxo-filter-row>
                         <dxo-header-filter [visible]="showHeaderFilter"></dxo-header-filter>
                         <dxo-grouping [autoExpandAll]="true"></dxo-grouping>
-                        <dxi-column caption="Acciones" cellTemplate="Acciones" alignment="center" [width]="220"></dxi-column>
+                        <dxi-column *appHasPermission="['63','64']" caption="Acciones" cellTemplate="Acciones" alignment="center" [width]="220"></dxi-column>
                         <dxi-column dataField="nombre" caption="Nombre Zona" alignment="center"></dxi-column>
                         <dxi-column dataField="descripcion" caption="Descripción" alignment="center"></dxi-column>
                         <dxi-column caption="Cliente" alignment="center" cellTemplate="nomCliente">
@@ -90,7 +90,7 @@
                             [texts]="{ exportAll: 'Exportar todos los datos a Excel', exportSelectedRows: 'Exportar filas seleccionadas a Excel' }">
                         </dxo-export>
                         <div *dxTemplate="let row of 'Acciones'" class="d-flex gap-3 justify-content-center">
-                            <div>
+                            <div [appHasPermission]="['63']">
                                 <button class="btn-edit" (click)="actualizarZona(row.data.id)" matTooltip="Editar">
                                     <mat-icon class="btn__icon">edit</mat-icon>
                                 </button>
@@ -100,7 +100,7 @@
                                     <mat-icon class="btn__icon">map</mat-icon>
                                 </button>
                             </div>
-                            <div>
+                            <div [appHasPermission]="['64']">
                                 <button *ngIf="row.data.estatus === 0" class="btn-active" (click)="activar(row.data)" matTooltip="Activar">
                                     <mat-icon class="btn__icon">check_circle</mat-icon>
                                 </button>

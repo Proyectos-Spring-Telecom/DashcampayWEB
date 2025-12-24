@@ -13,31 +13,26 @@
             <span class="sep">/</span>
             <span class="crumb-current" aria-current="page">Transacciones</span>
           </nav>
-
           <div class="flex-grow"></div>
-
           <div class="flex gap-3 actions-bar">
             <button mat-raised-button color="primary" type="button" class="btn-soft textGenerico"
               (click)="toggleExpandGroups()" matTooltip="Expandir / Contraer grupos">
               <mat-icon svgIcon="mat:compare_arrows"></mat-icon>
               <span class="btn-text">{{ autoExpandAllGroups ? 'Contraer' : 'Expandir' }}</span>
             </button>
-
             <button mat-raised-button color="accent" type="button" class="btn-soft textGenerico"
               (click)="limpiarCampos()" matTooltip="Limpiar filtros">
               <mat-icon svgIcon="mat:restore"></mat-icon>
               <span class="btn-text">Limpiar</span>
             </button>
-
-            <button (click)="agregarTransaccion()" mat-raised-button color="warn" type="button"
-              class="btn-soft textGenerico" matTooltip="Agregar usuario">
+            <button [appHasPermission]="['91']" (click)="agregarTransaccion()" mat-raised-button color="warn"
+              type="button" class="btn-soft textGenerico" matTooltip="Agregar Transacción">
               <mat-icon>add</mat-icon>
               <span class="btn-text">Agregar</span>
             </button>
           </div>
         </div>
 
-        <!-- Filtros de Fecha -->
         <div class="container-fluid py-3 border-b">
           <form [formGroup]="filtroForm" class="row g-3">
             <div class="col-12 col-md-4 d-flex flex-column">
@@ -46,7 +41,8 @@
                 <span>Fecha Inicio</span>
               </label>
               <mat-form-field appearance="fill" class="w-100 filtro-date-field">
-                <input matInput [matDatepicker]="pickerInicio" formControlName="fechaInicio" placeholder="Seleccione fecha inicio">
+                <input matInput [matDatepicker]="pickerInicio" formControlName="fechaInicio"
+                  placeholder="Seleccione fecha inicio">
                 <mat-datepicker-toggle matSuffix [for]="pickerInicio"></mat-datepicker-toggle>
                 <mat-datepicker #pickerInicio></mat-datepicker>
               </mat-form-field>
@@ -57,7 +53,8 @@
                 <span>Fecha Fin</span>
               </label>
               <mat-form-field appearance="fill" class="w-100 filtro-date-field">
-                <input matInput [matDatepicker]="pickerFin" formControlName="fechaFin" placeholder="Seleccione fecha fin">
+                <input matInput [matDatepicker]="pickerFin" formControlName="fechaFin"
+                  placeholder="Seleccione fecha fin">
                 <mat-datepicker-toggle matSuffix [for]="pickerFin"></mat-datepicker-toggle>
                 <mat-datepicker #pickerFin></mat-datepicker>
               </mat-form-field>
@@ -67,7 +64,8 @@
                 <span>Buscar</span>
               </label>
               <div class="filtro-button-wrapper">
-                <button type="button" mat-raised-button color="primary" class="btn-soft textGenerico" (click)="buscar()" matTooltip="Buscar">
+                <button type="button" mat-raised-button color="primary" class="btn-soft textGenerico" (click)="buscar()"
+                  matTooltip="Buscar">
                   <mat-icon svgIcon="mat:search"></mat-icon>
                   <span class="btn-text">Buscar</span>
                 </button>
@@ -80,13 +78,14 @@
           <dx-data-grid #gridContainer id="gridContainer" [columnHidingEnabled]="true" [showBorders]="true"
             [showColumnLines]="true" [showRowLines]="true" [rowAlternationEnabled]="true"
             [dataSource]="listaTransacciones" [keyExpr]="'Id'" [width]="'100%'" [remoteOperations]="{ paging: true }"
-            [paging]="{ pageSize: pageSize }" [pager]="{ 
-                                showPageSizeSelector: true, 
-                                allowedPageSizes: [20], 
-                                showInfo: true,
-                                infoText: 'Página {0} de {1}', 
-                                visible: true 
-                            }" (onPageIndexChanged)=" onPageIndexChanged($event)"
+            [paging]="{ pageSize: pageSize }" 
+            [pager]="{ 
+                showPageSizeSelector: true, 
+                allowedPageSizes: [20], 
+                showInfo: true,
+                infoText: 'Página {0} de {1}', 
+                visible: true 
+            }" (onPageIndexChanged)=" onPageIndexChanged($event)"
             (onOptionChanged)="onGridOptionChanged($event)">
             <dxo-search-panel [visible]="true" [width]="200" placeholder="Buscar..."></dxo-search-panel>
             <dxo-group-panel [emptyPanelText]="mensajeAgrupar" [visible]="true"></dxo-group-panel>
@@ -94,25 +93,20 @@
             <dxo-header-filter [visible]="showHeaderFilter"></dxo-header-filter>
             <dxo-grouping [autoExpandAll]="true"></dxo-grouping>
             <dxi-column caption="Acciones" cellTemplate="Acciones" alignment="center" [width]="200"></dxi-column>
-            <dxi-column dataField="fechaHoraInicio" caption="Fecha" alignment="center" cellTemplate="fecActi">
-              <div *dxTemplate="let a of 'fecActi'">
-                <span *ngIf="a.data.fechaHoraInicio">
-                  {{ a.data.fechaHoraInicio | date:'dd/MM/yyyy HH:mm' : '+0000' }}
-                </span>
-                <span *ngIf="a.data.fechaHoraInicio && a.data.fechaHoraFinal" class="mx-1">—</span>
-                <span *ngIf="a.data.fechaHoraFinal">
-                  {{ a.data.fechaHoraFinal | date:'dd/MM/yyyy HH:mm' : '+0000' }}
-                </span>
-                <span *ngIf="!a.data.fechaHoraInicio && !a.data.fechaHoraFinal">—</span>
-              </div>
-            </dxi-column>
-
+            <dxi-column dataField="fechaHoraFinal" caption="Fecha" alignment="center" cellTemplate="fechFinal">
+                <div *dxTemplate="let a of 'fechFinal'">
+                  <div *ngIf="a.data.fechaHoraFinal; else sinFechaFin">
+                      {{ a.data.fechaHoraFinal | date:'dd/MM/yyyy HH:mm a' : '+0000' }}
+                  </div>
+                  <ng-template #sinFechaFin><div>Sin registro</div></ng-template>
+                </div>
+              </dxi-column>
             <dxi-column dataField="monto" caption="Monto" alignment="center" cellTemplate="sald">
               <div *dxTemplate="let f of 'sald'">
                 {{
-                (f?.data?.tipoTransaccion === 'DEBITO'
-                ? 0 - (f?.data?.monto ?? 0)
-                : (f?.data?.monto ?? 0)) | currency:'$'
+                  (f?.data?.tipoTransaccion === 'DEBITO'
+                  ? 0 - (f?.data?.monto ?? 0)
+                  : (f?.data?.monto ?? 0)) | currency:'$'
                 }}
               </div>
             </dxi-column>
@@ -127,12 +121,15 @@
               </div>
             </dxi-column>
             <dxi-column dataField="numeroSerieMonedero" caption="N° Serie de Monedero" alignment="center"></dxi-column>
-            <dxi-column dataField="numeroSerieValidador" caption="N° Serie de Validador" alignment="center"></dxi-column>
-            <dxi-column dataField="pasajero" caption="Pasajero" alignment="center"
-              [customizeText]="customizePasajeroText">
+            <dxi-column dataField="numeroSerieValidador" caption="N° Serie Validador" alignment="center" cellTemplate="validadorTpl">
+              <div *dxTemplate="let r of 'validadorTpl'">
+                <span *ngIf="r?.data?.numeroSerieValidador; else sinRegistroVal">
+                  {{ r.data.numeroSerieValidador }}
+                </span>
+                <ng-template #sinRegistroVal>Sin registro</ng-template>
+              </div>
             </dxi-column>
-
-
+            <dxi-column dataField="pasajero" caption="Pasajero" alignment="center" [customizeText]="customizePasajeroText"> </dxi-column>
             <div *dxTemplate="let transaccion of 'Acciones'" class="d-flex gap-3 justify-content-center">
               <div>
                 <button class="btn-edit" (click)="abrirModal(transaccion.data)" style="border-radius: 5px;">
@@ -149,7 +146,6 @@
     </div>
   </vex-page-layout-content>
 </vex-page-layout>
-
 
 <div *ngIf="modalOpen" class="custom-modal-backdrop" [class.fade-out]="modalClosing || modalAnim === 'out'"
   (click)="onBackdrop()">
@@ -175,14 +171,17 @@
             <span *ngIf="selectedTransaccion?.fechaHoraInicio">
               {{ selectedTransaccion?.fechaHoraInicio | date:'dd/MM/yyyy HH:mm' }}
             </span>
-            <span *ngIf="selectedTransaccion?.fechaHoraInicio && selectedTransaccion?.fechaHoraFinal" class="mx-1">—</span>
+            <span *ngIf="selectedTransaccion?.fechaHoraInicio && selectedTransaccion?.fechaHoraFinal"
+              class="mx-1">—</span>
             <span *ngIf="selectedTransaccion?.fechaHoraFinal">
               {{ selectedTransaccion?.fechaHoraFinal | date:'dd/MM/yyyy HH:mm' }}
             </span>
-            <span *ngIf="!selectedTransaccion?.fechaHoraInicio && !selectedTransaccion?.fechaHoraFinal && selectedTransaccion?.fecha">
+            <span
+              *ngIf="!selectedTransaccion?.fechaHoraInicio && !selectedTransaccion?.fechaHoraFinal && selectedTransaccion?.fecha">
               {{ selectedTransaccion?.fecha | date:'dd/MM/yyyy HH:mm' }}
             </span>
-            <span *ngIf="!selectedTransaccion?.fechaHoraInicio && !selectedTransaccion?.fechaHoraFinal && !selectedTransaccion?.fecha">—</span>
+            <span
+              *ngIf="!selectedTransaccion?.fechaHoraInicio && !selectedTransaccion?.fechaHoraFinal && !selectedTransaccion?.fecha">—</span>
           </div>
         </div>
         <div class="detalle-item">
@@ -211,7 +210,6 @@
           No hay ubicación de esta transacción.
         </div>
       </ng-template>
-
       <div style="display: flex; justify-content: center; align-items: center;">
         <button class="btn-success" (click)="accionPrincipal()">
           Confirmar

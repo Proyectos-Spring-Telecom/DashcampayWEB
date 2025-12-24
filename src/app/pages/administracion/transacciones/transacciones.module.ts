@@ -1,14 +1,11 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
 import { TransaccionesRoutingModule } from './transacciones-routing.module';
 import { VexPageLayoutComponent } from '@vex/components/vex-page-layout/vex-page-layout.component';
 import { VexPageLayoutHeaderDirective } from '@vex/components/vex-page-layout/vex-page-layout-header.directive';
 import { VexBreadcrumbsComponent } from '@vex/components/vex-breadcrumbs/vex-breadcrumbs.component';
 import { VexPageLayoutContentDirective } from '@vex/components/vex-page-layout/vex-page-layout-content.directive';
-
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -20,16 +17,16 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';   // <-- FALTA
-import { MatSelectModule } from '@angular/material/select';         // <-- FALTA
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle'; // <-- FALTA
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { DxDataGridModule } from 'devextreme-angular';
 import { ListaTransaccionesComponent } from './lista-transacciones/lista-transacciones.component';
 import { AgregarTransaccionComponent } from './agregar-transaccion/agregar-transaccion.component';
-
+import { HasPermissionDirective } from '../../services/haspermission.directive';
 
 @NgModule({
   declarations: [ListaTransaccionesComponent, AgregarTransaccionComponent],
@@ -37,33 +34,30 @@ import { AgregarTransaccionComponent } from './agregar-transaccion/agregar-trans
     CommonModule,
     TransaccionesRoutingModule,
     VexPageLayoutComponent,
-        VexPageLayoutHeaderDirective,
-        VexBreadcrumbsComponent,
-        VexPageLayoutContentDirective,
-    
-        // Forms
-        FormsModule,
-        ReactiveFormsModule,
-    
-        // Angular Material
-        MatButtonToggleModule,
-        MatButtonModule,
-        MatTooltipModule,
-        MatIconModule,
-        MatMenuModule,
-        MatTableModule,
-        MatSortModule,
-        MatCheckboxModule,
-        MatPaginatorModule,
-        MatDialogModule,
-        MatFormFieldModule,    // <-- agregado
-        MatInputModule,
-        MatSelectModule,       // <-- agregado
-        MatOptionModule,
-        MatSlideToggleModule,  // <-- agregado
-        MatDatepickerModule,
-        MatNativeDateModule,
-        DxDataGridModule,
+    VexPageLayoutHeaderDirective,
+    VexBreadcrumbsComponent,
+    VexPageLayoutContentDirective,
+    FormsModule,
+    ReactiveFormsModule,
+    MatButtonToggleModule,
+    MatButtonModule,
+    MatTooltipModule,
+    MatIconModule,
+    MatMenuModule,
+    MatTableModule,
+    MatSortModule,
+    MatCheckboxModule,
+    MatPaginatorModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatOptionModule,
+    MatSlideToggleModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    DxDataGridModule,
+    HasPermissionDirective
   ]
 })
 export class TransaccionesModule { }

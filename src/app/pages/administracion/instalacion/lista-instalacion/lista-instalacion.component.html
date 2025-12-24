@@ -1,5 +1,4 @@
 <vex-page-layout @fadeInRight>
-
     <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
         [class.px-6]="layoutCtrl.value === 'fullwidth'" class="-mt-6">
         <div class="card mt-4">
@@ -13,30 +12,25 @@
                         <span class="sep">/</span>
                         <span class="crumb-current" aria-current="page">Instalaciones</span>
                     </nav>
-
                     <div class="flex-grow"></div>
-
                     <div class="flex gap-3 actions-bar">
                         <button mat-raised-button color="primary" type="button" class="btn-soft textGenerico"
                             (click)="toggleExpandGroups()" matTooltip="Expandir / Contraer grupos">
                             <mat-icon svgIcon="mat:compare_arrows"></mat-icon>
                             <span class="btn-text">{{ autoExpandAllGroups ? 'Contraer' : 'Expandir' }}</span>
                         </button>
-
                         <button mat-raised-button color="accent" type="button" class="btn-soft textGenerico"
                             (click)="limpiarCampos()" matTooltip="Limpiar filtros">
                             <mat-icon svgIcon="mat:restore"></mat-icon>
                             <span class="btn-text">Limpiar</span>
                         </button>
-
-                        <button (click)="agregarInstalacion()" mat-raised-button color="warn" type="button"
+                        <button [appHasPermission]="['50']" (click)="agregarInstalacion()" mat-raised-button color="warn" type="button"
                             class="btn-soft textGenerico" matTooltip="Agregar usuario">
                             <mat-icon>add</mat-icon>
                             <span class="btn-text">Agregar</span>
                         </button>
                     </div>
                 </div>
-
                 <section class="mt-5 table-shell">
                     <dx-data-grid #gridContainer id="gridContainer" [columnHidingEnabled]="true" [showBorders]="true"
                         [showColumnLines]="true" [showRowLines]="true" [rowAlternationEnabled]="true"
@@ -50,29 +44,25 @@
                             }" (onPageIndexChanged)=" onPageIndexChanged($event)"
                         (onOptionChanged)="onGridOptionChanged($event)">
                         <dxo-search-panel [visible]="true" [width]="200" placeholder="Buscar..."></dxo-search-panel>
-                        <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[20]"
-                            [showInfo]="true"></dxo-pager>
+                        <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[20]" [showInfo]="true"></dxo-pager>
                         <dxo-group-panel [emptyPanelText]="mensajeAgrupar" [visible]="true"></dxo-group-panel>
                         <dxo-filter-row [visible]="showFilterRow"></dxo-filter-row>
                         <dxo-header-filter [visible]="showHeaderFilter"></dxo-header-filter>
                         <dxo-grouping [autoExpandAll]="true"></dxo-grouping>
-                        <dxi-column caption="Acciones" cellTemplate="Acciones" alignment="center" [width]="180"></dxi-column>
-                        <dxi-column dataField="fechaCreacion" caption="Fecha Creación" [width]="160" alignment="center"
-                            cellTemplate="fechCreaci">
+                        <dxi-column *appHasPermission="['51','52']" caption="Acciones" cellTemplate="Acciones" alignment="center" [width]="180"></dxi-column>
+                        <dxi-column dataField="fechaCreacion" caption="Fecha Creación" [width]="160" alignment="center" cellTemplate="fechCreaci">
                             <div *dxTemplate="let a of 'fechCreaci'">
                                 {{ a.data.fechaCreacion | date:'dd/MM/yyyy HH:mm' : '+0000' }}
                             </div>
                         </dxi-column>
-                        <dxi-column dataField="fechaActualizacion" caption="Fecha Actualización" [width]="160"
-                            alignment="center" cellTemplate="fechActualizacion">
+                        <dxi-column dataField="fechaActualizacion" caption="Fecha Actualización" [width]="160" alignment="center" cellTemplate="fechActualizacion">
                             <div *dxTemplate="let a of 'fechActualizacion'">
                                 {{ a.data.fechaActualizacion | date:'dd/MM/yyyy HH:mm' : '+0000' }}
                             </div>
                         </dxi-column>
                         <dxi-column dataField="numeroSerieValidador" caption="Validador" alignment="center"></dxi-column>
                         <dxi-column dataField="numeroSerieContador" caption="Contador" alignment="center"></dxi-column>
-                        <dxi-column dataField="placaVehiculo" caption="Vehículo" alignment="center"
-                            cellTemplate="instalVehiculo">
+                        <dxi-column dataField="placaVehiculo" caption="Vehículo" alignment="center" cellTemplate="instalVehiculo">
                             <div *dxTemplate="let t of 'instalVehiculo' ">
                                 {{'N° de Placa: ' + t.data.placaVehiculo}}
                             </div>
@@ -92,12 +82,12 @@
                             </div>
                         </dxi-column>
                         <div *dxTemplate="let row of 'Acciones'" class="d-flex gap-3 justify-content-center">
-                            <div>
+                            <div [appHasPermission]="['51']">
                                 <button class="btn-edit" (click)="actualizarInstalacion(row.data.id)">
                                     <mat-icon class="btn__icon">edit</mat-icon>
                                 </button>
                             </div>
-                            <div>
+                            <div [appHasPermission]="['52']">
                                 <button *ngIf="row.data.estatus === 0" class="btn-active" (click)="activar(row.data)">
                                     <mat-icon class="btn__icon">check_circle</mat-icon>
                                 </button>

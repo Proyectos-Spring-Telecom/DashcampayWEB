@@ -30,6 +30,7 @@ import { MatOptionModule } from '@angular/material/core';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { DxDataGridModule } from 'devextreme-angular';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { HasPermissionDirective } from '../../services/haspermission.directive';
 
 @NgModule({
   declarations: [
@@ -40,17 +41,12 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
     CommonModule,
     RouterModule,
     TalleresRoutingModule,
-    // Vex layout
     VexPageLayoutComponent,
     VexPageLayoutHeaderDirective,
     VexBreadcrumbsComponent,
     VexPageLayoutContentDirective,
-
-    // Forms
     FormsModule,
     ReactiveFormsModule,
-
-    // Angular Material
     MatButtonToggleModule,
     MatButtonModule,
     MatTooltipModule,
@@ -67,7 +63,8 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
     MatOptionModule,
     MatSlideToggleModule,
     DxDataGridModule,
-    MatProgressBarModule
+    MatProgressBarModule,
+    HasPermissionDirective
   ]
 })
 export class TalleresModule { }

@@ -1,9 +1,13 @@
 <div [class.container]="isVerticalLayout$ | async" class="toolbar text-default w-full px-6 flex items-center">
   <div class="flex-auto flex items-center ml-l">
-    <button style="color: black;" (click)="toggleCollapse()" *ngIf="showCollapsePin$ | async" mat-icon-button type="button">
-      <mat-icon *ngIf="!collapsed" class="icon-xs" svgIcon="mat:menu"></mat-icon>
-      <mat-icon *ngIf="collapsed" class="icon-xs" svgIcon="mat:menu"></mat-icon>
-    </button>&nbsp;&nbsp;
+    <button
+  (click)="toggleCollapse()"
+  *ngIf="showCollapsePin$ | async"
+  class="toolbar-toggle-btn"
+  type="button">
+  <i class="fas fa-bars"></i>
+</button>
+&nbsp;&nbsp;
     <div class="action flex-none textPrincipal" color="secondary" id="get-vex" mat-flat-button>
       <span>DashCam PAY - Sistema de Administración</span>
     </div>

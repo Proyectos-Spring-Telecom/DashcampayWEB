@@ -1,5 +1,5 @@
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { LOCALE_ID, NgModule } from '@angular/core';
+import { CommonModule, registerLocaleData } from '@angular/common';
 
 import { PerfilPasajeroRoutingModule } from './perfil-pasajero-routing.module';
 import { VexPageLayoutComponent } from '@vex/components/vex-page-layout/vex-page-layout.component';
@@ -21,8 +21,9 @@ import { MatInputModule } from '@angular/material/input';
 import { DxDataGridModule } from 'devextreme-angular';
 import { HasPermissionDirective } from '../../services/haspermission.directive';
 import { PerfilPasajeroComponent } from './perfil-pasajero.component';
+import localeEsMx from '@angular/common/locales/es-MX';
 
-
+registerLocaleData(localeEsMx);
 
 @NgModule({
   declarations: [PerfilPasajeroComponent],
@@ -48,6 +49,10 @@ import { PerfilPasajeroComponent } from './perfil-pasajero.component';
         MatInputModule,
         DxDataGridModule,
         HasPermissionDirective
-  ]
+  ],
+  providers: [
+  { provide: LOCALE_ID, useValue: 'es-MX' }
+]
+
 })
 export class PerfilPasajeroModule { }

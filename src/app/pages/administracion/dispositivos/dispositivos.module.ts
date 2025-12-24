@@ -22,12 +22,13 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';   // <-- FALTA
-import { MatSelectModule } from '@angular/material/select';         // <-- FALTA
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle'; // <-- FALTA
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { DxDataGridModule } from 'devextreme-angular';
 import { ListaDispositivosComponent } from './lista-dispositivos/lista-dispositivos.component';
+import { HasPermissionDirective } from '../../services/haspermission.directive';
 
 
 @NgModule({
@@ -38,17 +39,12 @@ import { ListaDispositivosComponent } from './lista-dispositivos/lista-dispositi
   imports: [
     CommonModule,
     DispositivosRoutingModule,
-
     VexPageLayoutComponent,
     VexPageLayoutHeaderDirective,
     VexBreadcrumbsComponent,
     VexPageLayoutContentDirective,
-
-    // Forms
     FormsModule,
     ReactiveFormsModule,
-
-    // Angular Material
     MatButtonToggleModule,
     MatButtonModule,
     MatTooltipModule,
@@ -59,12 +55,13 @@ import { ListaDispositivosComponent } from './lista-dispositivos/lista-dispositi
     MatCheckboxModule,
     MatPaginatorModule,
     MatDialogModule,
-    MatFormFieldModule,    // <-- agregado
+    MatFormFieldModule,
     MatInputModule,
-    MatSelectModule,       // <-- agregado
+    MatSelectModule,
     MatOptionModule,
-    MatSlideToggleModule,  // <-- agregado
+    MatSlideToggleModule,
     DxDataGridModule,
+    HasPermissionDirective
   ]
 })
 export class DispositivosModule { }

@@ -29,7 +29,7 @@
               <span class="btn-text">Limpiar</span>
             </button>
 
-            <button mat-raised-button color="warn" (click)="agregarCliente()" type="button"
+            <button [appHasPermission]="['2']" mat-raised-button color="warn" (click)="agregarCliente()" type="button"
               class="btn-soft textGenerico" matTooltip="Agregar usuario">
               <mat-icon>add</mat-icon>
               <span class="btn-text">Agregar</span>
@@ -60,7 +60,7 @@
                                     <img [src]="d.data.Logotipo" alt="Logo" width="50">
                                 </ng-template>
                             </dxi-column> -->
-            <dxi-column caption="Acciones" cellTemplate="Acciones" alignment="center" [width]="180"></dxi-column>
+            <dxi-column *appHasPermission="['3','4']" caption="Acciones" cellTemplate="Acciones" alignment="center" [width]="180"></dxi-column>
             <dxi-column dataField="logotipo" caption="Imagen" cellTemplate="imagen" [width]="200" alignment="center">
               <dxo-header-filter [allowSearch]="true"></dxo-header-filter>
             </dxi-column>
@@ -80,10 +80,7 @@
                 <i class="fa fa-file-pdf-o btn__icon"></i>
               </button>
             </div>
-            <dxi-column  caption="Comprobante de Domicilio" [width]="150" alignment="center" [allowSorting]="false"
-              [allowFiltering]="false" cellTemplate="poliz">
-            </dxi-column>
-
+            <dxi-column caption="Comprobante de Domicilio" [width]="150" alignment="center" [allowSorting]="false" [allowFiltering]="false" cellTemplate="poliz"> </dxi-column>
             <div *dxTemplate="let f of 'poliz'">
               <button class="btn-magenta" [disabled]="!f?.data?.comprobanteDomicilio"
                 (click)="f?.data?.comprobanteDomicilio && irAVerDocumento(f.data.comprobanteDomicilio, 'Comprobante de Domicilio', f.data)"
@@ -91,9 +88,7 @@
                 <i class="fa fa-file-pdf-o btn__icon"></i>
               </button>
             </div>
-            <dxi-column caption="Constancia Situación Fiscal" [width]="150" alignment="center" [allowSorting]="false"
-              [allowFiltering]="false" cellTemplate="concesip">
-            </dxi-column>
+            <dxi-column caption="Constancia Situación Fiscal" [width]="150" alignment="center" [allowSorting]="false" [allowFiltering]="false" cellTemplate="concesip"></dxi-column>
             <div *dxTemplate="let f of 'concesip'">
               <button class="btn-orange" [disabled]="!f?.data?.constanciaSituacionFiscal"
                 (click)="f?.data?.constanciaSituacionFiscal && irAVerDocumento(f.data.constanciaSituacionFiscal, 'Constancia Situación Fiscal', f.data)"
@@ -105,8 +100,7 @@
             <dxi-column dataField="telefono" caption="Teléfono" alignment="center" dataType="string"></dxi-column>
             <dxi-column dataField="rfc" caption="RFC" alignment="center" dataType="string"></dxi-column>
             <dxi-column dataField="correo" caption="Correo" alignment="center" dataType="string"></dxi-column>
-            <dxi-column dataField="tipoPersona" caption="Tipo Persona" alignment="center"
-              dataType="string"></dxi-column>
+            <dxi-column dataField="tipoPersona" caption="Tipo Persona" alignment="center" dataType="string"></dxi-column>
             <dxi-column dataField="nombreEncargado" caption="Nombre Encargado" alignment="center"></dxi-column>
             <dxi-column dataField="telefonoEncargado" caption="Teléfono Encargado" alignment="center"></dxi-column>
             <dxi-column dataField="correoEncargado" caption="Email Encargado" alignment="center"></dxi-column>
@@ -122,16 +116,15 @@
               </div>
             </dxi-column>
             <div *dxTemplate="let row of 'Acciones'" class="d-flex gap-3 justify-content-center">
-              <div>
+              <div [appHasPermission]="['3']">
                 <button class="btn-edit" (click)="actualizarCliente(row.data.id)">
                   <mat-icon class="btn__icon">edit</mat-icon>
                 </button>
               </div>
-              <div>
+              <div [appHasPermission]="['4']">
                 <button *ngIf="row.data.estatusCliente === 0" class="btn-active" (click)="activar(row.data)">
                   <mat-icon class="btn__icon">check_circle</mat-icon>
                 </button>
-
                 <button *ngIf="row.data.estatusCliente === 1" class="btn-desactive" (click)="desactivar(row.data)">
                   <mat-icon class="btn__icon">block</mat-icon>
                 </button>

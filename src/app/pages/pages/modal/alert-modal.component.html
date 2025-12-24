@@ -30,6 +30,18 @@
 
       <h3 id="am-title" class="am-title">{{ state?.title }}</h3>
       <p id="am-msg" class="am-msg" [innerHTML]="state?.message"></p>
+
+      <div *ngIf="state?.inputEnabled" class="am-field">
+        <label class="am-field__label">{{ state?.inputLabel }}</label>
+        <input
+          id="nuevo-monedero"
+          class="am-input"
+          type="text"
+          [placeholder]="state?.inputPlaceholder"
+          [value]="state?.inputValue ?? ''"
+          (input)="onInputChange($event)"
+        />
+      </div>
     </div>
 
     <div class="am-divider"></div>

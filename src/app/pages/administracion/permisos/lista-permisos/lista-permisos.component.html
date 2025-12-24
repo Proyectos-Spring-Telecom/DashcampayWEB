@@ -1,5 +1,4 @@
 <vex-page-layout @fadeInRight>
-
   <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
     [class.px-6]="layoutCtrl.value === 'fullwidth'" class="-mt-6">
     <div class="card mt-4">
@@ -13,41 +12,36 @@
             <span class="sep">/</span>
             <span class="crumb-current" aria-current="page">Permisos</span>
           </nav>
-
           <div class="flex-grow"></div>
-
           <div class="flex gap-3 actions-bar">
             <button mat-raised-button color="primary" type="button" class="btn-soft textGenerico"
               (click)="toggleExpandGroups()" matTooltip="Expandir / Contraer grupos">
               <mat-icon svgIcon="mat:compare_arrows"></mat-icon>
               <span class="btn-text">{{ autoExpandAllGroups ? 'Contraer' : 'Expandir' }}</span>
             </button>
-
             <button mat-raised-button color="accent" type="button" class="btn-soft textGenerico"
               (click)="limpiarCampos()" matTooltip="Limpiar filtros">
               <mat-icon svgIcon="mat:restore"></mat-icon>
               <span class="btn-text">Limpiar</span>
             </button>
-
-            <button (click)="agregarPermiso()" mat-raised-button color="warn" type="button"
+            <button [appHasPermission]="['14']" (click)="agregarPermiso()" mat-raised-button color="warn" type="button"
               class="btn-soft textGenerico" matTooltip="Agregar usuario">
               <mat-icon>add</mat-icon>
               <span class="btn-text">Agregar</span>
             </button>
           </div>
         </div>
-
         <section class="mt-5 table-shell">
           <dx-data-grid #gridContainer id="gridContainer" [columnHidingEnabled]="true" [showBorders]="true"
             [showColumnLines]="true" [showRowLines]="true" [rowAlternationEnabled]="true" [dataSource]="listaPermisos"
             [keyExpr]="'id'" [width]="'100%'" [remoteOperations]="{ paging: true }" [paging]="{ pageSize: pageSize }"
             [pager]="{ 
-                                showPageSizeSelector: true, 
-                                allowedPageSizes: [50], 
-                                showInfo: true,
-                                infoText: 'Página {0} de {1}', 
-                                visible: true 
-                            }" (onPageIndexChanged)=" onPageIndexChanged($event)"
+                showPageSizeSelector: true, 
+                allowedPageSizes: [50], 
+                showInfo: true,
+                infoText: 'Página {0} de {1}', 
+                visible: true 
+            }" (onPageIndexChanged)=" onPageIndexChanged($event)"
             (onOptionChanged)="onGridOptionChanged($event)">
             <dxo-search-panel [visible]="true" [width]="200" placeholder="Buscar..."></dxo-search-panel>
             <dxo-toolbar>
@@ -57,19 +51,16 @@
               </dxi-item>
               <dxi-item name="searchPanel" location="after"></dxi-item>
             </dxo-toolbar>
-            <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[20]" [showInfo]="true"></dxo-pager>
+            <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[150]" [showInfo]="true"></dxo-pager>
             <dxo-group-panel [emptyPanelText]="mensajeAgrupar" [visible]="true"></dxo-group-panel>
             <dxo-filter-row [visible]="showFilterRow"></dxo-filter-row>
             <dxo-header-filter [visible]="showHeaderFilter"></dxo-header-filter>
-            <dxi-column caption="Acciones" cellTemplate="Acciones" alignment="center" [width]="180"></dxi-column>
+            <dxi-column *appHasPermission="['15','16']" caption="Acciones" cellTemplate="Acciones" alignment="center" [width]="180"></dxi-column>
             <dxo-grouping #expand [autoExpandAll]="true"></dxo-grouping>
             <dxi-column dataField="id" caption="Id" alignment="center" dataType="string" [allowSearch]="true"></dxi-column>
-            <dxi-column dataField="nombre" caption="Nombre" alignment="center" dataType="string"
-              [allowSearch]="true"></dxi-column>
-            <dxi-column dataField="descripcion" caption="Descripción" alignment="center" dataType="string"
-              [allowSearch]="true"></dxi-column>
-            <dxi-column dataField="idModulo2.nombre" caption="Módulo" alignment="center" dataType="string"
-              [allowSearch]="true">
+            <dxi-column dataField="nombre" caption="Nombre" alignment="center" dataType="string" [allowSearch]="true"></dxi-column>
+            <dxi-column dataField="descripcion" caption="Descripción" alignment="center" dataType="string" [allowSearch]="true"></dxi-column>
+            <dxi-column dataField="idModulo2.nombre" caption="Módulo" alignment="center" dataType="string" [allowSearch]="true">
               <dxo-header-filter [allowSearch]="true"></dxo-header-filter>
             </dxi-column>
             <dxi-column dataField="estatus" caption="Estatus" alignment="center" cellTemplate="est">
@@ -80,16 +71,15 @@
               </div>
             </dxi-column>
             <div *dxTemplate="let row of 'Acciones'" class="d-flex gap-3 justify-content-center">
-              <div>
+              <div [appHasPermission]="['15']">
                 <button class="btn-edit" (click)="actualizarPermiso(row.data.id)">
                   <mat-icon class="btn__icon">edit</mat-icon>
                 </button>
               </div>
-              <div>
+              <div [appHasPermission]="['16']">
                 <button *ngIf="row.data.estatus === 0" class="btn-active" (click)="activar(row.data)">
                   <mat-icon class="btn__icon">check_circle</mat-icon>
                 </button>
-
                 <button *ngIf="row.data.estatus === 1" class="btn-desactive" (click)="desactivar(row.data)">
                   <mat-icon class="btn__icon">block</mat-icon>
                 </button>
