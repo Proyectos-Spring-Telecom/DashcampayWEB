@@ -260,6 +260,11 @@ export const appRoutes: VexRoutes = [
               .then(m => m.VariantesModule)
           },
           {
+            path: 'transbordos',
+            loadChildren:() => import('./pages/administracion/transbordos/transbordos.module')
+              .then(m => m.TransbordosModule)
+          },
+          {
             path: 'zonas',
             loadChildren:() => import('./pages/administracion/zonas/zonas.module')
               .then(m => m.ZonasModule)

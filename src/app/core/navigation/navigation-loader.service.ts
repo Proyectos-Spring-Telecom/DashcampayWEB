@@ -130,6 +130,13 @@ export class NavigationLoaderService {
           },
           {
             type: 'link',
+            label: 'Transbordos',
+            route: '/administracion/transbordos',
+            icon: 'mat:swap_horiz', // o 'mat:transfer_within_a_station' / 'mat:sync_alt'
+            permissions: []
+          },
+          {
+            type: 'link',
             label: 'Tarifas',
             route: '/administracion/tarifas',
             icon: 'mat:category', // o 'mat:tune' / 'mat:widgets',
