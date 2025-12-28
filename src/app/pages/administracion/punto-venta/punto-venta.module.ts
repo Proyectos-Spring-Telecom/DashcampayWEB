@@ -26,6 +26,7 @@ import { MatOptionModule } from '@angular/material/core';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle'; // <-- FALTA
 import { DxDataGridModule } from 'devextreme-angular';
 import { GenerarTransaccionComponent } from './generar-transaccion/generar-transaccion.component';
+import { NetpayDialogComponent } from './netpay-dialog/netpay-dialog.component';
 
 @NgModule({
   declarations: [GenerarTransaccionComponent],
@@ -58,6 +59,7 @@ import { GenerarTransaccionComponent } from './generar-transaccion/generar-trans
         MatOptionModule,
         MatSlideToggleModule,  // <-- agregado
         DxDataGridModule,
+        NetpayDialogComponent  // Import as standalone component
   ]
 })
 export class PuntoVentaModule { }
