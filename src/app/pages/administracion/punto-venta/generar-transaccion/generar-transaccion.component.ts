@@ -1,10 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, NgZone } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
 import { Router } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
 import { fadeInRight400ms } from '@vex/animations/fade-in-right.animation';
 import { AlertsService } from 'src/app/pages/pages/modal/alerts.service';
 import { MonederosServices } from 'src/app/pages/services/monederos.service';
 import { TransaccionesService } from 'src/app/pages/services/transacciones.service';
+import { NetpayService } from 'src/app/pages/services/netpay.service';
+import { NetpayDialogComponent } from '../netpay-dialog/netpay-dialog.component';
+
+declare const NetPay: any;
 
 @Component({
   selector: 'vex-generar-transaccion',
@@ -50,7 +55,9 @@ export class GenerarTransaccionComponent implements OnInit {
     private moneService: MonederosServices,
     private transaccionService: TransaccionesService,
     private alerts: AlertsService,
-    private route: Router
+    private route: Router,
+    private dialog: MatDialog,
+    private netpayService: NetpayService
   ) {}
 
   ngOnInit() {
@@ -152,6 +159,153 @@ export class GenerarTransaccionComponent implements OnInit {
     };
     console.log('Payload a enviar:', payload);
     this.agregar(payload);
+  }
+
+  pagarConTarjeta() {
+    if (this.cargando) return;
+    if (!this.monederoSeleccionado || !this.monto || this.monto <= 0) {
+      this.alerts.open({
+        type: 'warning',
+        title: '¡Atención!',
+        message: 'Por favor seleccione un monedero e ingrese un monto válido.',
+        confirmText: 'Entendido',
+        backdropClose: false
+      });
+      return;
+    }
+
+    // Cargar NetpayJS y mostrar el formulario
+    this.loadNetpayScript().then(() => {
+      this.abrirDialogNetpay();
+    }).catch(error => {
+      console.error('Error al cargar NetpayJS:', error);
+      this.alerts.open({
+        type: 'error',
+        title: '¡Error!',
+        message: 'No se pudo cargar el sistema de pagos. Por favor, intente nuevamente.',
+        confirmText: 'Entendido',
+        backdropClose: false
+      });
+    });
+  }
+
+  private loadNetpayScript(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      // Verificar si NetPay ya está cargado
+      if ((window as any).NetPay) {
+        resolve();
+        return;
+      }
+
+      // Verificar si el script ya existe
+      const existing = document.getElementById('netpay-sdk') as HTMLScriptElement | null;
+      if (existing) {
+        existing.addEventListener('load', () => resolve());
+        existing.addEventListener('error', (e) => reject(e));
+        return;
+      }
+
+      // Crear y cargar el script
+      const script = document.createElement('script');
+      script.id = 'netpay-sdk';
+      script.type = 'text/javascript';
+      script.src = 'https://docs.netpay.mx/cdn/v1.3/netpay.min.js';
+      script.onload = () => resolve();
+      script.onerror = (e) => reject(e);
+      document.head.appendChild(script);
+    });
+  }
+
+  private abrirDialogNetpay() {
+    const dialogRef = this.dialog.open(NetpayDialogComponent, {
+      width: '600px',
+      disableClose: true,
+      data: {
+        monto: this.monto,
+        monederoSerie: this.getNumeroSerieMonedero()
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && result.token && result.deviceFingerPrint && result.deviceInformation) {
+        // Procesar el pago con el token y datos del dispositivo
+        this.procesarPagoNetpay(result.token, result.deviceFingerPrint, result.deviceInformation);
+      }
+    });
+  }
+
+  private procesarPagoNetpay(token: string, deviceFingerPrint: string, deviceInformation: any) {
+    this.cargando = true;
+
+    // Paso 2: Procesar el pago usando la API de Dashcam
+    const sessionId = deviceFingerPrint; // sessionId es el mismo que deviceFingerPrint según la documentación
+    const referenceId = `REF-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+
+    // Convertir deviceInformation al formato requerido (todos los valores como strings)
+    const deviceInfo = {
+      deviceChannel: String(deviceInformation.deviceChannel || 'Browser'),
+      httpBrowserColorDepth: String(deviceInformation.httpBrowserColorDepth || '24'),
+      httpBrowserJavaEnabled: String(deviceInformation.httpBrowserJavaEnabled || 'FALSE'),
+      httpBrowserJavaScriptEnabled: String(deviceInformation.httpBrowserJavaScriptEnabled || 'TRUE'),
+      httpBrowserLanguage: String(deviceInformation.httpBrowserLanguage || 'es'),
+      httpBrowserScreenHeight: String(deviceInformation.httpBrowserScreenHeight || '687'),
+      httpBrowserScreenWidth: String(deviceInformation.httpBrowserScreenWidth || '1718'),
+      httpBrowserTimeDifference: String(deviceInformation.httpBrowserTimeDifference || '360')
+    };
+
+    const paymentData = {
+      amount: this.monto,
+      description: `Recarga de monedero ${this.getNumeroSerieMonedero()}`,
+      currency: 'MXN',
+      referenceId: referenceId,
+      token: token,
+      sessionId: sessionId,
+      deviceFingerPrint: deviceFingerPrint,
+      saveCard: 'false',
+      billing: {
+        firstName: 'Cliente',
+        lastName: 'Dashcam',
+        email: 'accept@netpay.com.mx',
+        phone: '8190034544',
+        address: {
+          city: 'Monterrey',
+          country: 'MX',
+          postalCode: '65700',
+          state: 'NL',
+          street1: 'Filósofos 100',
+          street2: 'Tecnologico'
+        },
+        merchantReferenceCode: referenceId
+      },
+      deviceInformation: deviceInfo
+    };
+
+    this.netpayService.procesarPago(paymentData).subscribe(
+      (paymentResponse: any) => {
+        // Si el pago fue exitoso, crear la transacción
+        const payload = {
+          idTipoTransaccion: 1,
+          monto: Number(this.monto),
+          latitudInicial: null,
+          longitudInicial: null,
+          numeroSerieMonedero: this.getNumeroSerieMonedero(),
+          numeroSerieValidador: null
+        };
+
+        this.agregar(payload);
+      },
+      (paymentError: any) => {
+        this.cargando = false;
+        console.error('Error al procesar pago:', paymentError);
+        this.alerts.open({
+          type: 'error',
+          title: '¡Error en el Pago!',
+          message: paymentError?.error?.message || paymentError?.message || 'Ocurrió un error al procesar el pago con tarjeta.',
+          confirmText: 'Entendido',
+          backdropClose: false
+        });
+      }
+    );
   }
 
   cancelar() {

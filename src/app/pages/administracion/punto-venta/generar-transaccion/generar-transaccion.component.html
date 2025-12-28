@@ -177,6 +177,12 @@
                                                                 currency:'MXN':'symbol-narrow':'1.2-2' }}</b>
                                                         </div>
                                                         <div class="summary-foot">
+                                                            <button mat-raised-button color="accent"
+                                                                [disabled]="!monto || monto<=0"
+                                                                (click)="pagarConTarjeta()">
+                                                                <mat-icon>credit_card</mat-icon>
+                                                                Pagar con Tarjeta
+                                                            </button>
                                                             <button mat-raised-button color="primary"
                                                                 [disabled]="!monto || monto<=0"
                                                                 (click)="confirmarRecarga()">
