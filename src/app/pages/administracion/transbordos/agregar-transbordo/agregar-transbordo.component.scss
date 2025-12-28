@@ -1,0 +1,39 @@
+::ng-deep {
+  .mat-mdc-form-field {
+    .mat-mdc-text-field-wrapper {
+      padding-bottom: 0;
+    }
+  }
+}
+
+.detail-action-button {
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.delete-detail-btn {
+  height: 36px;
+  padding: 0 16px;
+  font-size: 0.875rem;
+  line-height: 36px;
+  color: #fff !important;
+  background-color: #f44336 !important;
+  margin-bottom: 20px !important;
+  margin-top: 0 !important;
+  transform: translateY(-8px); /* Mover el botón hacia arriba */
+  
+  &:hover {
+    background-color: #d32f2f !important;
+  }
+  
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    margin-right: 4px;
+    color: #fff !important;
+  }
+}
+

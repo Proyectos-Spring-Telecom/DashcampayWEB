@@ -1,0 +1,100 @@
+<vex-page-layout @fadeInRight>
+  <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
+    [class.px-6]="layoutCtrl.value === 'fullwidth'" class="-mt-6">
+    <div class="card mt-4">
+      <div class="dashboard-lite p-4">
+        <div class="bg-app-bar appbar px-6 h-16 border-b sticky top-0 left-0 flex items-center z-10">
+          <nav class="breadcrumb-simple" aria-label="Ruta de navegación">
+            <a routerLink="/administracion" class="crumb-link">
+              <mat-icon inline>home</mat-icon>
+              Administración
+            </a>
+            <span class="sep">/</span>
+            <span class="crumb-current" aria-current="page">Transbordos</span>
+          </nav>
+          <div class="flex-grow"></div>
+          <div class="flex gap-3 actions-bar">
+            <button mat-raised-button color="primary" type="button" class="btn-soft textGenerico"
+              (click)="toggleExpandGroups()" matTooltip="Expandir / Contraer grupos">
+              <mat-icon svgIcon="mat:compare_arrows"></mat-icon>
+              <span class="btn-text">{{ autoExpandAllGroups ? 'Contraer' : 'Expandir' }}</span>
+            </button>
+            <button mat-raised-button color="accent" type="button" class="btn-soft textGenerico"
+              (click)="limpiarCampos()" matTooltip="Limpiar filtros">
+              <mat-icon svgIcon="mat:restore"></mat-icon>
+              <span class="btn-text">Limpiar</span>
+            </button>
+            <button (click)="agregarTransbordo()" mat-raised-button color="warn" type="button"
+              class="btn-soft textGenerico" matTooltip="Agregar Transbordo">
+              <mat-icon>add</mat-icon>
+              <span class="btn-text">Agregar</span>
+            </button>
+          </div>
+        </div>
+        <section class="mt-5 table-shell">
+          <dx-data-grid #gridContainer id="gridContainer" [columnHidingEnabled]="true" [showBorders]="true"
+            [showColumnLines]="true" [showRowLines]="true" [rowAlternationEnabled]="true" [dataSource]="listaTransbordos"
+            [keyExpr]="'id'" [width]="'100%'" [remoteOperations]="{ paging: true }" [paging]="{ pageSize: pageSize }"
+            [pager]="{ 
+                  showPageSizeSelector: true, 
+                  allowedPageSizes: [50], 
+                  showInfo: true,
+                  infoText: 'Página {0} de {1}', 
+                  visible: true 
+              }" (onPageIndexChanged)="onPageIndexChanged($event)" (onOptionChanged)="onGridOptionChanged($event)">
+            <dxo-search-panel [visible]="true" [width]="200" placeholder="Buscar..."></dxo-search-panel>
+            <dxo-group-panel [emptyPanelText]="mensajeAgrupar" [visible]="true"></dxo-group-panel>
+            <dxo-filter-row [visible]="showFilterRow"></dxo-filter-row>
+            <dxo-header-filter [visible]="showHeaderFilter"></dxo-header-filter>
+            <dxo-grouping [autoExpandAll]="autoExpandAllGroups"></dxo-grouping>
+            <dxo-column-chooser [enabled]="true"></dxo-column-chooser>
+            <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[20]" [showInfo]="true"></dxo-pager>
+            <dxi-column caption="Acciones" cellTemplate="acciones" alignment="center" [width]="180"></dxi-column>
+            <dxi-column dataField="nombre" caption="Nombre" alignment="center"></dxi-column>
+            <dxi-column dataField="tiempo" caption="Tiempo" alignment="center"></dxi-column>
+            <dxi-column dataField="numeroTransbordos" caption="Número de Transbordos" alignment="center"></dxi-column>
+            <dxi-column caption="Detalles" alignment="center" cellTemplate="detalles" [width]="300"></dxi-column>
+            <dxi-column dataField="nombreTipoDescuento" caption="Tipo Descuento" alignment="center"></dxi-column>
+            <dxi-column dataField="nombreCliente" caption="Cliente" alignment="center"></dxi-column>
+            <dxi-column dataField="estatus" caption="Estatus" alignment="center" cellTemplate="est">
+              <div *dxTemplate="let f of 'est'">
+                <span [ngClass]="f.data.estatus === 1 ? 'badge-status activo' : 'badge-status inactivo'">
+                  {{ f.data.estatus === 1 ? 'Activo' : 'Inactivo' }}
+                </span>
+              </div>
+            </dxi-column>
+            <div *dxTemplate="let row of 'detalles'">
+              <div *ngIf="row.data.detalles && row.data.detalles.length > 0" style="text-align: left; padding: 8px;">
+                <div *ngFor="let detalle of row.data.detalles" style="padding: 4px 0; border-bottom: 1px solid #e0e0e0;">
+                  <strong>#{{ detalle.nroTransbordo }}:</strong> {{ detalle.costo | currency:'$':'symbol':'1.2-2' }}
+                  <span *ngIf="detalle.nombreTipoDescuento" style="color: #666; margin-left: 8px;">
+                    ({{ detalle.nombreTipoDescuento }})
+                  </span>
+                </div>
+              </div>
+              <div *ngIf="!row.data.detalles || row.data.detalles.length === 0" style="text-align: center; color: #999;">
+                Sin detalles
+              </div>
+            </div>
+            <div *dxTemplate="let row of 'acciones'" class="d-flex gap-3 justify-content-center">
+              <div>
+                <button class="btn-edit" (click)="editarTransbordo(row.data.id)">
+                  <mat-icon class="btn__icon">edit</mat-icon>
+                </button>
+              </div>
+              <div>
+                <button class="btn-desactive" (click)="eliminarTransbordo(row.data)">
+                  <mat-icon class="btn__icon">delete</mat-icon>
+                </button>
+              </div>
+            </div>
+            <dxo-export [enabled]="false" [allowExportSelectedData]="true"
+              [texts]="{ exportAll: 'Exportar todos los datos a Excel', exportSelectedRows: 'Exportar filas seleccionadas a Excel' }">
+            </dxo-export>
+          </dx-data-grid>
+        </section>
+      </div>
+    </div>
+  </vex-page-layout-content>
+</vex-page-layout>
+
