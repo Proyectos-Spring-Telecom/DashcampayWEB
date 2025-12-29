@@ -11,6 +11,13 @@ export interface NetpayDialogData {
   monederoSerie: string;
 }
 
+export interface NetpayDialogResult {
+  token: string;
+  deviceFingerPrint: string;
+  deviceInformation: any;
+  cvv?: string;
+}
+
 @Component({
   selector: 'vex-netpay-dialog',
   standalone: true,
@@ -190,12 +197,34 @@ export class NetpayDialogComponent implements OnInit, OnDestroy {
                 }
               }
 
+              // Intentar obtener el CVV del formulario antes de cerrar
+              let cvv = '';
+              try {
+                // Intentar obtener el CVV del formulario de Netpay
+                const cardData = NetPay.form.getCardData();
+                if (cardData && cardData.cvv) {
+                  cvv = cardData.cvv;
+                  console.log('CVV obtenido del formulario:', cvv);
+                } else {
+                  // Intentar obtenerlo del DOM directamente (último recurso)
+                  const cvvInput = document.querySelector('input[name="cvv"], input[placeholder*="CVV"], input[placeholder*="cvv"], #netpay-cvv') as HTMLInputElement;
+                  if (cvvInput && cvvInput.value) {
+                    cvv = cvvInput.value;
+                    console.log('CVV obtenido del DOM:', cvv);
+                  }
+                }
+              } catch (err) {
+                console.warn('No se pudo obtener el CVV del formulario:', err);
+              }
+
               // Si llegamos aquí, tenemos todo lo necesario
               console.log('=== ÉXITO: PROCESANDO TOKENIZACIÓN ===');
+              console.log('CVV capturado:', cvv ? '***' : 'No disponible');
               this.dialogRef.close({
                 token: token,
                 deviceFingerPrint: this.deviceFingerPrint,
-                deviceInformation: deviceInformation
+                deviceInformation: deviceInformation,
+                cvv: cvv
               });
             } catch (error) {
               this.loading = false;

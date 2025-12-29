@@ -133,7 +133,7 @@ export class NavigationLoaderService {
             label: 'Transbordos',
             route: '/administracion/transbordos',
             icon: 'mat:swap_horiz', // o 'mat:transfer_within_a_station' / 'mat:sync_alt'
-            permissions: []
+            permissions: [127]
           },
           {
             type: 'link',

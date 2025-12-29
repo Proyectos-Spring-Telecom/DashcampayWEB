@@ -176,12 +176,70 @@
                                                             <b class="monto">{{ monto |
                                                                 currency:'MXN':'symbol-narrow':'1.2-2' }}</b>
                                                         </div>
+                                                        
+                                                        <!-- Sección de Tarjetas -->
+                                                        <div class="tarjetas-section" *ngIf="monederoSeleccionado?.customerId !== null && monederoSeleccionado?.customerId !== undefined">
+                                                            <div class="tarjetas-header">
+                                                                <i class="fa fa-credit-card"></i>
+                                                                <h4>Tarjetas Guardadas</h4>
+                                                            </div>
+                                                            <div class="tarjetas-loading" *ngIf="cargandoTarjetas">
+                                                                <mat-spinner diameter="30"></mat-spinner>
+                                                                <span>Cargando tarjetas...</span>
+                                                            </div>
+                                                            <div class="tarjetas-list" *ngIf="!cargandoTarjetas">
+                                                                <div class="tarjeta-item" *ngFor="let tarjeta of tarjetasCliente">
+                                                                    <div class="tarjeta-card" [class.visa-card]="tarjeta.card?.brand === 'visa'" 
+                                                                         [class.mastercard-card]="tarjeta.card?.brand === 'mastercard'" 
+                                                                         [class.amex-card]="tarjeta.card?.brand === 'amex'">
+                                                                        <div class="tarjeta-card-header">
+                                                                            <div class="tarjeta-chip">
+                                                                                <div class="chip-lines"></div>
+                                                                            </div>
+                                                                            <div class="tarjeta-brand-logo">
+                                                                                <i class="fa fa-credit-card" [class.visa-icon]="tarjeta.card?.brand === 'visa'" 
+                                                                                   [class.mastercard-icon]="tarjeta.card?.brand === 'mastercard'" 
+                                                                                   [class.amex-icon]="tarjeta.card?.brand === 'amex'"></i>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="tarjeta-card-body">
+                                                                            <div class="tarjeta-number">
+                                                                                <span class="tarjeta-masked">**** **** ****</span>
+                                                                                <span class="tarjeta-last4">{{ tarjeta.card?.lastFourDigits || '****' }}</span>
+                                                                            </div>
+                                                                            <div class="tarjeta-card-footer">
+                                                                                <div class="tarjeta-holder">
+                                                                                    <div class="tarjeta-label">Banco</div>
+                                                                                    <div class="tarjeta-value">{{ tarjeta.card?.bank || '—' }}</div>
+                                                                                </div>
+                                                                                <div class="tarjeta-expiry">
+                                                                                    <div class="tarjeta-label">Válida hasta</div>
+                                                                                    <div class="tarjeta-value" *ngIf="tarjeta.card?.expMonth && tarjeta.card?.expYear">
+                                                                                        {{ tarjeta.card?.expMonth }}/{{ tarjeta.card?.expYear }}
+                                                                                    </div>
+                                                                                    <div class="tarjeta-value" *ngIf="!tarjeta.card?.expMonth || !tarjeta.card?.expYear">—</div>
+                                                                                </div>
+                                                                                <div class="tarjeta-type">
+                                                                                    <div class="tarjeta-label">Tipo</div>
+                                                                                    <div class="tarjeta-value">{{ tarjeta.card?.type === 'credit' ? 'Crédito' : tarjeta.card?.type === 'debit' ? 'Débito' : (tarjeta.card?.type || '—') | titlecase }}</div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="tarjetas-empty" *ngIf="tarjetasCliente.length === 0">
+                                                                    <i class="fa fa-credit-card"></i>
+                                                                    <p>No hay tarjetas guardadas</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        
                                                         <div class="summary-foot">
                                                             <button mat-raised-button color="accent"
                                                                 [disabled]="!monto || monto<=0"
                                                                 (click)="pagarConTarjeta()">
                                                                 <mat-icon>credit_card</mat-icon>
-                                                                Pagar con Tarjeta
+                                                                Agregar Tarjeta
                                                             </button>
                                                             <button mat-raised-button color="primary"
                                                                 [disabled]="!monto || monto<=0"

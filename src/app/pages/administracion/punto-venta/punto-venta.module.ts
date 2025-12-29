@@ -24,6 +24,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';   // <-- FALT
 import { MatSelectModule } from '@angular/material/select';         // <-- FALTA
 import { MatOptionModule } from '@angular/material/core';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle'; // <-- FALTA
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { DxDataGridModule } from 'devextreme-angular';
 import { GenerarTransaccionComponent } from './generar-transaccion/generar-transaccion.component';
 import { NetpayDialogComponent } from './netpay-dialog/netpay-dialog.component';
@@ -58,6 +59,7 @@ import { NetpayDialogComponent } from './netpay-dialog/netpay-dialog.component';
         MatSelectModule,       // <-- agregado
         MatOptionModule,
         MatSlideToggleModule,  // <-- agregado
+        MatProgressSpinnerModule,
         DxDataGridModule,
         NetpayDialogComponent  // Import as standalone component
   ]

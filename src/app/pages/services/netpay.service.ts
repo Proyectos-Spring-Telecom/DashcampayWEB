@@ -42,47 +42,46 @@ export class NetpayService {
   }
 
   /**
-   * Realiza un pago con token usando la API de Dashcam
-   * Endpoint: /netpay/payment/saved-card
-   * @param paymentData Datos del pago con estructura completa para Dashcam
-   * @returns Observable con la respuesta del pago
+   * Crea un cliente en Netpay
+   * Endpoint: /netpay/customers
+   * @param customerData Datos del cliente
+   * @returns Observable con la respuesta de creación del cliente
    */
-  procesarPago(paymentData: {
-    amount: number;
-    description: string;
-    currency: string;
-    referenceId: string;
+  crearCliente(customerData: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
     token: string;
-    sessionId: string;
-    deviceFingerPrint: string;
-    saveCard: string;
-    billing: {
-      firstName: string;
-      lastName: string;
-      email: string;
-      phone: string;
-      address: {
-        city: string;
-        country: string;
-        postalCode: string;
-        state: string;
-        street1: string;
-        street2?: string;
-      };
-      merchantReferenceCode?: string;
-    };
-    deviceInformation: {
-      deviceChannel: string;
-      httpBrowserColorDepth: string;
-      httpBrowserJavaEnabled: string;
-      httpBrowserJavaScriptEnabled: string;
-      httpBrowserLanguage: string;
-      httpBrowserScreenHeight: string;
-      httpBrowserScreenWidth: string;
-      httpBrowserTimeDifference: string;
-    };
   }): Observable<any> {
-    return this.http.post(`${environment.API_SECURITY}/netpay/payment/saved-card`, paymentData);
+    return this.http.post(`${environment.API_SECURITY}/netpay/customers`, customerData);
   }
+
+  /**
+   * Obtiene las tarjetas de un cliente
+   * Endpoint: /netpay/customers?customerId=
+   * @param customerId ID del cliente
+   * @returns Observable con las tarjetas del cliente
+   */
+  obtenerTarjetasCliente(customerId: string): Observable<any> {
+    return this.http.get(`${environment.API_SECURITY}/netpay/customers?customerId=${customerId}`);
+  }
+
+  /**
+   * Actualiza el token de una tarjeta para un cliente existente
+   * Endpoint: /netpay/customers/{customerId}/token
+   * @param customerId ID del cliente
+   * @param tokenData Datos del token (customerId, token, preAuth, cvv2)
+   * @returns Observable con la respuesta de actualización
+   */
+  actualizarTokenCliente(customerId: string, tokenData: {
+    customerId: string;
+    token: string;
+    preAuth: boolean;
+    cvv2: string;
+  }): Observable<any> {
+    return this.http.put(`${environment.API_SECURITY}/netpay/customers/${customerId}/token`, tokenData);
+  }
+
 }
 
