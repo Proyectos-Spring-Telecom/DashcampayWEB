@@ -173,4 +173,11 @@ export enum Permiso {
   Consultar_Monitoreo = "101",
   Prueba_Modulos = "101",
   /* #endregion */
+
+  /* #region Transbordos */
+  Listado_Transbordos = "127",
+  Crear_Transbordos = "128",
+  Actualizar_Transbordos = "129",
+  CambiarEstatus_Transbordos = "130",
+  /* #endregion */
 }

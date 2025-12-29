@@ -147,7 +147,54 @@
     b { color:#0F172A; }
     .monto { color:#16A34A; font-weight:800; }
   }
-  .summary-foot { display:flex; gap:8px; margin-top: 10px; }
+  .summary-foot { 
+    display: flex; 
+    flex-direction: column;
+    gap: 10px; 
+    margin-top: 16px;
+    
+    button {
+      width: 100%;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 14px;
+      padding: 10px 16px;
+      justify-content: center;
+      
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        margin-right: 8px;
+      }
+      
+      @media (max-width: 768px) {
+        font-size: 13px;
+        padding: 10px 12px;
+        
+        mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+          margin-right: 6px;
+        }
+      }
+      
+      @media (max-width: 480px) {
+        font-size: 12px;
+        padding: 8px 10px;
+        
+        mat-icon {
+          font-size: 14px;
+          width: 14px;
+          height: 14px;
+          margin-right: 4px;
+        }
+      }
+    }
+  }
 }
 
 /* Icono de label reutilizable */
@@ -1053,4 +1100,325 @@
 .tarifa-card .btn.btn-primary:hover{
   filter: brightness(1.05);
   box-shadow: 0 6px 16px color-mix(in srgb, var(--c-azul-oscuro,#0A2E57) 28%, transparent);
+}
+
+/* ====== SECCIÓN DE TARJETAS ====== */
+.tarjetas-section {
+  margin-top: 16px;
+  border: 1px solid #E5E7EB;
+  border-radius: 16px;
+  padding: 14px;
+  background: #FFFFFF;
+
+  .tarjetas-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #E5E7EB;
+
+    i {
+      color: #0284C7;
+      font-size: 18px;
+    }
+
+    h4 {
+      margin: 0;
+      font-weight: 700;
+      color: #0F172A;
+      font-size: 16px;
+    }
+  }
+
+  .tarjetas-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    gap: 12px;
+
+    span {
+      color: #64748B;
+      font-size: 14px;
+    }
+  }
+
+  .tarjetas-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: none;
+    overflow: visible;
+    min-height: 0;
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+  }
+
+  .tarjeta-item {
+    perspective: 1000px;
+  }
+
+  .tarjeta-card {
+    position: relative;
+    width: 100%;
+    min-height: 180px;
+    height: auto;
+    border-radius: 16px;
+    padding: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    
+    @media (max-width: 768px) {
+      min-height: 160px;
+      padding: 16px;
+    }
+    
+    @media (max-width: 480px) {
+      min-height: 150px;
+      padding: 12px;
+    }
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    &.visa-card {
+      background: linear-gradient(135deg, #0057B8 0%, #003D82 100%);
+      /* Azul oficial de Visa */
+    }
+
+    &.mastercard-card {
+      background: linear-gradient(135deg, #EB001B 0%, #F79E1B 100%);
+      /* Rojo y amarillo oficiales de Mastercard */
+    }
+
+    &.amex-card {
+      background: linear-gradient(135deg, #0070D2 0%, #004A8F 100%);
+      /* Azul oficial de American Express */
+    }
+  }
+
+  .tarjeta-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .tarjeta-chip {
+    width: 50px;
+    height: 40px;
+    background: linear-gradient(135deg, #f4d03f 0%, #f39c12 100%);
+    border-radius: 8px;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+
+    .chip-lines {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      right: 8px;
+      height: 24px;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.1) 2px,
+        rgba(0, 0, 0, 0.1) 4px
+      );
+      border-radius: 4px;
+    }
+  }
+
+  .tarjeta-brand-logo {
+    font-size: 32px;
+    opacity: 0.9;
+
+    i.visa-icon {
+      color: #0057B8;
+      background: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    i.mastercard-icon {
+      color: #EB001B;
+      background: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+
+    i.amex-icon {
+      color: #0070D2;
+      background: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+  }
+
+  .tarjeta-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    position: relative;
+    z-index: 1;
+    flex: 1;
+  }
+
+  .tarjeta-number {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    font-family: 'Courier New', monospace;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+
+    .tarjeta-masked {
+      opacity: 0.7;
+    }
+
+    .tarjeta-last4 {
+      font-weight: 700;
+      font-size: 22px;
+    }
+    
+    @media (max-width: 768px) {
+      font-size: 18px;
+      letter-spacing: 1.5px;
+      gap: 6px;
+      
+      .tarjeta-last4 {
+        font-size: 20px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      font-size: 16px;
+      letter-spacing: 1px;
+      gap: 4px;
+      
+      .tarjeta-last4 {
+        font-size: 18px;
+      }
+    }
+  }
+
+  .tarjeta-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 16px;
+    position: relative;
+    z-index: 1;
+    flex-wrap: wrap;
+    
+    @media (max-width: 480px) {
+      gap: 8px;
+    }
+  }
+
+  .tarjeta-holder,
+  .tarjeta-expiry,
+  .tarjeta-type {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+    
+    @media (max-width: 480px) {
+      flex: 1 1 calc(50% - 4px);
+      min-width: 80px;
+    }
+  }
+
+  .tarjeta-label {
+    font-size: 10px;
+    opacity: 0.8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    
+    @media (max-width: 480px) {
+      font-size: 9px;
+      letter-spacing: 0.3px;
+    }
+  }
+
+  .tarjeta-value {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    
+    @media (max-width: 768px) {
+      font-size: 13px;
+    }
+    
+    @media (max-width: 480px) {
+      font-size: 12px;
+    }
+  }
+
+  .tarjetas-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    gap: 12px;
+    color: #94A3B8;
+
+    i {
+      font-size: 48px;
+      opacity: 0.5;
+    }
+
+    p {
+      margin: 0;
+      font-size: 14px;
+      color: #64748B;
+    }
+  }
 }
