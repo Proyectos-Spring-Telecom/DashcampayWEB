@@ -53,6 +53,7 @@ export class NetpayService {
     email: string;
     phone: string;
     token: string;
+    idPasajero?: number | string | null;
   }): Observable<any> {
     return this.http.post(`${environment.API_SECURITY}/netpay/customers`, customerData);
   }

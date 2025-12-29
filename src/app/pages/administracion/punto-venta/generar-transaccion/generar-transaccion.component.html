@@ -177,8 +177,45 @@
                                                                 currency:'MXN':'symbol-narrow':'1.2-2' }}</b>
                                                         </div>
                                                         
+                                                        <!-- Selección de Método de Pago -->
+                                                        <div class="metodo-pago-section">
+                                                            <div class="metodo-pago-options">
+                                                                <label class="metodo-pago-option">
+                                                                    <input type="radio" name="metodoPago" 
+                                                                           [(ngModel)]="metodoPago" 
+                                                                           value="efectivo"
+                                                                           (change)="tarjetaSeleccionada = null">
+                                                                    <span class="radio-custom"></span>
+                                                                    <i class="fa fa-money"></i>
+                                                                    <span>Efectivo</span>
+                                                                </label>
+                                                                <label class="metodo-pago-option" 
+                                                                       [class.disabled]="!monederoSeleccionado?.customerId">
+                                                                    <input type="radio" name="metodoPago" 
+                                                                           [(ngModel)]="metodoPago" 
+                                                                           value="tarjeta"
+                                                                           [disabled]="!monederoSeleccionado?.customerId">
+                                                                    <span class="radio-custom"></span>
+                                                                    <i class="fa fa-credit-card"></i>
+                                                                    <span>Tarjeta</span>
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <!-- Sección de Efectivo -->
+                                                        <div class="efectivo-section" *ngIf="metodoPago === 'efectivo'">
+                                                            <div class="efectivo-header">
+                                                                <i class="fa fa-money"></i>
+                                                                <h4>Efectivo</h4>
+                                                            </div>
+                                                            <div class="efectivo-content">
+                                                                <p>Pago en efectivo seleccionado</p>
+                                                            </div>
+                                                        </div>
+                                                        
                                                         <!-- Sección de Tarjetas -->
-                                                        <div class="tarjetas-section" *ngIf="monederoSeleccionado?.customerId !== null && monederoSeleccionado?.customerId !== undefined">
+                                                        <div class="tarjetas-section" 
+                                                             *ngIf="metodoPago === 'tarjeta' && monederoSeleccionado?.customerId !== null && monederoSeleccionado?.customerId !== undefined">
                                                             <div class="tarjetas-header">
                                                                 <i class="fa fa-credit-card"></i>
                                                                 <h4>Tarjetas Guardadas</h4>
@@ -189,9 +226,12 @@
                                                             </div>
                                                             <div class="tarjetas-list" *ngIf="!cargandoTarjetas">
                                                                 <div class="tarjeta-item" *ngFor="let tarjeta of tarjetasCliente">
-                                                                    <div class="tarjeta-card" [class.visa-card]="tarjeta.card?.brand === 'visa'" 
+                                                                    <div class="tarjeta-card" 
+                                                                         [class.visa-card]="tarjeta.card?.brand === 'visa'" 
                                                                          [class.mastercard-card]="tarjeta.card?.brand === 'mastercard'" 
-                                                                         [class.amex-card]="tarjeta.card?.brand === 'amex'">
+                                                                         [class.amex-card]="tarjeta.card?.brand === 'amex'"
+                                                                         [class.selected]="tarjetaSeleccionada === tarjeta"
+                                                                         (click)="seleccionarTarjeta(tarjeta)">
                                                                         <div class="tarjeta-card-header">
                                                                             <div class="tarjeta-chip">
                                                                                 <div class="chip-lines"></div>
