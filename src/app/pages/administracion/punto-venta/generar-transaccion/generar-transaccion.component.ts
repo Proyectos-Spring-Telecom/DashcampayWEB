@@ -50,6 +50,8 @@ export class GenerarTransaccionComponent implements OnInit {
   pageSize = 9;
   monto = 0;
   montoView = '';
+  metodoPago: 'efectivo' | 'tarjeta' = 'efectivo';
+  tarjetaSeleccionada: any = null;
 
   constructor(
     private moneService: MonederosServices,
@@ -84,6 +86,8 @@ export class GenerarTransaccionComponent implements OnInit {
 
   seleccionarMonedero(m: any) {
     this.monederoSeleccionado = m;
+    this.metodoPago = 'efectivo'; // Resetear a efectivo al cambiar de monedero
+    this.tarjetaSeleccionada = null; // Limpiar tarjeta seleccionada
     console.log('=== MONEDERO SELECCIONADO ===');
     console.log('Monedero:', m);
     console.log('ID:', m?.id);
@@ -100,6 +104,12 @@ export class GenerarTransaccionComponent implements OnInit {
     } else {
       this.tarjetasCliente = [];
     }
+  }
+
+  seleccionarTarjeta(tarjeta: any) {
+    this.tarjetaSeleccionada = tarjeta;
+    this.metodoPago = 'tarjeta'; // Cambiar automáticamente a método de pago con tarjeta
+    console.log('Tarjeta seleccionada:', tarjeta);
   }
 
   obtenerTarjetas(customerId: string) {
@@ -312,7 +322,6 @@ export class GenerarTransaccionComponent implements OnInit {
       console.log('CustomerId es null, creando cliente con el token tokenizado');
       this.crearClienteNetpay(token, monedero).subscribe(
         (response: any) => {
-          this.cargando = false;
           console.log('Cliente creado exitosamente en Netpay:', response);
           
           // Obtener el customerId de la respuesta
@@ -324,20 +333,63 @@ export class GenerarTransaccionComponent implements OnInit {
               this.monederoSeleccionado.customerId = nuevoCustomerId;
             }
             
-            // Obtener las tarjetas actualizadas
-            console.log('Obteniendo tarjetas actualizadas con customerId:', nuevoCustomerId);
-            this.obtenerTarjetas(nuevoCustomerId);
+            // Actualizar el token del cliente después de crearlo
+            console.log('Actualizando token del cliente recién creado con customerId:', nuevoCustomerId);
+            this.actualizarTokenCliente(nuevoCustomerId, token, cvv).subscribe(
+              (updateResponse: any) => {
+                this.cargando = false;
+                console.log('Token actualizado exitosamente después de crear cliente:', updateResponse);
+                
+                // Obtener las tarjetas actualizadas
+                console.log('Obteniendo tarjetas actualizadas con customerId:', nuevoCustomerId);
+                this.obtenerTarjetas(nuevoCustomerId);
+                
+                this.alerts.open({
+                  type: 'success',
+                  title: '¡Operación Exitosa!',
+                  message: 'Tarjeta tokenizada, cliente creado y token actualizado correctamente.',
+                  confirmText: 'Entendido',
+                  backdropClose: false
+                });
+              },
+              (updateError: any) => {
+                this.cargando = false;
+                console.error('Error al actualizar token después de crear cliente:', updateError);
+                
+                // Aún así, obtener las tarjetas si el cliente se creó correctamente
+                this.obtenerTarjetas(nuevoCustomerId);
+                
+                // Mostrar alerta de advertencia
+                let errorMessage = 'Cliente creado pero hubo un error al actualizar el token.';
+                if (updateError?.error) {
+                  if (typeof updateError.error === 'string') {
+                    errorMessage = updateError.error;
+                  } else if (updateError.error?.message) {
+                    errorMessage = updateError.error.message;
+                  }
+                }
+                
+                this.alerts.open({
+                  type: 'warning',
+                  title: '¡Atención!',
+                  message: errorMessage,
+                  confirmText: 'Entendido',
+                  backdropClose: false
+                });
+              }
+            );
           } else {
+            this.cargando = false;
             console.warn('No se pudo obtener el customerId de la respuesta:', response);
+            
+            this.alerts.open({
+              type: 'warning',
+              title: '¡Atención!',
+              message: 'Cliente creado pero no se pudo obtener el ID del cliente. Por favor, verifique manualmente.',
+              confirmText: 'Entendido',
+              backdropClose: false
+            });
           }
-          
-          this.alerts.open({
-            type: 'success',
-            title: '¡Operación Exitosa!',
-            message: 'Tarjeta tokenizada y cliente creado correctamente.',
-            confirmText: 'Entendido',
-            backdropClose: false
-          });
         },
         (error: any) => {
           this.cargando = false;
@@ -465,7 +517,8 @@ export class GenerarTransaccionComponent implements OnInit {
       lastName: monedero?.pasajeroApellidoPaterno || '',
       email: monedero?.correoUsuario || '',
       phone: monedero?.telefonoUsuario || '',
-      token: token
+      token: token,
+      idPasajero: monedero?.idPasajero || null
     };
 
     console.log('=== DATOS PARA CREAR CLIENTE EN NETPAY ===');
@@ -473,6 +526,7 @@ export class GenerarTransaccionComponent implements OnInit {
     console.log('Customer Data (JSON):', JSON.stringify(customerData, null, 2));
     console.log('Token:', token);
     console.log('Monedero completo:', monedero);
+    console.log('idPasajero:', monedero?.idPasajero);
     console.log('==========================================');
     
     return this.netpayService.crearCliente(customerData);
