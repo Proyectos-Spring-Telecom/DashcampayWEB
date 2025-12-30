@@ -7,6 +7,7 @@ import { ClientesService } from 'src/app/pages/services/clientes.service';
 import { DispositivosService } from 'src/app/pages/services/dispositivos.service';
 import { MonederosServices } from 'src/app/pages/services/monederos.service';
 import { PasajerosService } from 'src/app/pages/services/pasajeros.service';
+import { TiposPasajeroService } from 'src/app/pages/services/tipos-pasajero.service';
 
 @Component({
   selector: 'vex-agregar-monedero',
@@ -23,6 +24,7 @@ export class AgregarMonederoComponent implements OnInit {
   public title = 'Agregar Monedero';
   public listaClientes: any;
   public listaPasajeros: any;
+  public listaTiposPasajero: any[] = [];
   public showDatosID = true;
   selectedFileName: string = '';
   previewUrl: string | ArrayBuffer | null = null;
@@ -35,13 +37,15 @@ export class AgregarMonederoComponent implements OnInit {
     private clieService: ClientesService,
     private moneService: MonederosServices,
     private pasaService: PasajerosService,
+    private tiposPasajeroService: TiposPasajeroService,
     private alerts: AlertsService,
   ) { }
 
   ngOnInit(): void {
     this.obtenerClientes();
     this.initForm();
-    this.obtenerPasajeros()
+    this.obtenerPasajeros();
+    this.obtenerTiposPasajero();
     this.activatedRouted.params.subscribe((params) => {
       this.idMonedero = params['idMonedero'];
       if (this.idMonedero) {
@@ -55,6 +59,20 @@ export class AgregarMonederoComponent implements OnInit {
       }
     });
 
+    // Suscribirse a cambios en el select de pasajero para auto-seleccionar tipo de pasajero
+    this.monederoForm.get('idPasajero')?.valueChanges.subscribe((idPasajero) => {
+      if (idPasajero) {
+        const pasajeroSeleccionado = this.listaPasajeros.find((p: any) => p.id === idPasajero);
+        if (pasajeroSeleccionado?.idTipoPasajero) {
+          // Usar setValue para campos deshabilitados
+          this.monederoForm.get('idTipoPasajero')?.setValue(pasajeroSeleccionado.idTipoPasajero, { emitEvent: false });
+        } else {
+          this.monederoForm.get('idTipoPasajero')?.setValue(null, { emitEvent: false });
+        }
+      } else {
+        this.monederoForm.get('idTipoPasajero')?.setValue(null, { emitEvent: false });
+      }
+    });
   }
 
   obtenerPasajeros() {
@@ -83,7 +101,31 @@ export class AgregarMonederoComponent implements OnInit {
         idCliente: Number(response.data.idCliente),
         // saldo: Number(response.data.saldo)
       });
+      // Actualizar idTipoPasajero usando setValue para campos deshabilitados
+      if (response.data.idTipoPasajero) {
+        this.monederoForm.get('idTipoPasajero')?.setValue(Number(response.data.idTipoPasajero));
+      }
     })
+  }
+
+  obtenerTiposPasajero() {
+    this.tiposPasajeroService.obtenerTiposPasajeroList().subscribe(
+      (response: any) => {
+        // Manejar diferentes estructuras de respuesta
+        if (Array.isArray(response)) {
+          this.listaTiposPasajero = response;
+        } else if (response?.data && Array.isArray(response.data)) {
+          this.listaTiposPasajero = response.data;
+        } else if (response?.data?.data && Array.isArray(response.data.data)) {
+          this.listaTiposPasajero = response.data.data;
+        } else {
+          this.listaTiposPasajero = [];
+        }
+      },
+      (error: any) => {
+        this.listaTiposPasajero = [];
+      }
+    );
   }
 
   initForm() {
@@ -93,6 +135,7 @@ export class AgregarMonederoComponent implements OnInit {
       estatus: [1, Validators.required],
       idPasajero: [null],
       idCliente: [null, Validators.required],
+      idTipoPasajero: [{ value: null, disabled: true }],
     });
   }
 

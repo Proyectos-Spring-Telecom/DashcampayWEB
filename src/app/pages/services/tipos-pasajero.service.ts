@@ -51,5 +51,11 @@ export class TiposPasajeroService {
       catchError(error => throwError(() => error))
     );
   }
+
+  obtenerTiposPasajeroList(): Observable<any> {
+    return this.http.get(`${environment.API_SECURITY}/catpasajero/list`).pipe(
+      catchError(error => throwError(() => error))
+    );
+  }
 }
 
