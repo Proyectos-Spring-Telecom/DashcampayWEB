@@ -3,6 +3,14 @@
     [crumbs]="['Dashboards', 'Analytics']"
     class="flex-auto"></vex-breadcrumbs>
 
+  <mat-form-field appearance="outline" class="mr-4">
+    <mat-select [(ngModel)]="filtroSeleccionado" (selectionChange)="onFiltroChange()" [compareWith]="compararFiltros">
+      <mat-option *ngFor="let opcion of opcionesFiltro" [value]="opcion">
+        {{ opcion.etiqueta }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+
   <button class="ml-2" color="primary" mat-icon-button type="button">
     <mat-icon svgIcon="mat:more_vert"></mat-icon>
   </button>

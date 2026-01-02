@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
 import { fadeInRight400ms } from '@vex/animations/fade-in-right.animation';
+import { DashboardService } from '../../services/dashboard.service';
 
 type TrendPoint = { d: string; v: number };
 
@@ -11,10 +12,25 @@ type TrendPoint = { d: string; v: number };
   animations: [fadeInRight400ms],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit {
   layoutCtrl = new UntypedFormControl('fullwidth');
-ahora = new Date();
+  ahora = new Date();
   ventanaMin = 15;
+  
+  opcionesFiltro = [
+    { valor: 1, etiqueta: 'Hoy' },
+    { valor: 2, etiqueta: '7 Días' },
+    { valor: 3, etiqueta: 'Mes Actual' },
+    { valor: 4, etiqueta: 'Año Actual' }
+  ];
+  filtroSeleccionado = this.opcionesFiltro[0];
+  metricas: any = null;
+  cargando: boolean = false;
+
+  constructor(
+    private dashboardService: DashboardService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   kpis = {
     ingresosHoy: 0,
@@ -39,12 +55,15 @@ ahora = new Date();
   pagoDistrib: any[] = [];
   ascensosVsBoletos: any[] = [];
   pasajerosPorRuta: any[] = [];
-  franjas = [
-    { name: 'Adulto Mayor', value: 'manana' },
-    { name: 'Estudiantes', value: 'mediodia' },
-    { name: 'Embarazadas', value: 'tarde' },
-    { name: 'Discapacidad', value: 'noche' }
-  ];
+  tiposPasajero: any[] = [];
+  
+  // Mapeo de colores para tipos de pasajero
+  coloresTiposPasajero: { [key: string]: string } = {
+    'estandar': '#008ffb',      // Azul
+    'estudiantes': '#f44336',   // Rojo
+    'embarazadas': '#f44336',   // Rojo
+    'discapacidad': '#ffc107'   // Amarillo
+  };
 
   histPuntualidad: any[] = [];
 
@@ -56,7 +75,180 @@ ahora = new Date();
 
   ngOnInit(): void {
     this.simularDatos();
+    this.cargarMetricas();
     setInterval(() => this.ahora = new Date(), 30000);
+  }
+
+  cargarMetricas(): void {
+    this.cargando = true;
+    this.dashboardService.obtenerMetricas(this.filtroSeleccionado.valor).subscribe({
+      next: (data) => {
+        this.metricas = data;
+        // Actualizar ingresos del día con datos de la API
+        if (data && data.ingresosTotales !== undefined) {
+          this.kpis.ingresosHoy = data.ingresosTotales || 0;
+          // Calcular porcentaje de diferencia solo cuando el filtro es "Hoy"
+          if (this.filtroSeleccionado.valor === 1 && data.ingresoTotalAyer !== undefined && data.ingresoTotalAyer !== null) {
+            const ingresoAyer = data.ingresoTotalAyer || 0;
+            if (ingresoAyer > 0) {
+              this.kpis.deltaIngresos = ((data.ingresosTotales - ingresoAyer) / ingresoAyer) * 100;
+            } else {
+              this.kpis.deltaIngresos = data.ingresosTotales > 0 ? 100 : 0;
+            }
+          }
+        }
+        // Actualizar pasajeros validados
+        if (data && data.pasajerosValidados !== undefined) {
+          this.kpis.pasajerosValidadosHoy = data.pasajerosValidados || 0;
+        }
+        // Actualizar ticket promedio
+        if (data && data.ticketPromedio && data.ticketPromedio.ticketPromedio !== undefined) {
+          this.kpis.ticketProm = data.ticketPromedio.ticketPromedio || 0;
+        }
+        // Actualizar porcentaje de pagos electrónicos y tarjeta
+        if (data && data.porcentajeMonederoVirtual) {
+          if (data.porcentajeMonederoVirtual.porcentajePagoElectronico !== undefined) {
+            this.kpis.pctElectronico = data.porcentajeMonederoVirtual.porcentajePagoElectronico / 100 || 0;
+          }
+        }
+        // Actualizar validaciones exitosas y fallidas
+        if (data && data.validacionesExitosas !== undefined) {
+          this.kpis.validacionesOk = data.validacionesExitosas || 0;
+        }
+        if (data && data.validacionesFallidas !== undefined) {
+          this.kpis.validacionesFail = data.validacionesFallidas || 0;
+        }
+        // Actualizar unidades en servicio / total
+        // viajesAbiertos es un objeto con viajesAbiertos y totalValidadores dentro
+        if (data && data.viajesAbiertos) {
+          if (data.viajesAbiertos.viajesAbiertos !== undefined) {
+            this.kpis.enServicio = Number(data.viajesAbiertos.viajesAbiertos) || 0;
+          }
+          if (data.viajesAbiertos.totalValidadores !== undefined) {
+            this.kpis.totalVehiculos = Number(data.viajesAbiertos.totalValidadores) || 0;
+          }
+        }
+        // Actualizar Top 5 rutas
+        if (data && data.top5Rutas && Array.isArray(data.top5Rutas)) {
+          this.topRutas = data.top5Rutas.map((ruta: any) => ({
+            ruta: ruta.nombreRuta || ruta.idRuta,
+            monto: Number(ruta.ingresosTotales) || 0,
+            pasajeros: Number(ruta.totalViajes) || 0,
+            ticket: ruta.ingresosTotales && ruta.totalViajes 
+              ? Number(ruta.ingresosTotales) / Number(ruta.totalViajes) 
+              : 0
+          })).slice(0, 5);
+        }
+        // Actualizar curva de ascensos vs boletos
+        if (data && data.graficaAscensosVsBoletos && Array.isArray(data.graficaAscensosVsBoletos)) {
+          this.ascensosVsBoletos = data.graficaAscensosVsBoletos.map((item: any) => ({
+            hora: `Viaje ${item.idViaje}`,
+            ascensos: Number(item.ascensos) || 0,
+            boletos: Number(item.boletos) || 0
+          }));
+        }
+        // Actualizar pasajeros por ruta
+        if (data && data.pasajerosPorRutaTipo && Array.isArray(data.pasajerosPorRutaTipo)) {
+          // Función para normalizar nombres de tipos
+          const normalizarTipo = (tipo: string): string => {
+            return tipo.toLowerCase()
+              .replace(/\s+/g, '')
+              .normalize('NFD')
+              .replace(/[\u0300-\u036f]/g, '');
+          };
+          
+          // Obtener tipos únicos de pasajero y crear mapeo de nombres originales a campos normalizados
+          const tiposUnicosMap = new Map<string, string>();
+          data.pasajerosPorRutaTipo.forEach((item: any) => {
+            if (item.tipoPasajero) {
+              const campoNormalizado = normalizarTipo(item.tipoPasajero);
+              if (!tiposUnicosMap.has(campoNormalizado)) {
+                tiposUnicosMap.set(campoNormalizado, item.tipoPasajero);
+              }
+            }
+          });
+          
+          // Crear array de tipos con colores
+          this.tiposPasajero = Array.from(tiposUnicosMap.entries()).map(([campo, nombreOriginal], index) => {
+            return {
+              name: nombreOriginal,
+              value: campo,
+              color: this.coloresTiposPasajero[campo] || this.obtenerColorPorIndice(index)
+            };
+          });
+          
+          // Agrupar por ruta y tipo de pasajero
+          const rutasMap = new Map<string, any>();
+          data.pasajerosPorRutaTipo.forEach((item: any) => {
+            const rutaKey = item.nombreRuta || item.idRuta;
+            if (!rutasMap.has(rutaKey)) {
+              const rutaInicial: any = { ruta: rutaKey };
+              // Inicializar todos los tipos de pasajero en 0
+              this.tiposPasajero.forEach(tipo => {
+                rutaInicial[tipo.value] = 0;
+              });
+              rutasMap.set(rutaKey, rutaInicial);
+            }
+            const rutaData = rutasMap.get(rutaKey);
+            const cantidad = Number(item.cantidadPasajeros) || 0;
+            const campoNormalizado = normalizarTipo(item.tipoPasajero || '');
+            
+            if (rutaData.hasOwnProperty(campoNormalizado)) {
+              rutaData[campoNormalizado] += cantidad;
+            }
+          });
+          this.pasajerosPorRuta = Array.from(rutasMap.values());
+        }
+        this.cargando = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error al cargar métricas:', error);
+        this.cargando = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  onFiltroChange(): void {
+    this.cargarMetricas();
+  }
+
+  compararFiltros = (f1: any, f2: any): boolean => {
+    return f1 && f2 ? f1.valor === f2.valor : f1 === f2;
+  }
+
+  obtenerTextoFiltro(): string {
+    return this.filtroSeleccionado?.etiqueta || 'Hoy';
+  }
+
+  obtenerTextoIngresos(): string {
+    const filtro = this.filtroSeleccionado?.valor || 1;
+    switch (filtro) {
+      case 1:
+        return 'Ingresos del día';
+      case 2:
+        return 'Ingresos de los últimos 7 días';
+      case 3:
+        return 'Ingresos del mes';
+      case 4:
+        return 'Ingresos del año';
+      default:
+        return 'Ingresos del día';
+    }
+  }
+
+  obtenerTextoPasajeros(): string {
+    const filtro = this.filtroSeleccionado?.valor || 1;
+    if (filtro === 1) {
+      return 'Pasajeros validados hoy';
+    }
+    return `Pasajeros validados (${this.obtenerTextoFiltro()})`;
+  }
+
+  obtenerColorPorIndice(index: number): string {
+    const coloresDefault = ['#008ffb', '#f44336', '#4caf50', '#ffc107', '#9c27b0', '#00bcd4', '#ff9800', '#795548'];
+    return coloresDefault[index % coloresDefault.length];
   }
 
   simularDatos(): void {
@@ -132,12 +324,13 @@ ahora = new Date();
     this.kpis.pctElectronico = (monedero + otrosEMVQR + Math.round(pasajerosHoy * 0.08)) / Math.max(1, pasajerosHoy + efectivo);
     this.kpis.validacionesOk = ok;
     this.kpis.validacionesFail = fallidas;
-    this.kpis.enServicio = 185;
+    // enServicio y totalVehiculos ahora vienen de la API, no se establecen aquí
+    // this.kpis.enServicio = 185;
     this.kpis.cumplimientoTurnos = 0.91;
     this.kpis.turnosInicio = 210;
     this.kpis.turnosFin = Math.round(this.kpis.turnosInicio * this.kpis.cumplimientoTurnos);
     this.kpis.ocupacion = 0.54;
-    this.kpis.totalVehiculos = 220;
+    // this.kpis.totalVehiculos = 220;
 
     this.alertasValidadores = [
       { nombre: 'Validador A-102', detalle: 'Sin posición > 20 min', tag: 'Sin señal', severidad: 'sev-high' },

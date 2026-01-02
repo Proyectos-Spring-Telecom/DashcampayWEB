@@ -8,7 +8,10 @@ import { VexPageLayoutComponent } from '@vex/components/vex-page-layout/vex-page
 import { VexPageLayoutHeaderDirective } from '@vex/components/vex-page-layout/vex-page-layout-header.directive';
 import { VexBreadcrumbsComponent } from '@vex/components/vex-breadcrumbs/vex-breadcrumbs.component';
 import { VexPageLayoutContentDirective } from '@vex/components/vex-page-layout/vex-page-layout-content.directive';
-import { ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { MatSelectModule } from '@angular/material/select';
+import { MatOptionModule } from '@angular/material/core';
+import { MatFormFieldModule } from '@angular/material/form-field';
 
 
 @NgModule({
@@ -19,6 +22,10 @@ import { ReactiveFormsModule } from '@angular/forms';
     DxChartModule,
     DxPieChartModule,
     ReactiveFormsModule,
+    FormsModule,
+    MatSelectModule,
+    MatOptionModule,
+    MatFormFieldModule,
     VexPageLayoutComponent,
     VexPageLayoutHeaderDirective,
     VexBreadcrumbsComponent,
