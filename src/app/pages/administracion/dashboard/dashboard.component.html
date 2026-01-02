@@ -1,7 +1,18 @@
 <vex-page-layout @fadeInRight>
   <vex-page-layout-content [class.container]="layoutCtrl.value === 'boxed'"
     [class.px-6]="layoutCtrl.value === 'fullwidth'" class="-mt-6">
-    <div class="container-fluid px-3 px-md-4 py-3 dashboard-wrap">
+    <div class="container-fluid px-3 px-md-4 py-2 dashboard-wrap">
+      <div class="row align-items-center mb-1 g-2 justify-content-end">
+        <div class="col-auto">
+          <mat-form-field appearance="outline" class="mb-0">
+            <mat-select [(ngModel)]="filtroSeleccionado" (selectionChange)="onFiltroChange()" [compareWith]="compararFiltros">
+              <mat-option *ngFor="let opcion of opcionesFiltro" [value]="opcion">
+                {{ opcion.etiqueta }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </div>
       <!-- <div class="row align-items-center mb-3 g-2">
         <div class="col-12 col-md">
           <h1 class="page-title mb-0">Panel Operativo</h1>
@@ -18,15 +29,17 @@
       <div class="row g-3 kpi-row">
         <div class="col-12 col-sm-6 col-lg-3">
           <div class="kpi-card kpi-primary shadow-sm">
-            <div class="kpi-top"><span>Ingresos del día</span><i class="material-icons">paid</i></div>
+            <div class="kpi-top"><span>{{ obtenerTextoIngresos() }}</span><i class="material-icons">paid</i></div>
             <div class="kpi-value">{{ kpis.ingresosHoy | currency:'MXN':'symbol':'1.0-0' }}</div>
-            <div class="kpi-foot">vs ayer <span class="trend" [class.up]="kpis.deltaIngresos>=0"
-                [class.down]="kpis.deltaIngresos<0">{{ kpis.deltaIngresos | number:'1.0-1' }}%</span></div>
+            <div class="kpi-foot" *ngIf="filtroSeleccionado.valor === 1">
+              vs ayer <span class="trend" [class.up]="kpis.deltaIngresos>=0"
+                [class.down]="kpis.deltaIngresos<0">{{ kpis.deltaIngresos | number:'1.0-1' }}%</span>
+            </div>
           </div>
         </div>
         <div class="col-12 col-sm-6 col-lg-3">
           <div class="kpi-card kpi-secondary shadow-sm">
-            <div class="kpi-top"><span>Pasajeros validados hoy</span><i class="material-icons">verified_user</i></div>
+            <div class="kpi-top"><span>{{ obtenerTextoPasajeros() }}</span><i class="material-icons">verified_user</i></div>
             <div class="kpi-value">{{ kpis.pasajerosValidadosHoy | number }}</div>
             <div class="kpi-foot">Últimas 24 h</div>
           </div>
@@ -42,7 +55,9 @@
           <div class="kpi-card kpi-green shadow-sm">
             <div class="kpi-top"><span>% Pagos electrónicos</span><i class="material-icons">payments</i></div>
             <div class="kpi-value">{{ kpis.pctElectronico | percent:'1.0-1' }}</div>
-            <div class="kpi-foot">Efectivo: {{ (1 - kpis.pctElectronico) | percent:'1.0-1' }}</div>
+            <div class="kpi-foot" *ngIf="metricas && metricas.porcentajeMonederoVirtual">
+              Tarjeta: {{ (metricas.porcentajeMonederoVirtual.porcentajeTarjeta / 100) | percent:'1.0-1' }}
+            </div>
           </div>
         </div>
 
@@ -122,16 +137,30 @@
       </div>
 
       <div class="row g-3 mt-1">
-        <div class="col-12 col-xl-7">
+        <div class="col-12 col-xl-6">
           <div class="card-plot shadow-sm">
             <div class="plot-head">
-              <h3>Ingresos por hora en Dinero (hoy)</h3><span class="hint">Barras + ticket</span>
+              <h3>Ingresos por hora en Dinero ({{ obtenerTextoFiltro() }})</h3><span class="hint">Barras + ticket</span>
             </div>
             <dx-chart [dataSource]="ingresosHora" class="dx-chart-brand">
               <dxi-series type="bar" argumentField="hora" valueField="ingresos" name="Ingresos"></dxi-series>
               <dxi-series type="line" argumentField="hora" valueField="ticket" name="Ticket"></dxi-series>
               <dxo-legend [visible]="true" position="inside" horizontalAlignment="right"
                 verticalAlignment="top"></dxo-legend>
+              <dxo-tooltip [enabled]="true"></dxo-tooltip>
+            </dx-chart>
+          </div>
+        </div>
+
+        <div class="col-12 col-xl-6">
+          <div class="card-plot shadow-sm">
+            <div class="plot-head">
+              <h3>Curva de ascensos vs boletos</h3><span class="hint">Brecha</span>
+            </div>
+            <dx-chart [dataSource]="ascensosVsBoletos" class="dx-chart-brand">
+              <dxi-series type="line" argumentField="hora" valueField="ascensos" name="Ascensos"></dxi-series>
+              <dxi-series type="line" argumentField="hora" valueField="boletos" name="Validaciones"></dxi-series>
+              <dxo-legend [visible]="true"></dxo-legend>
               <dxo-tooltip [enabled]="true"></dxo-tooltip>
             </dx-chart>
           </div>
@@ -151,21 +180,7 @@
           </div>
         </div> -->
 
-        <div class="col-12 col-xl-7">
-          <div class="card-plot shadow-sm">
-            <div class="plot-head">
-              <h3>Curva de ascensos vs boletos</h3><span class="hint">Brecha</span>
-            </div>
-            <dx-chart [dataSource]="ascensosVsBoletos" class="dx-chart-brand">
-              <dxi-series type="line" argumentField="hora" valueField="ascensos" name="Ascensos"></dxi-series>
-              <dxi-series type="line" argumentField="hora" valueField="boletos" name="Validaciones"></dxi-series>
-              <dxo-legend [visible]="true"></dxo-legend>
-              <dxo-tooltip [enabled]="true"></dxo-tooltip>
-            </dx-chart>
-          </div>
-        </div>
-
-        <div class="col-12 col-xl-5">
+        <!-- <div class="col-12 col-xl-5">
           <div class="card-plot shadow-sm">
             <div class="plot-head">
               <h3>Puntualidad de inicio de viaje</h3><span class="hint">Δ minutos</span>
@@ -176,7 +191,7 @@
               <dxo-tooltip [enabled]="true"></dxo-tooltip>
             </dx-chart>
           </div>
-        </div>
+        </div> -->
 
         <div class="col-12">
           <div class="card-plot shadow-sm">
@@ -184,8 +199,8 @@
               <h3>Pasajeros por ruta</h3><span class="hint">Apilado por franja</span>
             </div>
             <dx-chart [dataSource]="pasajerosPorRuta" [resolveLabelOverlapping]="'stack'" class="dx-chart-brand">
-              <dxi-series *ngFor="let f of franjas" valueField="{{ f.value }}" name="{{ f.name }}" argumentField="ruta"
-                type="stackedBar"></dxi-series>
+              <dxi-series *ngFor="let tipo of tiposPasajero" [valueField]="tipo.value" [name]="tipo.name" argumentField="ruta"
+                type="stackedBar" [color]="tipo.color"></dxi-series>
               <dxo-legend [visible]="true"></dxo-legend>
               <dxo-tooltip [enabled]="true"></dxo-tooltip>
             </dx-chart>

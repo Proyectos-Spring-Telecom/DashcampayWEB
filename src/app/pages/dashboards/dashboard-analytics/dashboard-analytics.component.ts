@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { defaultChartOptions } from '@vex/utils/default-chart-options';
 import {
   Order,
@@ -15,6 +15,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { VexBreadcrumbsComponent } from '@vex/components/vex-breadcrumbs/vex-breadcrumbs.component';
 import { VexSecondaryToolbarComponent } from '@vex/components/vex-secondary-toolbar/vex-secondary-toolbar.component';
+import { MatSelectModule } from '@angular/material/select';
+import { MatOptionModule } from '@angular/material/core';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { DashboardService } from '../../services/dashboard.service';
 
 @Component({
   selector: 'vex-dashboard-analytics',
@@ -26,6 +32,11 @@ import { VexSecondaryToolbarComponent } from '@vex/components/vex-secondary-tool
     VexBreadcrumbsComponent,
     MatButtonModule,
     MatIconModule,
+    MatSelectModule,
+    MatOptionModule,
+    MatFormFieldModule,
+    FormsModule,
+    CommonModule,
     WidgetAssistantComponent,
     WidgetQuickLineChartComponent,
     WidgetLargeGoalChartComponent,
@@ -34,7 +45,44 @@ import { VexSecondaryToolbarComponent } from '@vex/components/vex-secondary-tool
     WidgetTableComponent
   ]
 })
-export class DashboardAnalyticsComponent {
+export class DashboardAnalyticsComponent implements OnInit {
+  opcionesFiltro = [
+    { valor: 1, etiqueta: 'Hoy' },
+    { valor: 2, etiqueta: '7 Días' },
+    { valor: 3, etiqueta: 'Mes Actual' },
+    { valor: 4, etiqueta: 'Año Actual' }
+  ];
+  filtroSeleccionado = this.opcionesFiltro[0];
+  metricas: any = null;
+  cargando: boolean = false;
+
+  constructor(private dashboardService: DashboardService) {}
+
+  ngOnInit(): void {
+    this.cargarMetricas();
+  }
+
+  cargarMetricas(): void {
+    this.cargando = true;
+    this.dashboardService.obtenerMetricas(this.filtroSeleccionado.valor).subscribe({
+      next: (data) => {
+        this.metricas = data;
+        this.cargando = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar métricas:', error);
+        this.cargando = false;
+      }
+    });
+  }
+
+  onFiltroChange(): void {
+    this.cargarMetricas();
+  }
+
+  compararFiltros = (f1: any, f2: any): boolean => {
+    return f1 && f2 ? f1.valor === f2.valor : f1 === f2;
+  }
   tableColumns: TableColumn<Order>[] = [
     {
       label: '',
