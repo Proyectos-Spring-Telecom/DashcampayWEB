@@ -6,7 +6,7 @@
       <div class="dashboard-lite p-4">
 
         <section class="mt-2 table-shell">
-          <form class="dc-filters mb-4" novalidate>
+          <form [formGroup]="filtrosForm" class="dc-filters mb-4" novalidate>
             <div class="dc-card">
               <!-- Cinta de marca -->
               <div class="dc-brand-strip d-flex align-items-center gap-2">
@@ -19,10 +19,10 @@
                 </div>
 
                 <div class="dc-actions d-flex gap-2 ms-auto">
-                  <button type="button" class="dc-btn dc-btn-primary">
+                  <button type="button" class="dc-btn dc-btn-primary" (click)="aplicarFiltros()">
                     <mat-icon>filter_alt</mat-icon><span>Aplicar</span>
                   </button>
-                  <button type="button" class="dc-btn dc-btn-ghost">
+                  <button type="button" class="dc-btn dc-btn-ghost" (click)="limpiarFiltros()">
                     <mat-icon>restart_alt</mat-icon><span>Limpiar</span>
                   </button>
                 </div>
@@ -35,10 +35,9 @@
                   <div class="col">
                     <mat-form-field appearance="outline" class="dc-ff dc-date w-100">
                       <mat-label>Fecha</mat-label>
-                      <!-- <mat-icon matPrefix>event</mat-icon> -->
                       <mat-date-range-input [rangePicker]="picker" [separator]="'—'">
-                        <input matStartDate placeholder="Inicio">
-                        <input matEndDate placeholder="Fin">
+                        <input matStartDate formControlName="fechaInicio" placeholder="Inicio">
+                        <input matEndDate formControlName="fechaFin" placeholder="Fin">
                       </mat-date-range-input>
                       <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
                       <mat-date-range-picker #picker></mat-date-range-picker>
@@ -49,15 +48,12 @@
                   <div class="col">
                     <mat-form-field appearance="outline" class="dc-ff dc-select w-100">
                       <mat-label>Cliente</mat-label>
-                      <!-- <mat-icon matPrefix>store</mat-icon> -->
-                      <mat-select panelClass="dc-select-panel">
+                      <mat-select formControlName="idCliente" panelClass="dc-select-panel">
                         <mat-option [value]="null">Todos</mat-option>
-                        <mat-option value="1">Logistica</mat-option>
-                        <mat-option value="2">MobilExpress</mat-option>
+                        <mat-option *ngFor="let cliente of listaClientes" [value]="cliente.id">
+                          {{ cliente.nombreCliente || (cliente.nombre || '') + ' ' + (cliente.apellidoPaterno || '') + ' ' + (cliente.apellidoMaterno || '') }}
+                        </mat-option>
                       </mat-select>
-                      <!-- <button mat-icon-button matSuffix type="button" class="dc-clear">
-              <mat-icon>close</mat-icon>
-            </button> -->
                     </mat-form-field>
                   </div>
 
@@ -65,16 +61,12 @@
                   <div class="col">
                     <mat-form-field appearance="outline" class="dc-ff dc-select w-100">
                       <mat-label>Zona</mat-label>
-                      <!-- <mat-icon matPrefix>map</mat-icon> -->
-                      <mat-select panelClass="dc-select-panel">
+                      <mat-select formControlName="idRegion" panelClass="dc-select-panel">
                         <mat-option [value]="null">Todas</mat-option>
-                        <mat-option value="10">Norte</mat-option>
-                        <mat-option value="20">Centro</mat-option>
-                        <mat-option value="30">Sur</mat-option>
+                        <mat-option *ngFor="let zona of listaZonas" [value]="zona.id">
+                          {{ zona.nombre || zona.descripcion || 'Zona ' + zona.id }}
+                        </mat-option>
                       </mat-select>
-                      <!-- <button mat-icon-button matSuffix type="button" class="dc-clear">
-              <mat-icon>times</mat-icon>
-            </button> -->
                     </mat-form-field>
                   </div>
 
@@ -82,16 +74,12 @@
                   <div class="col">
                     <mat-form-field appearance="outline" class="dc-ff dc-select w-100">
                       <mat-label>Ruta</mat-label>
-                      <!-- <mat-icon matPrefix>alt_route</mat-icon> -->
-                      <mat-select panelClass="dc-select-panel">
+                      <mat-select formControlName="idRuta" panelClass="dc-select-panel">
                         <mat-option [value]="null">Todas</mat-option>
-                        <mat-option value="100">Ruta 101</mat-option>
-                        <mat-option value="110">Ruta 102</mat-option>
-                        <mat-option value="200">Ruta 201</mat-option>
+                        <mat-option *ngFor="let ruta of listaRutas" [value]="ruta.id">
+                          {{ ruta.nombre || (ruta.nombreInicio || '') + ' - ' + (ruta.nombreFin || '') || 'Ruta ' + ruta.id }}
+                        </mat-option>
                       </mat-select>
-                      <!-- <button mat-icon-button matSuffix type="button" class="dc-clear">
-              <mat-icon>close</mat-icon>
-            </button> -->
                     </mat-form-field>
                   </div>
 
@@ -99,16 +87,12 @@
                   <div class="col">
                     <mat-form-field appearance="outline" class="dc-ff dc-select w-100">
                       <mat-label>Variante</mat-label>
-                      <!-- <mat-icon matPrefix>route</mat-icon> -->
-                      <mat-select panelClass="dc-select-panel">
+                      <mat-select formControlName="idVariante" panelClass="dc-select-panel">
                         <mat-option [value]="null">Todos</mat-option>
-                        <mat-option value="1001">Var A</mat-option>
-                        <mat-option value="1002">Var B</mat-option>
-                        <mat-option value="1101">Var C</mat-option>
+                        <mat-option *ngFor="let variante of listaVariantes" [value]="variante.id">
+                          {{ variante.nombre || variante.descripcion || 'Variante ' + variante.id }}
+                        </mat-option>
                       </mat-select>
-                      <!-- <button mat-icon-button matSuffix type="button" class="dc-clear">
-              <mat-icon>close</mat-icon>
-            </button> -->
                     </mat-form-field>
                   </div>
                 </div>

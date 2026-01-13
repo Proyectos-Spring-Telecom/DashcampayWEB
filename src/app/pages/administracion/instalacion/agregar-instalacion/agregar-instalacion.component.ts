@@ -1,5 +1,6 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import {
+  FormArray,
   FormBuilder,
   FormGroup,
   UntypedFormControl,
@@ -168,12 +169,57 @@ export class AgregarInstalacionComponent implements OnInit {
         Validators.required
       ],
       idValidador: [{ value: null, disabled: true }, Validators.required],
-      idContador: [{ value: null, disabled: true }, Validators.required],
+      idContadores: this.fb.array([
+        this.fb.control({ value: null, disabled: true }, Validators.required)
+      ]),
       idVehiculo: [{ value: null, disabled: true }, Validators.required]
     });
 
     if (!this.isAdmin)
       this.instalacionesForm.get('idCliente')?.disable({ onlySelf: true });
+  }
+
+  get idContadoresArray(): FormArray {
+    return this.instalacionesForm.get('idContadores') as FormArray;
+  }
+
+  agregarContador(): void {
+    const nuevoContador = this.fb.control({ value: null, disabled: true }, Validators.required);
+    this.idContadoresArray.push(nuevoContador);
+    const opts = { emitEvent: false };
+    const idCliente = this.instalacionesForm.get('idCliente')?.value;
+    if (idCliente && !this.instalacionesForm.get('idCliente')?.disabled) {
+      nuevoContador.enable(opts);
+    }
+  }
+
+  eliminarContador(index: number): void {
+    if (this.idContadoresArray.length > 1) {
+      this.idContadoresArray.removeAt(index);
+    }
+  }
+
+  obtenerContadoresDisponibles(index: number): any[] {
+    const contadoresSeleccionados = this.idContadoresArray.controls
+      .map((control, i) => i !== index ? control.value : null)
+      .filter(id => id != null && id !== '');
+    
+    if (contadoresSeleccionados.length === 0) {
+      return this.listaContadores;
+    }
+    
+    return this.listaContadores.filter(
+      contador => !contadoresSeleccionados.includes(Number(contador.id))
+    );
+  }
+
+  puedeAgregarContador(): boolean {
+    const contadoresSeleccionados = this.idContadoresArray.controls
+      .map(control => control.value)
+      .filter(id => id != null && id !== '');
+    
+    // Si todos los contadores disponibles ya están seleccionados, no se puede agregar más
+    return this.listaContadores.length > contadoresSeleccionados.length;
   }
 
   private keepEditLocks(): void {
@@ -188,16 +234,16 @@ export class AgregarInstalacionComponent implements OnInit {
     if (!this.instalacionesForm) return;
     const opts = { emitEvent: false };
     const idValidador = this.instalacionesForm.get('idValidador');
-    const idContador = this.instalacionesForm.get('idContador');
+    const idContadores = this.instalacionesForm.get('idContadores') as FormArray;
     const idVehiculo = this.instalacionesForm.get('idVehiculo');
 
     if (disabled) {
       idValidador?.disable(opts);
-      idContador?.disable(opts);
+      idContadores.controls.forEach(control => control.disable(opts));
       idVehiculo?.disable(opts);
     } else {
       idValidador?.enable(opts);
-      idContador?.enable(opts);
+      idContadores.controls.forEach(control => control.enable(opts));
       idVehiculo?.enable(opts);
       this.keepEditLocks();
     }
@@ -206,9 +252,15 @@ export class AgregarInstalacionComponent implements OnInit {
   private limpiarDependientes(): void {
     const opts = { emitEvent: false };
     this.instalacionesForm.patchValue(
-      { idValidador: null, idContador: null, idVehiculo: null },
+      { idValidador: null, idVehiculo: null },
       opts
     );
+    // Limpiar y resetear FormArray de contadores a un solo campo
+    const idContadores = this.instalacionesForm.get('idContadores') as FormArray;
+    while (idContadores.length > 1) {
+      idContadores.removeAt(idContadores.length - 1);
+    }
+    idContadores.at(0).setValue(null, opts);
     this.listaValidadores = [];
     this.listaContadores = [];
     this.listaVehiculos = [];
@@ -293,41 +345,22 @@ export class AgregarInstalacionComponent implements OnInit {
         this.abrirModalValidador();
       });
 
-    // Contador (BlueVox)
-    this.instalacionesForm
-      .get('idContador')
-      ?.valueChanges.subscribe(async (nuevo: any) => {
-        if (this.bootstrapping || !this.idInstalacion) return; // solo en edición
-
+    // Contadores (BlueVox) - suscripción a cambios en el FormArray
+    this.idContadoresArray.valueChanges.subscribe(async (valores: any[]) => {
+      if (this.bootstrapping || !this.idInstalacion) return; // solo en edición
+      
+      // Verificar cada cambio en los contadores
+      valores.forEach((nuevo, index) => {
         const nuevoId = this.toNumOrNull(nuevo);
-        const anteriorId = this.initialBlueVoxId ?? null;
-
-        if (nuevoId === anteriorId) return;
-
         const pertenece = this.listaContadores.some(
           (c) => Number(c?.id) === Number(nuevoId)
         );
-        if (!pertenece) {
-          await this.alerts.open({
-            type: 'error',
-            title: '¡Ops!',
-            message:
-              'La contadora seleccionada no pertenece al cliente actual.',
-            confirmText: 'Entendido',
-            backdropClose: false
-          });
-          this.instalacionesForm
-            .get('idContador')
-            ?.setValue(anteriorId, { emitEvent: false });
-          return;
+        if (nuevoId && !pertenece) {
+          // Revertir si no pertenece al cliente
+          this.idContadoresArray.at(index).setValue(null, { emitEvent: false });
         }
-
-        // Abrir modal y guardar "pendiente"
-        this.pendingNuevoContadorId = nuevoId;
-        this.estadoContadorSel = null;
-        this.comentarioContadorText = '';
-        this.abrirModalContador();
       });
+    });
   }
 
   // ---------- Helpers visuales select options ----------
@@ -640,7 +673,7 @@ export class AgregarInstalacionComponent implements OnInit {
             if (applyPending) {
               const f = this.instalacionesForm;
               f.get('idValidador')?.setValue(toN(this.pendingSelecciones.idValidador), { emitEvent: false });
-              f.get('idContador')?.setValue(toN(this.pendingSelecciones.idContador), { emitEvent: false });
+              // Los contadores se manejan con FormArray, no se establecen aquí
               f.get('idVehiculo')?.setValue(toN(this.pendingSelecciones.idVehiculo), { emitEvent: false });
               this.pendingSelecciones = {};
             }
@@ -701,16 +734,23 @@ export class AgregarInstalacionComponent implements OnInit {
             raw?.IdValidador ??
             raw?.IDValidador
         );
-        const idContador = this.toNumOrNull(
-          raw.idContador ??
-            raw.idcontador ??
-            raw.idContadores ??
-            raw.idcontadores ??
-            raw?.blueVoxs?.id ??
-            raw?.contador?.id ??
-            raw?.IdContador ??
-            raw?.IDContador
-        );
+        // Manejar idContadores como array o valor único
+        let idContadores: number[] = [];
+        if (raw.idContadores && Array.isArray(raw.idContadores)) {
+          idContadores = raw.idContadores.map((id: any) => this.toNumOrNull(id)).filter((id: any) => id != null) as number[];
+        } else {
+          const idContador = this.toNumOrNull(
+            raw.idContador ??
+              raw.idcontador ??
+              raw?.blueVoxs?.id ??
+              raw?.contador?.id ??
+              raw?.IdContador ??
+              raw?.IDContador
+          );
+          if (idContador != null) {
+            idContadores = [idContador];
+          }
+        }
         const idVehiculo = this.toNumOrNull(
           raw.idVehiculo ??
             raw.idvehiculo ??
@@ -720,12 +760,28 @@ export class AgregarInstalacionComponent implements OnInit {
             raw?.IDVehiculo
         );
 
-        // Guardar IDs iniciales
+        // Guardar IDs iniciales (tomar el primero si hay múltiples)
         this.initialDispositivoId = idValidador ?? null;
-        this.initialBlueVoxId = idContador ?? null;
+        this.initialBlueVoxId = idContadores.length > 0 ? idContadores[0] : null;
 
         // Cliente fijo en edición si no es admin
         const idCliente = this.isAdmin ? idClienteSrv : this.idClienteUser;
+
+        // Configurar FormArray de contadores
+        const contadoresArray = this.instalacionesForm.get('idContadores') as FormArray;
+        // Limpiar y agregar contadores
+        while (contadoresArray.length > 0) {
+          contadoresArray.removeAt(0);
+        }
+        if (idContadores.length === 0) {
+          // Si no hay contadores, agregar uno vacío
+          contadoresArray.push(this.fb.control({ value: null, disabled: true }, Validators.required));
+        } else {
+          // Agregar un control por cada contador
+          idContadores.forEach(id => {
+            contadoresArray.push(this.fb.control({ value: id, disabled: true }, Validators.required));
+          });
+        }
 
         // Set de valores sin disparar dependientes
         this.instalacionesForm.patchValue(
@@ -733,7 +789,6 @@ export class AgregarInstalacionComponent implements OnInit {
             idCliente,
             estatus,
             idValidador: idValidador ?? null,
-            idContador: idContador ?? null,
             idVehiculo: idVehiculo ?? null
           },
           { emitEvent: false }
@@ -765,10 +820,9 @@ export class AgregarInstalacionComponent implements OnInit {
               }
             ]
           : [];
-        const placeholderContador = idContador
-          ? [
-              {
-                id: idContador,
+        const placeholderContador = idContadores.length > 0
+          ? idContadores.map(id => ({
+              id: id,
                 numeroSerie: (
                   raw.numeroSerie ??
                   raw.NumeroSerie ??
@@ -802,8 +856,7 @@ export class AgregarInstalacionComponent implements OnInit {
                   raw.ModeloBlueVox ??
                   ''
                 ).toString()
-              }
-            ]
+              }))
           : [];
         const placeholderVehiculo = idVehiculo
           ? [
@@ -827,7 +880,8 @@ export class AgregarInstalacionComponent implements OnInit {
         this.keepEditLocks();
         const opts = { emitEvent: false };
         this.instalacionesForm.get('idValidador')?.enable(opts);
-        this.instalacionesForm.get('idContador')?.enable(opts);
+        const contadoresArrayEdit = this.instalacionesForm.get('idContadores') as FormArray;
+        contadoresArrayEdit.controls.forEach(control => control.enable(opts));
 
         // Pedir listas reales y fusionar
         const idClienteParaServicios =
@@ -953,9 +1007,8 @@ export class AgregarInstalacionComponent implements OnInit {
             this.instalacionesForm
               .get('idValidador')
               ?.enable({ emitEvent: false });
-            this.instalacionesForm
-              .get('idContador')
-              ?.enable({ emitEvent: false });
+            const contadoresArrayFork = this.instalacionesForm.get('idContadores') as FormArray;
+            contadoresArrayFork.controls.forEach(control => control.enable({ emitEvent: false }));
             this.cdr.detectChanges();
 
             if (errores.length) {
@@ -1030,15 +1083,24 @@ export class AgregarInstalacionComponent implements OnInit {
 
     const etiquetas: any = {
       idValidador: 'Validador',
-      idContador: 'Contador',
+      idContadores: 'Contador',
       idVehiculo: 'Vehículo',
       idCliente: 'Cliente'
     };
-    const requeridos = ['idValidador', 'idContador', 'idVehiculo', 'idCliente'];
     const raw = this.instalacionesForm.getRawValue();
-    const camposFaltantes: string[] = requeridos
-      .filter((k) => !raw[k])
-      .map((k) => etiquetas[k] || k);
+    const camposFaltantes: string[] = [];
+    
+    if (!raw.idValidador) camposFaltantes.push(etiquetas.idValidador);
+    if (!raw.idVehiculo) camposFaltantes.push(etiquetas.idVehiculo);
+    if (!raw.idCliente) camposFaltantes.push(etiquetas.idCliente);
+    
+    // Validar que haya al menos un contador seleccionado
+    const idContadores = Array.isArray(raw.idContadores) 
+      ? raw.idContadores.filter((id: any) => id != null && id !== '').map((id: any) => this.toNumOrNull(id)).filter((id: any) => id != null)
+      : [];
+    if (idContadores.length === 0) {
+      camposFaltantes.push(etiquetas.idContadores);
+    }
 
     if (camposFaltantes.length > 0) {
       this.submitButton = 'Guardar';
@@ -1064,8 +1126,14 @@ export class AgregarInstalacionComponent implements OnInit {
       });
       return;
     }
-
-    const payload = this.instalacionesForm.getRawValue();
+    
+    const payload: any = {
+      idValidador: raw.idValidador,
+      idContadores: idContadores,
+      idVehiculo: raw.idVehiculo,
+      idCliente: raw.idCliente,
+      estatus: raw.estatus
+    };
     this.instService.agregarInstalacion(payload).subscribe(
       () => {
         this.submitButton = 'Guardar';
@@ -1102,11 +1170,10 @@ export class AgregarInstalacionComponent implements OnInit {
     this.loading = true;
     const etiquetas: any = {
       idValidador: 'Validador',
-      idContador: 'Contador',
+      idContadores: 'Contador',
       idVehiculo: 'Vehículo',
       idCliente: 'Cliente'
     };
-    const requeridos = ['idValidador', 'idContador', 'idVehiculo', 'idCliente'];
     const raw = this.instalacionesForm.getRawValue();
 
     // COALESCE: usa lo actual, o lo ÚLTIMO ENVIADO si esta vez no cambiaste ese lado
@@ -1126,9 +1193,13 @@ export class AgregarInstalacionComponent implements OnInit {
       this.lastSubmittedMeta.comentariosContador ??
       null;
 
+    const idContadores = Array.isArray(raw.idContadores) 
+      ? raw.idContadores.filter((id: any) => id != null && id !== '').map((id: any) => this.toNumOrNull(id)).filter((id: any) => id != null)
+      : [];
+    
     const payload = {
       idValidador: this.toNumOrNull(raw.idValidador),
-      idContador: this.toNumOrNull(raw.idContador),
+      idContadores: idContadores,
       idVehiculo: this.toNumOrNull(raw.idVehiculo),
       idCliente: this.toNumOrNull(raw.idCliente) ?? this.idClienteUser,
       estatus: this.toNumOrNull(raw.estatus) ?? 1,
@@ -1138,9 +1209,11 @@ export class AgregarInstalacionComponent implements OnInit {
       comentariosContador: _comentCon
     };
 
-    const camposFaltantes: string[] = requeridos
-      .filter((k) => !raw[k])
-      .map((k) => etiquetas[k] || k);
+    const camposFaltantes: string[] = [];
+    if (!raw.idValidador) camposFaltantes.push(etiquetas.idValidador);
+    if (!raw.idVehiculo) camposFaltantes.push(etiquetas.idVehiculo);
+    if (!raw.idCliente) camposFaltantes.push(etiquetas.idCliente);
+    if (idContadores.length === 0) camposFaltantes.push(etiquetas.idContadores);
     if (camposFaltantes.length > 0) {
       this.submitButton = 'Actualizar';
       this.loading = false;
@@ -1367,7 +1440,8 @@ export class AgregarInstalacionComponent implements OnInit {
 
         const opts = { emitEvent: false };
         this.instalacionesForm.get('idValidador')?.enable(opts);
-        this.instalacionesForm.get('idContador')?.enable(opts);
+        const idContadoresArray = this.instalacionesForm.get('idContadores') as FormArray;
+        idContadoresArray.controls.forEach(control => control.enable(opts));
         this.cdr.detectChanges();
 
         if (errores.length)
