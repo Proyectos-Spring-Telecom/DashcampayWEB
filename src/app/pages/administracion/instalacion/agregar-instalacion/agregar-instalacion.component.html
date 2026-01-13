@@ -37,6 +37,9 @@
                     </mat-option>
                   </mat-select>
                 </mat-form-field>
+                <button mat-stroked-button color="primary" type="button" (click)="agregarContador()" [disabled]="!puedeAgregarContador()" class="mt-2 w-100">
+                  <mat-icon>add</mat-icon> Agregar Contador
+                </button>
               </div>
 
               <div class="col-12 col-md-6 col-lg-3">
@@ -59,16 +62,25 @@
                 <label class="form-label">
                   <i class="fa fa-bluetooth-b"></i><span>Contadores</span>
                 </label>
-                <mat-form-field appearance="fill" class="w-100">
-                  <mat-select placeholder="Contador" formControlName="idContador">
-                    <mat-option *ngIf="listaContadores.length === 0" [disabled]="true" [value]="null">
-                      Sin registros
-                    </mat-option>
-                    <mat-option *ngFor="let b of listaContadores" [value]="b.id">
-                      {{ b.numeroSerie }} - {{ b.marca }} - {{ b.modelo }}
-                    </mat-option>
-                  </mat-select>
-                </mat-form-field>
+                <div formArrayName="idContadores">
+                  <div *ngFor="let control of idContadoresArray.controls; let i = index" class="mb-2">
+                    <div class="d-flex align-items-start gap-2">
+                      <mat-form-field appearance="fill" class="flex-grow-1">
+                        <mat-select [placeholder]="'Contador ' + (i + 1)" [formControlName]="i">
+                          <mat-option *ngIf="obtenerContadoresDisponibles(i).length === 0" [disabled]="true" [value]="null">
+                            Sin registros disponibles
+                          </mat-option>
+                          <mat-option *ngFor="let b of obtenerContadoresDisponibles(i)" [value]="b.id">
+                            {{ b.numeroSerie }} - {{ b.marca }} - {{ b.modelo }}
+                          </mat-option>
+                        </mat-select>
+                      </mat-form-field>
+                      <button *ngIf="idContadoresArray.length > 1" mat-icon-button color="warn" type="button" (click)="eliminarContador(i)" class="mt-2">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div class="col-12 col-md-6 col-lg-3">

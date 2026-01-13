@@ -1,8 +1,11 @@
-import { Component, ViewChild } from '@angular/core';
-import { UntypedFormControl } from '@angular/forms';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { FormBuilder, FormGroup, UntypedFormControl } from '@angular/forms';
 import { fadeInRight400ms } from '@vex/animations/fade-in-right.animation';
 import { DxDataGridComponent } from 'devextreme-angular';
 import { AlertsService } from 'src/app/pages/pages/modal/alerts.service';
+import { ReportesService } from 'src/app/pages/services/reportes.service';
+import { ClientesService } from 'src/app/pages/services/clientes.service';
+import { OperadoresService } from 'src/app/pages/services/operadores.service';
 
 @Component({
   selector: 'vex-recaudacion-operador',
@@ -10,195 +13,16 @@ import { AlertsService } from 'src/app/pages/pages/modal/alerts.service';
   styleUrl: './recaudacion-operador.component.scss',
   animations: [fadeInRight400ms],
 })
-export class RecaudacionOperadorComponent {
-
+export class RecaudacionOperadorComponent implements OnInit {
   layoutCtrl = new UntypedFormControl('fullwidth');
   public showFilterRow: boolean;
   public showHeaderFilter: boolean;
   public loadingVisible: boolean = false;
   public mensajeAgrupar: string = 'Arrastre un encabezado de columna aquí para agrupar por esa columna';
-  informacion = [
-  {
-    id: 1,
-    operador: 'Eduardo Cruz',
-    licencia: 'ECZ-9045',
-    turnos: 3,
-    viajes: 14,
-    validaciones: 120,
-    ingresos: 2850,
-    ticketPromedio: 9.5,
-    evasionPorcentaje: 0.035,
-    ultimoTurno: new Date(2025, 0, 2, 21, 15)
-  },
-  {
-    id: 2,
-    operador: 'Rodrigo Martinez',
-    licencia: 'RMT-1120',
-    turnos: 2,
-    viajes: 11,
-    validaciones: 95,
-    ingresos: 2100,
-    ticketPromedio: 9.2,
-    evasionPorcentaje: 0.03,
-    ultimoTurno: new Date(2025, 0, 3, 20, 40)
-  },
-  {
-    id: 3,
-    operador: 'Sergio Torres',
-    licencia: 'STR-7834',
-    turnos: 2,
-    viajes: 10,
-    validaciones: 88,
-    ingresos: 1980,
-    ticketPromedio: 9.1,
-    evasionPorcentaje: 0.038,
-    ultimoTurno: new Date(2025, 0, 4, 19, 55)
-  },
-  {
-    id: 4,
-    operador: 'Luis Herrera',
-    licencia: 'LHR-5590',
-    turnos: 3,
-    viajes: 15,
-    validaciones: 135,
-    ingresos: 3050,
-    ticketPromedio: 9.7,
-    evasionPorcentaje: 0.034,
-    ultimoTurno: new Date(2025, 0, 2, 22, 5)
-  },
-  {
-    id: 5,
-    operador: 'Carlos Medina',
-    licencia: 'CMD-4412',
-    turnos: 3,
-    viajes: 13,
-    validaciones: 120,
-    ingresos: 2760,
-    ticketPromedio: 9.2,
-    evasionPorcentaje: 0.029,
-    ultimoTurno: new Date(2025, 0, 3, 21, 10)
-  },
-  {
-    id: 6,
-    operador: 'Jorge Rivas',
-    licencia: 'JRV-6648',
-    turnos: 2,
-    viajes: 12,
-    validaciones: 110,
-    ingresos: 2610,
-    ticketPromedio: 9.3,
-    evasionPorcentaje: 0.032,
-    ultimoTurno: new Date(2025, 0, 4, 20, 20)
-  },
-  {
-    id: 7,
-    operador: 'David Sánchez',
-    licencia: 'DVS-9081',
-    turnos: 3,
-    viajes: 14,
-    validaciones: 125,
-    ingresos: 2890,
-    ticketPromedio: 9.4,
-    evasionPorcentaje: 0.04,
-    ultimoTurno: new Date(2025, 0, 2, 21, 30)
-  },
-  {
-    id: 8,
-    operador: 'Héctor Blanco',
-    licencia: 'HBL-7729',
-    turnos: 2,
-    viajes: 12,
-    validaciones: 112,
-    ingresos: 2550,
-    ticketPromedio: 9.1,
-    evasionPorcentaje: 0.043,
-    ultimoTurno: new Date(2025, 0, 3, 20, 50)
-  },
-  {
-    id: 9,
-    operador: 'Ricardo Flores',
-    licencia: 'RCF-2190',
-    turnos: 2,
-    viajes: 10,
-    validaciones: 98,
-    ingresos: 2280,
-    ticketPromedio: 9.0,
-    evasionPorcentaje: 0.045,
-    ultimoTurno: new Date(2025, 0, 4, 19, 35)
-  },
-  {
-    id: 10,
-    operador: 'Fernando Díaz',
-    licencia: 'FND-3501',
-    turnos: 2,
-    viajes: 13,
-    validaciones: 118,
-    ingresos: 2720,
-    ticketPromedio: 9.3,
-    evasionPorcentaje: 0.033,
-    ultimoTurno: new Date(2025, 0, 2, 20, 45)
-  },
-  {
-    id: 11,
-    operador: 'Mario Castillo',
-    licencia: 'MCS-4873',
-    turnos: 2,
-    viajes: 11,
-    validaciones: 102,
-    ingresos: 2440,
-    ticketPromedio: 9.1,
-    evasionPorcentaje: 0.036,
-    ultimoTurno: new Date(2025, 0, 3, 20, 5)
-  },
-  {
-    id: 12,
-    operador: 'Alejandro Cruz',
-    licencia: 'ALC-6315',
-    turnos: 2,
-    viajes: 12,
-    validaciones: 108,
-    ingresos: 2560,
-    ticketPromedio: 9.2,
-    evasionPorcentaje: 0.034,
-    ultimoTurno: new Date(2025, 0, 4, 21, 0)
-  },
-  {
-    id: 13,
-    operador: 'Andrés Molina',
-    licencia: 'ANM-7102',
-    turnos: 3,
-    viajes: 15,
-    validaciones: 130,
-    ingresos: 2950,
-    ticketPromedio: 9.4,
-    evasionPorcentaje: 0.031,
-    ultimoTurno: new Date(2025, 0, 2, 22, 15)
-  },
-  {
-    id: 14,
-    operador: 'Pablo Romero',
-    licencia: 'PBR-8246',
-    turnos: 2,
-    viajes: 13,
-    validaciones: 118,
-    ingresos: 2680,
-    ticketPromedio: 9.2,
-    evasionPorcentaje: 0.029,
-    ultimoTurno: new Date(2025, 0, 3, 21, 25)
-  },
-  {
-    id: 15,
-    operador: 'Julián Pérez',
-    licencia: 'JLP-9630',
-    turnos: 2,
-    viajes: 11,
-    validaciones: 104,
-    ingresos: 2420,
-    ticketPromedio: 9.0,
-    evasionPorcentaje: 0.033,
-    ultimoTurno: new Date(2025, 0, 4, 20, 10)
-  }
-];
+  filtrosForm!: FormGroup;
+  listaClientes: any[] = [];
+  listaOperadores: any[] = [];
+  informacion: any[] = [];
 
   public paginaActual: number = 1;
   public totalRegistros: number = 0;
@@ -213,21 +37,145 @@ export class RecaudacionOperadorComponent {
 
   constructor(
     private alerts: AlertsService,
+    private fb: FormBuilder,
+    private reportesService: ReportesService,
+    private clientesService: ClientesService,
+    private operadoresService: OperadoresService
   ) {
     this.showFilterRow = true;
     this.showHeaderFilter = true;
+    this.initForm();
+  }
+
+  initForm(): void {
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+    this.filtrosForm = this.fb.group({
+      fechaInicio: [firstDay],
+      fechaFin: [lastDay],
+      idCliente: [null],
+      idOperador: [null]
+    });
   }
 
   ngOnInit(): void {
+    this.cargarListas();
+  }
 
+  cargarListas(): void {
+    // Cargar clientes
+    this.clientesService.obtenerClientes().subscribe({
+      next: (response: any) => {
+        this.listaClientes = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
+      },
+      error: (error) => {
+        console.error('Error al cargar clientes:', error);
+      }
+    });
+
+    // Cargar operadores
+    this.operadoresService.obtenerOperadores().subscribe({
+      next: (response: any) => {
+        this.listaOperadores = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
+      },
+      error: (error) => {
+        console.error('Error al cargar operadores:', error);
+      }
+    });
+  }
+
+  aplicarFiltros(): void {
+    this.loadingVisible = true;
+    const formValue = this.filtrosForm.value;
+    
+    // Formatear fechas a YYYY-MM-DD
+    const fechaInicio = formValue.fechaInicio 
+      ? this.formatearFecha(formValue.fechaInicio) 
+      : this.formatearFecha(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+    
+    const fechaFin = formValue.fechaFin 
+      ? this.formatearFecha(formValue.fechaFin) 
+      : this.formatearFecha(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0));
+
+    const payload = {
+      fechaInicio: fechaInicio,
+      fechaFin: fechaFin,
+      idCliente: formValue.idCliente || null,
+      idOperador: formValue.idOperador || null
+    };
+
+    this.reportesService.obtenerRecaudacionPorOperador(payload).subscribe({
+      next: (response: any) => {
+        this.loadingVisible = false;
+        // Mapear la respuesta del API a la estructura esperada por el grid
+        if (response && response.data && Array.isArray(response.data)) {
+          this.informacion = response.data.map((item: any, index: number) => ({
+            id: index + 1,
+            operador: item.operador || item.nombreOperador || '',
+            licencia: item.licencia || item.numeroLicencia || '',
+            turnos: Number(item.turnos || item.totalTurnos || 0),
+            viajes: Number(item.viajes || item.totalViajes || 0),
+            validaciones: Number(item.validaciones || item.totalValidaciones || 0),
+            ingresos: Number(item.ingresos || item.ingresosTotales || 0),
+            ticketPromedio: Number(item.ticketPromedio || 0),
+            evasionPorcentaje: Number(item.evasionPorcentaje || 0) / 100,
+            ultimoTurno: item.ultimoTurno ? new Date(item.ultimoTurno) : new Date()
+          }));
+        } else if (Array.isArray(response)) {
+          this.informacion = response.map((item: any, index: number) => ({
+            id: index + 1,
+            operador: item.operador || item.nombreOperador || '',
+            licencia: item.licencia || item.numeroLicencia || '',
+            turnos: Number(item.turnos || item.totalTurnos || 0),
+            viajes: Number(item.viajes || item.totalViajes || 0),
+            validaciones: Number(item.validaciones || item.totalValidaciones || 0),
+            ingresos: Number(item.ingresos || item.ingresosTotales || 0),
+            ticketPromedio: Number(item.ticketPromedio || 0),
+            evasionPorcentaje: Number(item.evasionPorcentaje || 0) / 100,
+            ultimoTurno: item.ultimoTurno ? new Date(item.ultimoTurno) : new Date()
+          }));
+        }
+        
+        if (this.dataGrid) {
+          this.dataGrid.instance.refresh();
+        }
+      },
+      error: (error: any) => {
+        this.loadingVisible = false;
+        console.error('Error al cargar reporte:', error);
+        this.alerts.open({
+          type: 'error',
+          title: 'Error',
+          message: 'No se pudo cargar el reporte. Por favor, intente nuevamente.',
+          confirmText: 'Aceptar',
+          backdropClose: false
+        });
+      }
+    });
+  }
+
+  limpiarFiltros(): void {
+    this.initForm();
+    this.informacion = [];
+    if (this.dataGrid) {
+      this.dataGrid.instance.clearGrouping();
+      this.isGrouped = false;
+      this.dataGrid.instance.refresh();
+    }
+  }
+
+  formatearFecha(fecha: Date): string {
+    if (!fecha) return '';
+    const year = fecha.getFullYear();
+    const month = String(fecha.getMonth() + 1).padStart(2, '0');
+    const day = String(fecha.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   limpiarCampos() {
-    const today = new Date();
-    this.dataGrid.instance.clearGrouping();
-    this.isGrouped = false;
-    // this.setupDataSource();
-    this.dataGrid.instance.refresh();
+    this.limpiarFiltros();
   }
 
   toggleExpandGroups() {

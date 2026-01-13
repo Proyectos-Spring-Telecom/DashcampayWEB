@@ -1,8 +1,12 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { UntypedFormControl } from '@angular/forms';
+import { FormBuilder, FormGroup, UntypedFormControl } from '@angular/forms';
 import { fadeInRight400ms } from '@vex/animations/fade-in-right.animation';
 import { DxDataGridComponent } from 'devextreme-angular';
 import { AlertsService } from 'src/app/pages/pages/modal/alerts.service';
+import { ReportesService } from 'src/app/pages/services/reportes.service';
+import { ClientesService } from 'src/app/pages/services/clientes.service';
+import { DispositivosService } from 'src/app/pages/services/dispositivos.service';
+import { InstalacionesService } from 'src/app/pages/services/instalaciones.service';
 
 @Component({
   selector: 'vex-recaudacion-dispositivo-instalacion',
@@ -17,158 +21,11 @@ export class RecaudacionDispositivoInstalacionComponent implements OnInit {
       public showHeaderFilter: boolean;
       public loadingVisible: boolean = false;
       public mensajeAgrupar: string = 'Arrastre un encabezado de columna aquí para agrupar por esa columna';
-      informacion = [
-  {
-    id: 1,
-    serieDispositivo: 'AWF-5487',
-    serieBlueVox: 'BV-1001',
-    vehiculo: 'U-101 Mercedes Benz Ayco',
-    validaciones: 120,
-    ingresos: 2850,
-    ultimaPosicion: 'Polanco - Reforma',
-    estado: 'Operativo'
-  },
-  {
-    id: 2,
-    serieDispositivo: 'AWF-5490',
-    serieBlueVox: 'BV-1002',
-    vehiculo: 'U-102 Mercedes Benz Zafiro',
-    validaciones: 95,
-    ingresos: 2240,
-    ultimaPosicion: 'Centro Histórico - Zócalo',
-    estado: 'Operativo'
-  },
-  {
-    id: 3,
-    serieDispositivo: 'AWF-5493',
-    serieBlueVox: 'BV-1003',
-    vehiculo: 'U-103 Volkswagen MAN',
-    validaciones: 88,
-    ingresos: 2100,
-    ultimaPosicion: 'Roma Norte - Centro',
-    estado: 'Sin comunicación'
-  },
-  {
-    id: 4,
-    serieDispositivo: 'AWD-4870',
-    serieBlueVox: 'BV-1004',
-    vehiculo: 'U-104 Mercedes Benz Ayco',
-    validaciones: 132,
-    ingresos: 3010,
-    ultimaPosicion: 'Condesa - Chapultepec',
-    estado: 'Operativo'
-  },
-  {
-    id: 5,
-    serieDispositivo: 'AWD-4873',
-    serieBlueVox: 'BV-1005',
-    vehiculo: 'U-105 Volkswagen MAN',
-    validaciones: 76,
-    ingresos: 1820,
-    ultimaPosicion: 'Xochimilco - Centro',
-    estado: 'En revisión'
-  },
-  {
-    id: 6,
-    serieDispositivo: 'AWD-4876',
-    serieBlueVox: 'BV-1006',
-    vehiculo: 'U-106 Mercedes Benz Zafiro',
-    validaciones: 101,
-    ingresos: 2390,
-    ultimaPosicion: 'Satélite - Polanco',
-    estado: 'Operativo'
-  },
-  {
-    id: 7,
-    serieDispositivo: 'EAE-7541',
-    serieBlueVox: 'BV-1007',
-    vehiculo: 'U-107 Mercedes Benz Ayco',
-    validaciones: 115,
-    ingresos: 2680,
-    ultimaPosicion: 'Indios Verdes - Reforma',
-    estado: 'Operativo'
-  },
-  {
-    id: 8,
-    serieDispositivo: 'EAE-7544',
-    serieBlueVox: 'BV-1008',
-    vehiculo: 'U-108 Volkswagen MAN',
-    validaciones: 84,
-    ingresos: 1980,
-    ultimaPosicion: 'Coyoacán - Centro',
-    estado: 'Sin comunicación'
-  },
-  {
-    id: 9,
-    serieDispositivo: 'EAE-7547',
-    serieBlueVox: 'BV-1009',
-    vehiculo: 'U-109 Mercedes Benz Zafiro',
-    validaciones: 92,
-    ingresos: 2140,
-    ultimaPosicion: 'Observatorio - Zócalo',
-    estado: 'Operativo'
-  },
-  {
-    id: 10,
-    serieDispositivo: 'RTS-6010',
-    serieBlueVox: 'BV-1010',
-    vehiculo: 'U-110 Volkswagen MAN',
-    validaciones: 73,
-    ingresos: 1760,
-    ultimaPosicion: 'Perisur - Centro',
-    estado: 'En revisión'
-  },
-  {
-    id: 11,
-    serieDispositivo: 'RTS-6013',
-    serieBlueVox: 'BV-1011',
-    vehiculo: 'U-111 Mercedes Benz Ayco',
-    validaciones: 67,
-    ingresos: 1620,
-    ultimaPosicion: 'Tlalpan - Centro Histórico',
-    estado: 'Operativo'
-  },
-  {
-    id: 12,
-    serieDispositivo: 'RTS-6016',
-    serieBlueVox: 'BV-1012',
-    vehiculo: 'U-112 Mercedes Benz Zafiro',
-    validaciones: 108,
-    ingresos: 2520,
-    ultimaPosicion: 'Lindavista - Reforma',
-    estado: 'Operativo'
-  },
-  {
-    id: 13,
-    serieDispositivo: 'TAS-7201',
-    serieBlueVox: 'BV-1013',
-    vehiculo: 'U-113 Volkswagen MAN',
-    validaciones: 94,
-    ingresos: 2210,
-    ultimaPosicion: 'Roma Norte - Chapultepec',
-    estado: 'Sin comunicación'
-  },
-  {
-    id: 14,
-    serieDispositivo: 'TAS-7204',
-    serieBlueVox: 'BV-1014',
-    vehiculo: 'U-114 Mercedes Benz Ayco',
-    validaciones: 119,
-    ingresos: 2790,
-    ultimaPosicion: 'Polanco - Centro',
-    estado: 'Operativo'
-  },
-  {
-    id: 15,
-    serieDispositivo: 'TAS-7207',
-    serieBlueVox: 'BV-1015',
-    vehiculo: 'U-115 Mercedes Benz Zafiro',
-    validaciones: 81,
-    ingresos: 1920,
-    ultimaPosicion: 'Centro - Buenavista',
-    estado: 'Fuera de servicio'
-  }
-];
+      filtrosForm!: FormGroup;
+      listaClientes: any[] = [];
+      listaValidadores: any[] = [];
+      listaInstalaciones: any[] = [];
+      informacion: any[] = [];
 
       public paginaActual: number = 1;
       public totalRegistros: number = 0;
@@ -183,21 +40,154 @@ export class RecaudacionDispositivoInstalacionComponent implements OnInit {
     
       constructor(
         private alerts: AlertsService,
+        private fb: FormBuilder,
+        private reportesService: ReportesService,
+        private clientesService: ClientesService,
+        private dispositivosService: DispositivosService,
+        private instalacionesService: InstalacionesService
       ) {
         this.showFilterRow = true;
         this.showHeaderFilter = true;
+        this.initForm();
+      }
+
+      initForm(): void {
+        const today = new Date();
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+        const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+        this.filtrosForm = this.fb.group({
+          fechaInicio: [firstDay],
+          fechaFin: [lastDay],
+          idCliente: [null],
+          idValidador: [null],
+          idInstalacion: [null]
+        });
       }
     
       ngOnInit(): void {
-    
+        this.cargarListas();
+      }
+
+      cargarListas(): void {
+        // Cargar clientes
+        this.clientesService.obtenerClientes().subscribe({
+          next: (response: any) => {
+            this.listaClientes = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
+          },
+          error: (error) => {
+            console.error('Error al cargar clientes:', error);
+          }
+        });
+
+        // Cargar validadores
+        this.dispositivosService.obtenerDispositivos().subscribe({
+          next: (response: any) => {
+            this.listaValidadores = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
+          },
+          error: (error) => {
+            console.error('Error al cargar validadores:', error);
+          }
+        });
+
+        // Cargar instalaciones
+        this.instalacionesService.obtenerInstalaciones().subscribe({
+          next: (response: any) => {
+            this.listaInstalaciones = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
+          },
+          error: (error) => {
+            console.error('Error al cargar instalaciones:', error);
+          }
+        });
+      }
+
+      aplicarFiltros(): void {
+        this.loadingVisible = true;
+        const formValue = this.filtrosForm.value;
+        
+        // Formatear fechas a YYYY-MM-DD
+        const fechaInicio = formValue.fechaInicio 
+          ? this.formatearFecha(formValue.fechaInicio) 
+          : this.formatearFecha(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+        
+        const fechaFin = formValue.fechaFin 
+          ? this.formatearFecha(formValue.fechaFin) 
+          : this.formatearFecha(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0));
+
+        const payload = {
+          fechaInicio: fechaInicio,
+          fechaFin: fechaFin,
+          idCliente: formValue.idCliente || null,
+          idValidador: formValue.idValidador || null,
+          idInstalacion: formValue.idInstalacion || null
+        };
+
+        this.reportesService.obtenerRecaudacionPorDispositivo(payload).subscribe({
+          next: (response: any) => {
+            this.loadingVisible = false;
+            // Mapear la respuesta del API a la estructura esperada por el grid
+            if (response && response.data && Array.isArray(response.data)) {
+              this.informacion = response.data.map((item: any, index: number) => ({
+                id: index + 1,
+                serieDispositivo: item.serieDispositivo || item.numeroSerie || item.numeroSerieValidador || '',
+                serieBlueVox: item.serieBlueVox || item.numeroSerieContador || item.numeroSerieBlueVox || '',
+                vehiculo: item.vehiculo || (item.placa || '') + ' ' + (item.numeroEconomico || '') || '',
+                validaciones: Number(item.validaciones || item.totalValidaciones || 0),
+                ingresos: Number(item.ingresos || item.ingresosTotales || 0),
+                ultimaPosicion: item.ultimaPosicion || item.ubicacion || '',
+                estado: item.estado || item.estatus || 'Operativo'
+              }));
+            } else if (Array.isArray(response)) {
+              this.informacion = response.map((item: any, index: number) => ({
+                id: index + 1,
+                serieDispositivo: item.serieDispositivo || item.numeroSerie || item.numeroSerieValidador || '',
+                serieBlueVox: item.serieBlueVox || item.numeroSerieContador || item.numeroSerieBlueVox || '',
+                vehiculo: item.vehiculo || (item.placa || '') + ' ' + (item.numeroEconomico || '') || '',
+                validaciones: Number(item.validaciones || item.totalValidaciones || 0),
+                ingresos: Number(item.ingresos || item.ingresosTotales || 0),
+                ultimaPosicion: item.ultimaPosicion || item.ubicacion || '',
+                estado: item.estado || item.estatus || 'Operativo'
+              }));
+            }
+            
+            if (this.dataGrid) {
+              this.dataGrid.instance.refresh();
+            }
+          },
+          error: (error: any) => {
+            this.loadingVisible = false;
+            console.error('Error al cargar reporte:', error);
+            this.alerts.open({
+              type: 'error',
+              title: 'Error',
+              message: 'No se pudo cargar el reporte. Por favor, intente nuevamente.',
+              confirmText: 'Aceptar',
+              backdropClose: false
+            });
+          }
+        });
+      }
+
+      limpiarFiltros(): void {
+        this.initForm();
+        this.informacion = [];
+        if (this.dataGrid) {
+          this.dataGrid.instance.clearGrouping();
+          this.isGrouped = false;
+          this.dataGrid.instance.refresh();
+        }
+      }
+
+      formatearFecha(fecha: Date): string {
+        if (!fecha) return '';
+        const year = fecha.getFullYear();
+        const month = String(fecha.getMonth() + 1).padStart(2, '0');
+        const day = String(fecha.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
       }
     
       limpiarCampos() {
-        const today = new Date();
-        this.dataGrid.instance.clearGrouping();
-        this.isGrouped = false;
-        // this.setupDataSource();
-        this.dataGrid.instance.refresh();
+        this.limpiarFiltros();
       }
     
       toggleExpandGroups() {
