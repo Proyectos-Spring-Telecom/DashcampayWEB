@@ -56,17 +56,33 @@ export class RecaudacionOperadorComponent implements OnInit {
       fechaInicio: [firstDay],
       fechaFin: [lastDay],
       idCliente: [null],
-      idOperador: [null]
+      idOperador: [{value: null, disabled: true}]
     });
   }
 
   ngOnInit(): void {
     this.cargarListas();
+    
+    // Suscribirse a cambios en el cliente para habilitar/deshabilitar operadores
+    this.filtrosForm.get('idCliente')?.valueChanges.subscribe((idCliente) => {
+      // Limpiar siempre el filtro de operador cuando cambia el cliente
+      this.filtrosForm.get('idOperador')?.setValue(null, { emitEvent: false });
+      this.listaOperadores = [];
+
+      if (idCliente) {
+        // Habilitar campo de operadores y cargar operadores del cliente
+        this.filtrosForm.get('idOperador')?.enable();
+        this.cargarOperadoresByCliente(idCliente);
+      } else {
+        // Deshabilitar campo de operadores
+        this.filtrosForm.get('idOperador')?.disable();
+      }
+    });
   }
 
   cargarListas(): void {
-    // Cargar clientes
-    this.clientesService.obtenerClientes().subscribe({
+    // Cargar clientes usando clientes/list
+    this.clientesService.obtenerClientesList().subscribe({
       next: (response: any) => {
         this.listaClientes = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
       },
@@ -75,13 +91,21 @@ export class RecaudacionOperadorComponent implements OnInit {
       }
     });
 
-    // Cargar operadores
-    this.operadoresService.obtenerOperadores().subscribe({
+    // No cargar operadores inicialmente, se cargarán cuando se seleccione un cliente
+    this.listaOperadores = [];
+  }
+
+  /**
+   * Carga los operadores filtrados por cliente
+   */
+  cargarOperadoresByCliente(idCliente: number): void {
+    this.operadoresService.obtenerOperadoresByCliente(idCliente).subscribe({
       next: (response: any) => {
         this.listaOperadores = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
       },
       error: (error) => {
-        console.error('Error al cargar operadores:', error);
+        console.error('Error al cargar operadores por cliente:', error);
+        this.listaOperadores = [];
       }
     });
   }

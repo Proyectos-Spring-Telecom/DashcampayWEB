@@ -126,20 +126,9 @@
               </div>
 
               <div class="col-12 col-md-6 col-lg-4">
-                <label class="form-label"><i class="fa fa-calendar-check"></i><span>Fecha de Expedición</span></label>
+                <label class="form-label"><i class="fa fa-door-open"></i><span>Cantidad de Puertas</span></label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput [matDatepicker]="fechaExpedicionPicker" placeholder="dd/mm/aaaa" formControlName="fechaExpedicion" />
-                  <mat-datepicker-toggle matIconSuffix [for]="fechaExpedicionPicker"></mat-datepicker-toggle>
-                  <mat-datepicker #fechaExpedicionPicker></mat-datepicker>
-                </mat-form-field>
-              </div>
-
-              <div class="col-12 col-md-6 col-lg-4">
-                <label class="form-label"><i class="fa fa-calendar-times"></i><span>Fecha de Expiración</span></label>
-                <mat-form-field appearance="fill" class="w-100">
-                  <input matInput [matDatepicker]="fechaExpiracionPicker" placeholder="dd/mm/aaaa" formControlName="fechaExpiracion" />
-                  <mat-datepicker-toggle matIconSuffix [for]="fechaExpiracionPicker"></mat-datepicker-toggle>
-                  <mat-datepicker #fechaExpiracionPicker></mat-datepicker>
+                  <input matInput type="number" placeholder="Cantidad de Puertas" formControlName="cantidadPuertas" (keypress)="allowOnlyNumbers($event)" />
                 </mat-form-field>
               </div>
 

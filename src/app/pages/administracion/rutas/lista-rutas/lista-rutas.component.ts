@@ -429,8 +429,8 @@ export class ListaRutasComponent implements OnInit {
     if (!el) return;
     el.innerHTML = '';
 
-    const center = { lat: (inicio.lat + fin.lat) / 2, lng: (inicio.lng + fin.lng) / 2 };
-    const options: any = { center, zoom: 14 };
+    const defaultCenter = { lat: 21.110778, lng: -86.762590 };
+    const options: any = { center: defaultCenter, zoom: 14, clickableIcons: false };
     if (this.MAP_ID) options.mapId = this.MAP_ID;
 
     const map = new google.maps.Map(el, options);
@@ -537,7 +537,7 @@ export class ListaRutasComponent implements OnInit {
     el.innerHTML = '';
 
     const position = { lat, lng };
-    const options: any = { center: position, zoom: 15 };
+    const options: any = { center: position, zoom: 15, clickableIcons: false };
     if (this.MAP_ID) options.mapId = this.MAP_ID;
 
     const map = new google.maps.Map(el, options);

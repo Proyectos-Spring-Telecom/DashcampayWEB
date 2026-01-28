@@ -8,6 +8,7 @@ import { MonederosServices } from 'src/app/pages/services/monederos.service';
 import { TransaccionesService } from 'src/app/pages/services/transacciones.service';
 import { NetpayService } from 'src/app/pages/services/netpay.service';
 import { NetpayDialogComponent } from '../netpay-dialog/netpay-dialog.component';
+import { AuthenticationService } from 'src/app/core/services/auth.service';
 
 declare const NetPay: any;
 
@@ -52,6 +53,16 @@ export class GenerarTransaccionComponent implements OnInit {
   montoView = '';
   metodoPago: 'efectivo' | 'tarjeta' = 'efectivo';
   tarjetaSeleccionada: any = null;
+  // Información adicional de la tarjeta para transacciones
+  tarjetaInfo: {
+    tokenCard?: string;
+    deviceFingerPrint?: string;
+    deviceInformation?: any;
+    idDireccion?: number | null;
+  } = {};
+
+  rolUsuario: string = '';
+  esPasajero: boolean = false;
 
   constructor(
     private moneService: MonederosServices,
@@ -59,16 +70,33 @@ export class GenerarTransaccionComponent implements OnInit {
     private alerts: AlertsService,
     private route: Router,
     private dialog: MatDialog,
-    private netpayService: NetpayService
+    private netpayService: NetpayService,
+    private authService: AuthenticationService
   ) {}
 
   ngOnInit() {
+    // Obtener el rol del usuario
+    const user = this.authService.getUser();
+    this.rolUsuario = user?.rol?.nombre || '';
+    this.esPasajero = this.rolUsuario?.toLowerCase() === 'pasajero';
+    
+    // Establecer el método de pago por defecto según el rol
+    if (this.esPasajero) {
+      this.metodoPago = 'tarjeta';
+    } else {
+      this.metodoPago = 'efectivo';
+    }
+    
     this.aplicarPaginacion();
     this.obtenerMonederos();
   }
 
   irPaso(n: 1 | 2) {
     this.step = n;
+    // Cerrar todas las tarjetas al cambiar de paso
+    if (this.tarjetasCliente && this.tarjetasCliente.length > 0) {
+      this.cerrarTodasLasTarjetas();
+    }
   }
 
   onPage(e: { pageIndex: number; pageSize: number }) {
@@ -85,20 +113,79 @@ export class GenerarTransaccionComponent implements OnInit {
 
   seleccionarMonedero(m: any) {
     this.monederoSeleccionado = m;
-    this.metodoPago = 'efectivo'; // Resetear a efectivo al cambiar de monedero
+    // Solo resetear a efectivo si NO es Pasajero, si es Pasajero mantener tarjeta
+    if (!this.esPasajero) {
+      this.metodoPago = 'efectivo';
+    } else {
+      this.metodoPago = 'tarjeta';
+    }
     this.tarjetaSeleccionada = null; // Limpiar tarjeta seleccionada
+    this.tarjetaInfo = {}; // Limpiar información de la tarjeta
     
-    // Si el monedero tiene customerId, obtener las tarjetas
+    // Si el monedero tiene customerId, obtener las tarjetas y direcciones
     if (m?.customerId !== null && m?.customerId !== undefined) {
       this.obtenerTarjetas(m.customerId);
     } else {
       this.tarjetasCliente = [];
+      this.direccionesDisponibles = [];
     }
   }
 
   seleccionarTarjeta(tarjeta: any) {
     this.tarjetaSeleccionada = tarjeta;
     this.metodoPago = 'tarjeta'; // Cambiar automáticamente a método de pago con tarjeta
+    
+    // Guardar información de la tarjeta seleccionada para la transacción
+    const tokenCard = tarjeta.source || tarjeta.card?.token;
+    if (tokenCard) {
+      // Buscar la dirección en datosTarjeta usando el tokenCard
+      let idDireccion: number | null = null;
+      if (this.direccionesDisponibles && this.direccionesDisponibles.length > 0) {
+        const direccionEncontrada = this.direccionesDisponibles.find(
+          (dir: any) => dir.tokenCard === tokenCard
+        );
+        if (direccionEncontrada && direccionEncontrada.idDireccion) {
+          idDireccion = direccionEncontrada.idDireccion;
+          console.log('Dirección encontrada para la tarjeta:', direccionEncontrada);
+        }
+      }
+      
+      // Generar valores para la transacción (para tarjetas existentes)
+      this.tarjetaInfo = {
+        tokenCard: tokenCard,
+        deviceFingerPrint: tarjeta.card?.deviceFingerPrint || Date.now().toString(),
+        deviceInformation: this.generarDeviceInformation(),
+        idDireccion: idDireccion
+      };
+      
+      console.log('Información de tarjeta guardada:', this.tarjetaInfo);
+    }
+  }
+  
+  private generarDeviceInformation(): any {
+    // Generar información del dispositivo obtenida del navegador
+    // Algunos valores son del navegador real, otros son valores por defecto cuando no están disponibles
+    const colorDepth = window.screen.colorDepth || window.screen.pixelDepth || 24;
+    const javaEnabled = (navigator as any).javaEnabled ? (navigator as any).javaEnabled() : false;
+    
+    return {
+      deviceChannel: "Browser",
+      httpBrowserColorDepth: colorDepth.toString(),
+      httpBrowserJavaEnabled: javaEnabled ? "TRUE" : "FALSE",
+      httpBrowserJavaScriptEnabled: "TRUE", // Siempre true en navegadores modernos
+      httpBrowserLanguage: navigator.language || (navigator as any).userLanguage || "es",
+      httpBrowserScreenHeight: window.screen.height.toString(),
+      httpBrowserScreenWidth: window.screen.width.toString(),
+      httpBrowserTimeDifference: new Date().getTimezoneOffset().toString()
+    };
+  }
+
+  // Cerrar todas las tarjetas abiertas
+  cerrarTodasLasTarjetas() {
+    this.tarjetasCliente.forEach(t => {
+      t._swipeX = 0;
+      t._isSwiping = false;
+    });
   }
 
   obtenerTarjetas(customerId: string) {
@@ -106,13 +193,36 @@ export class GenerarTransaccionComponent implements OnInit {
     this.netpayService.obtenerTarjetasCliente(customerId).subscribe(
       (response: any) => {
         this.cargandoTarjetas = false;
+        
+        // Guardar las direcciones disponibles del array datosTarjeta
+        if (response?.datosTarjeta && Array.isArray(response.datosTarjeta)) {
+          this.direccionesDisponibles = response.datosTarjeta;
+        } else if (response?.data?.datosTarjeta && Array.isArray(response.data.datosTarjeta)) {
+          this.direccionesDisponibles = response.data.datosTarjeta;
+        } else {
+          this.direccionesDisponibles = [];
+        }
+        
         // Las tarjetas vienen en el array paymentSources
+        // Inicializar propiedades de swipe en cada tarjeta
         if (response?.paymentSources && Array.isArray(response.paymentSources)) {
-          this.tarjetasCliente = response.paymentSources;
+          this.tarjetasCliente = response.paymentSources.map((t: any) => ({
+            ...t,
+            _swipeX: 0,
+            _isSwiping: false
+          }));
         } else if (Array.isArray(response)) {
-          this.tarjetasCliente = response;
+          this.tarjetasCliente = response.map((t: any) => ({
+            ...t,
+            _swipeX: 0,
+            _isSwiping: false
+          }));
         } else if (response?.data?.paymentSources && Array.isArray(response.data.paymentSources)) {
-          this.tarjetasCliente = response.data.paymentSources;
+          this.tarjetasCliente = response.data.paymentSources.map((t: any) => ({
+            ...t,
+            _swipeX: 0,
+            _isSwiping: false
+          }));
         } else {
           this.tarjetasCliente = [];
         }
@@ -120,6 +230,7 @@ export class GenerarTransaccionComponent implements OnInit {
       (error: any) => {
         this.cargandoTarjetas = false;
         this.tarjetasCliente = [];
+        this.direccionesDisponibles = [];
       }
     );
   }
@@ -200,10 +311,10 @@ export class GenerarTransaccionComponent implements OnInit {
       return;
     }
 
-    // Determinar idMetodoPago: 1 para efectivo, 3 para tarjeta
+    // Determinar idMetodoPago: 1 para efectivo, 3 o 4 para tarjeta
     const idMetodoPago = this.metodoPago === 'efectivo' ? 1 : 3;
 
-    const payload = {
+    const payload: any = {
       idTipoTransaccion: 1,
       monto: Number(this.monto),
       latitudInicial: null,
@@ -212,16 +323,50 @@ export class GenerarTransaccionComponent implements OnInit {
       numeroSerieValidador: null,
       idMetodoPago: idMetodoPago
     };
+
+    // Si el método de pago es tarjeta, agregar campos adicionales
+    if (this.metodoPago === 'tarjeta' && this.tarjetaSeleccionada) {
+      const tokenCard = this.tarjetaInfo.tokenCard || this.tarjetaSeleccionada.source || this.tarjetaSeleccionada.card?.token;
+      
+      if (tokenCard) {
+        // Generar sessionId y referenceId
+        const sessionId = Date.now().toString();
+        const referenceId = Date.now().toString();
+        
+        const deviceFingerPrint = this.tarjetaInfo.deviceFingerPrint || sessionId;
+        
+        payload.tokenCardNetPay = tokenCard;
+        payload.referenceIdNetPay = referenceId;
+        payload.sessionId = sessionId;
+        payload.deviceFingerPrint = deviceFingerPrint;
+        payload.transactionTokenIdNetPay = deviceFingerPrint; // Obligatorio cuando método de pago es tarjeta
+        
+        // Agregar idDireccion si existe
+        if (this.tarjetaInfo.idDireccion) {
+          payload.idDireccion = this.tarjetaInfo.idDireccion;
+        }
+        
+        // Agregar deviceInformation
+        if (this.tarjetaInfo.deviceInformation) {
+          payload.deviceInformation = this.tarjetaInfo.deviceInformation;
+        }
+      }
+    }
+
+    // Log del body para debug
+    console.log('Body de la transacción:', JSON.stringify(payload, null, 2));
+    
+    // Enviar la petición
     this.agregar(payload);
   }
 
   pagarConTarjeta() {
     if (this.cargando) return;
-    if (!this.monederoSeleccionado || !this.monto || this.monto <= 0) {
+    if (!this.monederoSeleccionado) {
       this.alerts.open({
         type: 'warning',
         title: '¡Atención!',
-        message: 'Por favor seleccione un monedero e ingrese un monto válido.',
+        message: 'Por favor seleccione un monedero.',
         confirmText: 'Entendido',
         backdropClose: false
       });
@@ -275,22 +420,32 @@ export class GenerarTransaccionComponent implements OnInit {
       disableClose: true,
       data: {
         monto: this.monto,
-        monederoSerie: this.getNumeroSerieMonedero()
+        monederoSerie: this.getNumeroSerieMonedero(),
+        customerId: this.monederoSeleccionado?.customerId,
+        direccionesDisponibles: this.direccionesDisponibles // Pasar las direcciones ya obtenidas
       }
     });
 
     dialogRef.afterClosed().subscribe(result => {
       if (result && result.token && result.deviceFingerPrint && result.deviceInformation) {
+        // Guardar información de la tarjeta para usar en la transacción
+        this.tarjetaInfo = {
+          tokenCard: result.token,
+          deviceFingerPrint: result.deviceFingerPrint,
+          deviceInformation: result.deviceInformation,
+          idDireccion: result.clienteInfo?.idDireccion || null
+        };
+        
         // Asegurar que el token esté completamente procesado antes de crear el cliente
         setTimeout(() => {
           // Solo crear el cliente si es necesario, NO procesar el pago (charge)
-          this.crearClienteSiEsNecesario(result.token, result.deviceFingerPrint, result.deviceInformation, result.cvv);
+          this.crearClienteSiEsNecesario(result.token, result.deviceFingerPrint, result.deviceInformation, result.cvv, result.clienteInfo, result.referenceId);
         }, 100); // Pequeño delay para asegurar que todo esté procesado
       }
     });
   }
 
-  private crearClienteSiEsNecesario(token: string, deviceFingerPrint: string, deviceInformation: any, cvv?: string) {
+  private crearClienteSiEsNecesario(token: string, deviceFingerPrint: string, deviceInformation: any, cvv?: string, clienteInfo?: any, referenceId?: string) {
     // Validar que el token esté completamente listo antes de proceder
     if (!token || token.trim() === '') {
       this.alerts.open({
@@ -311,7 +466,7 @@ export class GenerarTransaccionComponent implements OnInit {
 
     // Si customerId es null, crear el cliente (solo después de que el token esté listo)
     if (customerId === null || customerId === undefined) {
-      this.crearClienteNetpay(token, monedero).subscribe(
+      this.crearClienteNetpay(token, monedero, clienteInfo, cvv, referenceId).subscribe(
         (response: any) => {
           // Obtener el customerId de la respuesta
           const nuevoCustomerId = response?.customerId || response?.data?.customerId || response?.id;
@@ -381,7 +536,7 @@ export class GenerarTransaccionComponent implements OnInit {
       );
     } else {
       // Si ya tiene customerId, actualizar el token del cliente
-      this.actualizarTokenCliente(customerId, token, cvv).subscribe(
+      this.actualizarTokenCliente(customerId, token, cvv, clienteInfo, referenceId).subscribe(
         (response: any) => {
           this.cargando = false;
           
@@ -431,29 +586,321 @@ export class GenerarTransaccionComponent implements OnInit {
     }
   }
 
-  private actualizarTokenCliente(customerId: string, token: string, cvv?: string) {
-    const tokenData = {
-      customerId: String(customerId),
-      token: token,
-      preAuth: false,
-      cvv2: cvv || ''
-    };
+  private actualizarTokenCliente(customerId: string, token: string, cvv?: string, clienteInfo?: any, referenceId?: string) {
+    let tokenData: any;
+    
+    if (clienteInfo) {
+      // Usar la información del formulario de tokenización
+      tokenData = {
+        customerId: String(customerId),
+        token: token,
+        preAuth: false,
+        cvv2: cvv || '',
+        nombre: clienteInfo.nombre,
+        apellidoPaterno: clienteInfo.apellidoPaterno,
+        apellidoMaterno: clienteInfo.apellidoMaterno,
+        email: clienteInfo.email,
+        telefono: clienteInfo.telefono,
+        idDireccion: clienteInfo.idDireccion || null
+      };
+      
+      // Agregar referenceId si existe
+      if (referenceId) {
+        tokenData.referenceId = referenceId;
+      }
+      
+      // Solo enviar direccion si existe (cuando es nueva dirección)
+      if (clienteInfo.direccion) {
+        tokenData.direccion = clienteInfo.direccion;
+      }
+    } else {
+      // Compatibilidad hacia atrás: usar solo los campos básicos
+      tokenData = {
+        customerId: String(customerId),
+        token: token,
+        preAuth: false,
+        cvv2: cvv || '',
+        // Campos adicionales con valores por defecto si no hay clienteInfo
+        nombre: '',
+        apellidoPaterno: '',
+        apellidoMaterno: '',
+        email: '',
+        telefono: '',
+        idDireccion: null,
+        direccion: {
+          ciudad: '',
+          pais: 'MX',
+          CP: '',
+          estado: '',
+          calle: '',
+          calleEsquina: ''
+        }
+      };
+    }
 
     return this.netpayService.actualizarTokenCliente(customerId, tokenData);
   }
 
-  private crearClienteNetpay(token: string, monedero: any) {
-    // Mapear los datos del monedero a los campos requeridos
-    const customerData = {
-      firstName: monedero?.pasajeroNombre || '',
-      lastName: monedero?.pasajeroApellidoPaterno || '',
-      email: monedero?.correoUsuario || '',
-      phone: monedero?.telefonoUsuario || '',
-      token: token,
-      idPasajero: monedero?.idPasajero || null
-    };
+  private crearClienteNetpay(token: string, monedero: any, clienteInfo?: any, cvv?: string, referenceId?: string) {
+    // Si clienteInfo está disponible, usar esa información; de lo contrario, usar los datos del monedero
+    let customerData: any;
+    
+    if (clienteInfo) {
+      // Usar la información del formulario de tokenización con el formato completo
+      customerData = {
+        token: token,
+        preAuth: false,
+        cvv2: cvv || '',
+        nombre: clienteInfo.nombre,
+        apellidoPaterno: clienteInfo.apellidoPaterno,
+        apellidoMaterno: clienteInfo.apellidoMaterno,
+        email: clienteInfo.email,
+        telefono: clienteInfo.telefono,
+        idDireccion: clienteInfo.idDireccion || null,
+        idPasajero: monedero?.idPasajero || null
+      };
+      
+      // Agregar referenceId si existe
+      if (referenceId) {
+        customerData.referenceId = referenceId;
+      }
+      
+      // Solo enviar direccion si existe (cuando es nueva dirección)
+      if (clienteInfo.direccion) {
+        customerData.direccion = clienteInfo.direccion;
+      }
+    } else {
+      // Usar los datos del monedero (compatibilidad hacia atrás)
+      customerData = {
+        firstName: monedero?.pasajeroNombre || '',
+        lastName: monedero?.pasajeroApellidoPaterno || '',
+        email: monedero?.correoUsuario || '',
+        phone: monedero?.telefonoUsuario || '',
+        token: token,
+        idPasajero: monedero?.idPasajero || null
+      };
+    }
 
     return this.netpayService.crearCliente(customerData);
+  }
+
+  // Variables para el swipe
+  private swipeStartX: number = 0;
+  private swipeStartY: number = 0;
+  private currentSwipeX: number = 0;
+  private swipeThreshold: number = -80; // Umbral para revelar el botón de eliminar
+  private swipeMaxDistance: number = -100; // Máxima distancia de deslizamiento
+
+  onSwipeStart(event: any, tarjeta: any, index: number) {
+    // Cerrar otras tarjetas que puedan estar abiertas
+    this.tarjetasCliente.forEach((t, i) => {
+      if (i !== index && t._swipeX !== 0) {
+        t._swipeX = 0;
+      }
+    });
+
+    const touch = event.touches ? event.touches[0] : event;
+    this.swipeStartX = touch.clientX;
+    this.swipeStartY = touch.clientY;
+    this.currentSwipeX = tarjeta._swipeX || 0;
+    tarjeta._isSwiping = true;
+
+    // Prevenir scroll durante el swipe
+    if (event.touches) {
+      event.preventDefault();
+    }
+
+    // Event listeners para mouse
+    if (!event.touches) {
+      const onMouseMove = (e: MouseEvent) => this.onSwipeMove(e, tarjeta);
+      const onMouseUp = (e: MouseEvent) => {
+        this.onSwipeEnd(e, tarjeta);
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+      };
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    } else {
+      // Event listeners para touch
+      const onTouchMove = (e: TouchEvent) => this.onSwipeMove(e, tarjeta);
+      const onTouchEnd = (e: TouchEvent) => {
+        this.onSwipeEnd(e, tarjeta);
+        document.removeEventListener('touchmove', onTouchMove);
+        document.removeEventListener('touchend', onTouchEnd);
+      };
+      document.addEventListener('touchmove', onTouchMove, { passive: false });
+      document.addEventListener('touchend', onTouchEnd);
+    }
+  }
+
+  onSwipeMove(event: any, tarjeta: any) {
+    if (!tarjeta._isSwiping) return;
+
+    const touch = event.touches ? event.touches[0] : event;
+    const deltaX = touch.clientX - this.swipeStartX;
+    const deltaY = touch.clientY - this.swipeStartY;
+
+    // Si el movimiento es más vertical que horizontal, no hacer swipe
+    if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaX) < 10) {
+      return;
+    }
+
+    // Solo permitir deslizar hacia la izquierda
+    let newX = this.currentSwipeX + deltaX;
+    if (newX > 0) {
+      newX = 0;
+    } else if (newX < this.swipeMaxDistance) {
+      newX = this.swipeMaxDistance;
+    }
+
+    tarjeta._swipeX = newX;
+
+    // Prevenir scroll durante el swipe horizontal
+    if (Math.abs(deltaX) > 10) {
+      event.preventDefault();
+    }
+  }
+
+  onSwipeEnd(event: any, tarjeta: any) {
+    tarjeta._isSwiping = false;
+
+    // Si se deslizó más allá del umbral, mostrar modal de confirmación
+    if (tarjeta._swipeX < this.swipeThreshold) {
+      tarjeta._swipeX = this.swipeMaxDistance;
+      // Pequeño delay para que se vea la animación antes de abrir el modal
+      setTimeout(() => {
+        this.confirmarEliminarTarjeta(tarjeta);
+      }, 200);
+    } else {
+      // Si no, volver a la posición inicial
+      tarjeta._swipeX = 0;
+    }
+  }
+
+  onTarjetaClick(tarjeta: any) {
+    // Si la tarjeta está abierta, cerrarla en lugar de seleccionarla
+    if (tarjeta._swipeX !== 0) {
+      tarjeta._swipeX = 0;
+      return;
+    }
+    
+    // Si no está abierta, seleccionarla
+    this.seleccionarTarjeta(tarjeta);
+  }
+
+  confirmarEliminarTarjeta(tarjeta: any) {
+    const lastFour = tarjeta.card?.lastFourDigits || '****';
+    const bank = tarjeta.card?.bank || 'desconocido';
+    
+    this.alerts.open({
+      type: 'warning',
+      title: '¿Eliminar tarjeta?',
+      message: `
+        <div style="text-align: center;">
+          <p style="font-size: 16px; margin-bottom: 16px;">
+            ¿Estás seguro de que deseas eliminar esta tarjeta?
+          </p>
+          <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+            <p style="margin: 4px 0; color: #374151;">
+              <strong>Banco:</strong> ${bank}
+            </p>
+            <p style="margin: 4px 0; color: #374151;">
+              <strong>Últimos 4 dígitos:</strong> **** ${lastFour}
+            </p>
+          </div>
+          <p style="color: #dc2626; font-size: 14px;">
+            <i class="fa fa-exclamation-triangle"></i>
+            Esta acción no se puede deshacer
+          </p>
+        </div>
+      `,
+      confirmText: 'Sí, eliminar',
+      cancelText: 'Cancelar',
+      backdropClose: false,
+      showCancel: true
+    }).then((result: any) => {
+      const confirmed = typeof result === 'string' ? result : result?.result;
+      if (confirmed === 'confirm') {
+        this.eliminarTarjeta(tarjeta);
+      } else {
+        // Si cancela, cerrar la tarjeta deslizada
+        tarjeta._swipeX = 0;
+      }
+    });
+  }
+
+  eliminarTarjeta(tarjeta: any) {
+    const customerId = this.monederoSeleccionado?.customerId;
+    // Usar el atributo 'source' que es el token de la tarjeta
+    const tokenCard = tarjeta.source || tarjeta.card?.token;
+    
+    console.log('Eliminando tarjeta:', {
+      customerId,
+      tokenCard,
+      tarjetaCompleta: tarjeta
+    });
+    
+    if (!customerId || !tokenCard) {
+      this.alerts.open({
+        type: 'error',
+        title: '¡Error!',
+        message: 'No se pudo obtener la información necesaria para eliminar la tarjeta.',
+        confirmText: 'Entendido',
+        backdropClose: false
+      });
+      return;
+    }
+
+    // Cerrar el swipe de la tarjeta
+    tarjeta._swipeX = 0;
+    tarjeta._isSwiping = false;
+
+    this.cargando = true;
+    
+    this.netpayService.eliminarTarjeta(customerId, tokenCard).subscribe(
+      () => {
+        this.cargando = false;
+        
+        // Si la tarjeta eliminada estaba seleccionada, limpiar la selección
+        if (this.tarjetaSeleccionada === tarjeta) {
+          this.tarjetaSeleccionada = null;
+        }
+        
+        // Actualizar la lista de tarjetas
+        this.obtenerTarjetas(customerId);
+        
+        this.alerts.open({
+          type: 'success',
+          title: '¡Operación Exitosa!',
+          message: 'La tarjeta ha sido eliminada correctamente.',
+          confirmText: 'Entendido',
+          backdropClose: false
+        });
+      },
+      (error: any) => {
+        this.cargando = false;
+        
+        let errorMessage = 'Ocurrió un error al eliminar la tarjeta.';
+        
+        if (error?.error) {
+          if (typeof error.error === 'string') {
+            errorMessage = error.error;
+          } else if (error.error?.message) {
+            errorMessage = error.error.message;
+          }
+        } else if (error?.message) {
+          errorMessage = error.message;
+        }
+        
+        this.alerts.open({
+          type: 'error',
+          title: '¡Error!',
+          message: errorMessage,
+          confirmText: 'Entendido',
+          backdropClose: false
+        });
+      }
+    );
   }
 
   cancelar() {
@@ -472,6 +919,7 @@ export class GenerarTransaccionComponent implements OnInit {
   monederoSeleccionado: any = null;
   tarjetasCliente: any[] = [];
   cargandoTarjetas: boolean = false;
+  direccionesDisponibles: any[] = [];
 
   obtenerMonederos() {
     this.moneService.obtenerMonederos().subscribe((response) => {

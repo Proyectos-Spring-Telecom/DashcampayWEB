@@ -1,7 +1,14 @@
 // mapa.component.ts
-import { AfterViewInit, Component, OnDestroy } from '@angular/core';
+import { AfterViewInit, Component, OnDestroy, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
 import { fadeInRight400ms } from '@vex/animations/fade-in-right.animation';
+import { HttpClient } from '@angular/common/http';
+import { environment } from 'src/environments/environment';
+import { MonitoreoWebSocketService, PositionUpdate, UnidadUpdate } from 'src/app/core/services/monitoreo-websocket.service';
+import { Subscription } from 'rxjs';
+import { VariantesService } from 'src/app/pages/services/variantes.service';
+import { RutasService } from 'src/app/pages/services/ruta.service';
+import { ZonasService } from 'src/app/pages/services/zonas.service';
 
 declare const google: any;
 
@@ -15,6 +22,15 @@ interface UnidadMapa {
   estado: 'ruta' | 'pausa' | 'desvio';
   desvioKm?: string;     // "3.1 km"
   posicion: { lat: any; lng: any };
+  horaInicioTurno?: string;
+  horaFinTurno?: string;
+  horaInicioViaje?: string;
+  horaFinViaje?: string;
+  nombreVariante?: string;
+  sumSubidas?: number;   // Ascensos
+  sumBajadas?: number;    // Descensos
+  diferencia?: number;    // Diferencia
+  numeroSerieValidador?: string; // Número de serie del validador para identificar la unidad
 }
 
 @Component({
@@ -23,46 +39,445 @@ interface UnidadMapa {
   styleUrls: ['./mapa.component.scss'],
   animations: [fadeInRight400ms],
 })
-export class MapaComponent implements AfterViewInit, OnDestroy {
+export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
   private map!: google.maps.Map;
   private infoWindow!: google.maps.InfoWindow;
   private markers = new Map<number, google.maps.Marker>();
+  private activeInfoWindowUnitId: number | null = null; // ID de la unidad cuyo InfoWindow está abierto
   layoutCtrl = new UntypedFormControl('fullwidth');
+  private mapaInicializado = false;
+  private websocketSubscriptions: Subscription[] = [];
+
+  // Polylines y marcadores para rutas/variantes
+  private routePolyline: google.maps.Polyline | null = null;
+  private routeStartMarker: google.maps.Marker | null = null;
+  private routeEndMarker: google.maps.Marker | null = null;
+  
+  // Polígono para zonas
+  private zonaPolygon: google.maps.Polygon | null = null;
 
   private readonly MAP_ID = 'DEMO_MAP_ID';
 
-  // Datos de ejemplo (cámbialos por los que te regrese tu API)
-  unidades: UnidadMapa[] = [
-    {
-      id: 143,
-      codigo: 'U-143',
-      modelo: 'Boxer 2022',
-      conductor: 'R. García',
-      ultimoPing: '08:14',
-      velocidad: '67 km/h',
-      estado: 'ruta',
-      posicion: { lat: 19.432608, lng: -99.133209 }, // CDMX
-    },
-    {
-      id: 92,
-      codigo: 'U-092',
-      modelo: 'Worker 15.190',
-      conductor: 'M. Ruiz',
-      ultimoPing: '08:06',
-      estado: 'pausa',
-      posicion: { lat: 19.302608, lng: -99.123209 },
-    },
-    {
-      id: 218,
-      codigo: 'U-218',
-      modelo: 'Boxer 2021',
-      conductor: 'J. Flores',
-      ultimoPing: '07:58',
-      estado: 'desvio',
-      desvioKm: '3.1 km',
-      posicion: { lat: 19.382608, lng: -99.203209 },
-    },
-  ];
+  constructor(
+    private http: HttpClient,
+    private monitoreoWebSocket: MonitoreoWebSocketService,
+    private variantesService: VariantesService,
+    private rutasService: RutasService,
+    private zonasService: ZonasService
+  ) {}
+
+  unidades: UnidadMapa[] = [];
+  loadingUnidades = false;
+  isWebSocketConnected = false;
+  
+  // Selects de filtros
+  listaVariantes: any[] = [];
+  listaRutas: any[] = [];
+  listaZonas: any[] = [];
+  varianteControl = new UntypedFormControl(null);
+  rutaControl = new UntypedFormControl(null);
+  zonaControl = new UntypedFormControl(null);
+
+  ngOnInit(): void {
+    this.obtenerMonitoreo();
+    this.initWebSocket();
+    this.cargarVariantes();
+    this.cargarRutas();
+    this.cargarZonas();
+    
+    // Suscribirse a cambios en los selects
+    this.varianteControl.valueChanges.subscribe((idVariante) => {
+      if (idVariante) {
+        this.limpiarZona();
+        this.dibujarVariante(idVariante);
+      } else {
+        this.limpiarRutaVariante();
+      }
+    });
+
+    this.rutaControl.valueChanges.subscribe((idRuta) => {
+      if (idRuta) {
+        this.limpiarZona();
+        this.dibujarRuta(idRuta);
+      } else {
+        this.limpiarRutaVariante();
+      }
+    });
+
+    this.zonaControl.valueChanges.subscribe((idZona) => {
+      if (idZona) {
+        this.limpiarRutaVariante();
+        this.dibujarZona(idZona);
+      } else {
+        this.limpiarZona();
+      }
+    });
+  }
+
+  /**
+   * Carga la lista de variantes
+   */
+  cargarVariantes(): void {
+    this.variantesService.obtenerVariantes().subscribe({
+      next: (response: any) => {
+        this.listaVariantes = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
+      },
+      error: (error) => {
+        console.error('Error al cargar variantes:', error);
+        this.listaVariantes = [];
+      }
+    });
+  }
+
+  /**
+   * Carga la lista de rutas
+   */
+  cargarRutas(): void {
+    this.rutasService.obtenerRutas().subscribe({
+      next: (response: any) => {
+        this.listaRutas = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
+      },
+      error: (error) => {
+        console.error('Error al cargar rutas:', error);
+        this.listaRutas = [];
+      }
+    });
+  }
+
+  /**
+   * Carga la lista de zonas
+   */
+  cargarZonas(): void {
+    this.zonasService.obtenerZonas().subscribe({
+      next: (response: any) => {
+        this.listaZonas = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
+      },
+      error: (error) => {
+        console.error('Error al cargar zonas:', error);
+        this.listaZonas = [];
+      }
+    });
+  }
+
+  /**
+   * Inicializa la conexión WebSocket y suscripciones
+   */
+  private initWebSocket(): void {
+    // Conectar al WebSocket
+    this.monitoreoWebSocket.connect();
+
+    // Suscribirse al estado de conexión
+    const connectionSub = this.monitoreoWebSocket.isConnected$.subscribe(
+      (connected: boolean) => {
+        this.isWebSocketConnected = connected;
+        console.log('[MapaComponent] Estado WebSocket:', connected ? 'Conectado' : 'Desconectado');
+      }
+    );
+    this.websocketSubscriptions.push(connectionSub);
+
+    // Suscribirse a actualizaciones de posición
+    const positionSub = this.monitoreoWebSocket.positionUpdate$.subscribe(
+      (update: PositionUpdate) => {
+        this.handlePositionUpdate(update);
+      }
+    );
+    this.websocketSubscriptions.push(positionSub);
+
+    // Suscribirse a actualizaciones de unidad completa
+    const unidadSub = this.monitoreoWebSocket.unidadUpdate$.subscribe(
+      (update: UnidadUpdate) => {
+        this.handleUnidadUpdate(update);
+      }
+    );
+    this.websocketSubscriptions.push(unidadSub);
+
+    // Suscribirse a confirmación de conexión
+    const connectedSub = this.monitoreoWebSocket.connected$.subscribe(
+      (data) => {
+        console.log('[MapaComponent] Conexión WebSocket confirmada:', data);
+      }
+    );
+    this.websocketSubscriptions.push(connectedSub);
+  }
+
+  /**
+   * Maneja actualizaciones de posición recibidas por WebSocket
+   */
+  private handlePositionUpdate(update: PositionUpdate): void {
+    if (!this.mapaInicializado || !this.map) {
+      return;
+    }
+
+    const unidadId = update.idUnidad || update.idVehiculo || update.id;
+    const numeroSerieValidador = update.numeroSerieValidador;
+
+    // Extraer coordenadas: puede venir como latitud/longitud directas o en objeto posicion
+    let lat: number;
+    let lng: number;
+    
+    const posicionObj = update['posicion'];
+    if (posicionObj && typeof posicionObj === 'object' && 'lat' in posicionObj && 'lng' in posicionObj) {
+      // Si viene en objeto posicion
+      lat = Number((posicionObj as any).lat);
+      lng = Number((posicionObj as any).lng);
+    } else if (update.latitud !== undefined && update.longitud !== undefined) {
+      // Si viene como latitud/longitud directas
+      lat = Number(update.latitud);
+      lng = Number(update.longitud);
+    } else {
+      console.warn('[MapaComponent] Actualización de posición sin coordenadas válidas:', update);
+      return;
+    }
+
+    // Validar que las coordenadas sean números válidos
+    if (isNaN(lat) || isNaN(lng)) {
+      console.warn('[MapaComponent] Coordenadas inválidas en actualización:', { lat, lng, update });
+      return;
+    }
+
+    // Buscar la unidad existente primero por ID, luego por número de serie del validador
+    let unidad: UnidadMapa | undefined;
+
+    if (unidadId) {
+      unidad = this.unidades.find(u => u.id === unidadId);
+    }
+
+    // Si no se encontró por ID y tenemos número de serie del validador, buscar por ese campo
+    if (!unidad && numeroSerieValidador) {
+      unidad = this.unidades.find(u => 
+        u.numeroSerieValidador && 
+        u.numeroSerieValidador.toString().toLowerCase() === numeroSerieValidador.toString().toLowerCase()
+      );
+      
+      if (unidad) {
+        console.log(`[MapaComponent] Unidad encontrada por número de serie del validador: ${numeroSerieValidador} -> Unidad ID: ${unidad.id}`);
+      }
+    }
+
+    if (unidad) {
+      // Guardar posición anterior para comparar
+      const posicionAnterior = { ...unidad.posicion };
+      
+      // Actualizar posición existente
+      unidad.posicion = {
+        lat: lat,
+        lng: lng
+      };
+
+      if (update.velocidad !== undefined) {
+        unidad.velocidad = `${update.velocidad} km/h`;
+      }
+
+      if (update.fechaHora) {
+        try {
+          const fecha = new Date(update.fechaHora);
+          unidad.ultimoPing = fecha.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+        } catch (e) {
+          console.error('[MapaComponent] Error al formatear fecha:', e);
+        }
+      }
+
+      // Log para depuración
+      console.log(`[MapaComponent] Actualizando posición de unidad ${unidad.id} (${unidad.codigo}):`, {
+        anterior: posicionAnterior,
+        nueva: unidad.posicion,
+        velocidad: unidad.velocidad
+      });
+
+      // Actualizar marcador en el mapa
+      this.updateMarker(unidad);
+    } else {
+      // Si no existe la unidad, podría ser una nueva unidad
+      // En este caso, recargar todas las unidades o agregar la nueva
+      console.warn('[MapaComponent] Unidad no encontrada en el mapa. ID:', unidadId, 'Número serie validador:', numeroSerieValidador);
+      console.log('[MapaComponent] Recargando datos del monitoreo...');
+      this.obtenerMonitoreo();
+    }
+  }
+
+  /**
+   * Maneja actualizaciones completas de unidad recibidas por WebSocket
+   */
+  private handleUnidadUpdate(update: UnidadUpdate): void {
+    if (!this.mapaInicializado || !this.map) {
+      return;
+    }
+
+    // Mapear la actualización a la estructura UnidadMapa
+    const unidadMapeada: UnidadMapa = {
+      id: update.id,
+      codigo: update.codigo || `U-${update.id}`,
+      modelo: update.modelo || '',
+      conductor: update.conductor || '',
+      ultimoPing: update.ultimoPing || '',
+      velocidad: update.velocidad,
+      estado: update.estado || 'ruta',
+      desvioKm: update.desvioKm,
+      posicion: update.posicion || { lat: 19.432608, lng: -99.133209 },
+      horaInicioTurno: update.horaInicioTurno,
+      horaFinTurno: update.horaFinTurno,
+      horaInicioViaje: update.horaInicioViaje,
+      horaFinViaje: update.horaFinViaje,
+      nombreVariante: update.nombreVariante,
+      sumSubidas: update.sumSubidas,
+      sumBajadas: update.sumBajadas,
+      diferencia: update.diferencia
+    };
+
+    // Buscar si la unidad ya existe
+    const index = this.unidades.findIndex(u => u.id === unidadMapeada.id);
+
+    if (index >= 0) {
+      // Actualizar unidad existente
+      this.unidades[index] = unidadMapeada;
+      this.updateMarker(unidadMapeada);
+    } else {
+      // Agregar nueva unidad
+      this.unidades.push(unidadMapeada);
+      this.addMarker(unidadMapeada);
+    }
+  }
+
+  /**
+   * Actualiza un marcador existente en el mapa
+   */
+  private updateMarker(unidad: UnidadMapa): void {
+    const marker = this.markers.get(unidad.id);
+    
+    if (marker) {
+      // Validar coordenadas antes de actualizar
+      const lat = Number(unidad.posicion.lat);
+      const lng = Number(unidad.posicion.lng);
+      
+      if (isNaN(lat) || isNaN(lng)) {
+        console.error(`[MapaComponent] Coordenadas inválidas para unidad ${unidad.id}:`, unidad.posicion);
+        return;
+      }
+
+      // Obtener posición actual del marcador para comparar
+      const currentPosition = marker.getPosition();
+      const nuevaPosicion = new google.maps.LatLng(lat, lng);
+      
+      // Actualizar posición del marcador solo si cambió
+      if (!currentPosition || 
+          currentPosition.lat() !== lat || 
+          currentPosition.lng() !== lng) {
+        marker.setPosition(nuevaPosicion);
+        console.log(`[MapaComponent] Marcador ${unidad.id} actualizado a posición:`, { lat, lng });
+      }
+      
+      // Actualizar título
+      marker.setTitle(`${unidad.codigo} · ${unidad.modelo}`);
+
+      // Si el infoWindow está abierto para este marcador, actualizar su contenido
+      if (this.infoWindow && this.activeInfoWindowUnitId === unidad.id && marker.getMap()) {
+        const html = this.buildInfoWindowHtml(unidad);
+        this.infoWindow.setContent(html);
+      }
+    } else {
+      // Si no existe el marcador, crearlo
+      console.log(`[MapaComponent] Marcador no existe para unidad ${unidad.id}, creando nuevo marcador`);
+      this.addMarker(unidad);
+    }
+  }
+
+  obtenerMonitoreo(): void {
+    this.loadingUnidades = true;
+    this.http.get(`${environment.API_SECURITY}/monitoreo`).subscribe({
+      next: (result: any) => {
+        console.log('Resultado de /monitoreo:', result);
+        
+        // Mapear la respuesta del API a la estructura UnidadMapa
+        const datos = Array.isArray(result?.data) ? result.data : (Array.isArray(result) ? result : []);
+        
+        this.unidades = datos.map((item: any) => {
+          // Extraer coordenadas
+          const lat = item.posicion.latitud || item.posicion.lat || item.posicion.latitudInicial || item.posicion.latitudFinal || 19.432608;
+          const lng = item.posicion.longitud || item.posicion.lng || item.posicion.longitudInicial || item.posicion.longitudFinal || -99.133209;
+          
+          // Mapear estado
+          let estado: 'ruta' | 'pausa' | 'desvio' = 'ruta';
+          const estadoStr = (item.estado || item.estatus || '').toString().toLowerCase();
+          if (estadoStr.includes('pausa') || estadoStr === 'pausa') {
+            estado = 'pausa';
+          } else if (estadoStr.includes('desvio') || estadoStr.includes('fuera')) {
+            estado = 'desvio';
+          }
+          
+          // Formatear último ping
+          let ultimoPing = '';
+          if (item.ultimoPing) {
+            ultimoPing = item.ultimoPing;
+          } else if (item.fechaHora || item.fechaHoraFinal || item.fechaHoraInicial) {
+            const fecha = new Date(item.fechaHora || item.fechaHoraFinal || item.fechaHoraInicial);
+            ultimoPing = fecha.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+          }
+          
+          // Función helper para formatear horas
+          const formatearHora = (fecha: any): string | undefined => {
+            if (!fecha) return undefined;
+            try {
+              const date = new Date(fecha);
+              if (isNaN(date.getTime())) return undefined;
+              return date.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+            } catch {
+              return undefined;
+            }
+          };
+          
+          return {
+            id: item.id || item.idVehiculo || item.idUnidad || 0,
+            codigo: item.codigo || item.numeroEconomico || `U-${item.id || ''}`,
+            modelo: item.modelo || item.modeloVehiculo || '',
+            conductor: item.conductor || item.nombreConductor || item.operador || '',
+            ultimoPing: ultimoPing,
+            velocidad: item.velocidad || undefined,
+            estado: estado,
+            desvioKm: item.desvioKm || item.desvio ? `${item.desvioKm || item.desvio} km` : undefined,
+            posicion: { lat: Number(lat), lng: Number(lng) },
+            horaInicioTurno: formatearHora(item.turnoInicio),
+            horaFinTurno: formatearHora(item.turnoFin),
+            horaInicioViaje: formatearHora(item.viajeInicio),
+            horaFinViaje: formatearHora(item.viajeFin),
+            nombreVariante: item.nombreVariante || undefined,
+            sumSubidas: item.sumSubidas !== undefined ? Number(item.sumSubidas) : undefined,
+            sumBajadas: item.sumBajadas !== undefined ? Number(item.sumBajadas) : undefined,
+            diferencia: item.diferencia !== undefined ? Number(item.diferencia) : undefined,
+            numeroSerieValidador: item.numeroSerieValidador || item.numeroSerie || item.validador?.numeroSerie || item.validador?.numeroSerieValidador || undefined
+          };
+        });
+        
+        this.loadingUnidades = false;
+        
+        // Si el mapa ya está inicializado, actualizar los marcadores
+        if (this.mapaInicializado && this.map) {
+          this.actualizarMarcadores();
+        }
+      },
+      error: (err: any) => {
+        console.error('Error al obtener /monitoreo:', err);
+        this.loadingUnidades = false;
+      }
+    });
+  }
+
+  private actualizarMarcadores(): void {
+    // Limpiar marcadores existentes
+    this.markers.forEach((marker) => marker.setMap(null));
+    this.markers.clear();
+    
+    // Agregar nuevos marcadores
+    this.unidades.forEach((u) => this.addMarker(u));
+    
+    // Ajustar el centro del mapa si hay unidades
+    if (this.unidades.length > 0) {
+      const bounds = new google.maps.LatLngBounds();
+      this.unidades.forEach((u) => {
+        bounds.extend(new google.maps.LatLng(u.posicion.lat, u.posicion.lng));
+      });
+      this.map.fitBounds(bounds);
+    }
+  }
 
   async ngAfterViewInit(): Promise<void> {
     try {
@@ -74,8 +489,20 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    // Limpiar marcadores
     this.markers.forEach((m) => m.setMap(null));
     this.markers.clear();
+
+    // Limpiar rutas/variantes dibujadas
+    this.limpiarRutaVariante();
+
+    // Limpiar zona dibujada
+    this.limpiarZona();
+
+    // Desconectar WebSocket y limpiar suscripciones
+    this.monitoreoWebSocket.disconnect();
+    this.websocketSubscriptions.forEach(sub => sub.unsubscribe());
+    this.websocketSubscriptions = [];
   }
 
   private waitForGoogleMaps(): Promise<void> {
@@ -106,14 +533,22 @@ export class MapaComponent implements AfterViewInit, OnDestroy {
       streetViewControl: false,
       mapTypeControl: true,
       mapId: this.MAP_ID,
+      clickableIcons: false,
     };
 
     this.map = new google.maps.Map(el, options);
     this.infoWindow = new google.maps.InfoWindow();
+    this.mapaInicializado = true;
 
-    this.map.addListener('click', () => this.infoWindow.close());
+    this.map.addListener('click', () => {
+      this.infoWindow.close();
+      this.activeInfoWindowUnitId = null; // Limpiar referencia cuando se cierra el InfoWindow
+    });
 
-    this.unidades.forEach((u) => this.addMarker(u));
+    // Si ya hay unidades cargadas, agregar marcadores
+    if (this.unidades.length > 0) {
+      this.actualizarMarcadores();
+    }
   }
 
 private addMarker(u: UnidadMapa): void {
@@ -138,6 +573,7 @@ private addMarker(u: UnidadMapa): void {
     const html = this.buildInfoWindowHtml(u);
     this.infoWindow.setContent(html);
     this.infoWindow.open(this.map, marker);
+    this.activeInfoWindowUnitId = u.id; // Guardar referencia al marcador activo
   });
 
   this.markers.set(u.id, marker);
@@ -188,6 +624,30 @@ private addMarker(u: UnidadMapa): void {
                </div>`
             : ''
         }
+        ${
+          u.sumSubidas !== undefined
+            ? `<div class="mp-iw-row">
+                 <span class="mp-iw-label">Ascensos</span>
+                 <span class="mp-iw-value">${u.sumSubidas}</span>
+               </div>`
+            : ''
+        }
+        ${
+          u.sumBajadas !== undefined
+            ? `<div class="mp-iw-row">
+                 <span class="mp-iw-label">Descensos</span>
+                 <span class="mp-iw-value">${u.sumBajadas}</span>
+               </div>`
+            : ''
+        }
+        ${
+          u.diferencia !== undefined
+            ? `<div class="mp-iw-row">
+                 <span class="mp-iw-label">Diferencia</span>
+                 <span class="mp-iw-value">${u.diferencia}</span>
+               </div>`
+            : ''
+        }
         <div class="mp-iw-pill" style="background:${estadoColor}1a;color:${estadoColor}">
           ${estadoTexto}
         </div>
@@ -210,6 +670,7 @@ private addMarker(u: UnidadMapa): void {
     const html = this.buildInfoWindowHtml(unidad);
     this.infoWindow.setContent(html);
     this.infoWindow.open(this.map, marker);
+    this.activeInfoWindowUnitId = id; // Guardar referencia al marcador activo
   }
 
   private svgCarUrl(color: string) {
@@ -224,5 +685,422 @@ private addMarker(u: UnidadMapa): void {
   </svg>`;
   return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
 }
+
+  /**
+   * Crea un SVG para marcador de pin
+   */
+  private svgPinUrl(color: string): string {
+    const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24">
+      <path d="M12 2C8.134 2 5 5.134 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.866-3.134-7-7-7z" fill="${color}"/>
+      <circle cx="12" cy="9" r="3" fill="#ffffff"/>
+    </svg>`;
+    return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+  }
+
+  /**
+   * Lee coordenadas de diferentes formatos
+   */
+  private readLatLng(obj: any): { lat: number; lng: number } | null {
+    if (!obj) return null;
+    if (obj.lat !== undefined && obj.lng !== undefined) {
+      return { lat: Number(obj.lat), lng: Number(obj.lng) };
+    }
+    if (obj.latitud !== undefined && obj.longitud !== undefined) {
+      return { lat: Number(obj.latitud), lng: Number(obj.longitud) };
+    }
+    if (obj.coordenadas?.lat !== undefined && obj.coordenadas?.lng !== undefined) {
+      return { lat: Number(obj.coordenadas.lat), lng: Number(obj.coordenadas.lng) };
+    }
+    return null;
+  }
+
+  /**
+   * Dibuja una variante en el mapa
+   */
+  dibujarVariante(idVariante: number): void {
+    if (!this.mapaInicializado || !this.map) {
+      console.warn('[MapaComponent] Mapa no inicializado, esperando...');
+      setTimeout(() => this.dibujarVariante(idVariante), 500);
+      return;
+    }
+
+    // Limpiar ruta si hay una seleccionada
+    if (this.rutaControl.value) {
+      this.rutaControl.setValue(null, { emitEvent: false });
+    }
+
+    this.variantesService.obtenerVariante(idVariante).subscribe({
+      next: (response: any) => {
+        // La respuesta puede venir como objeto directo o como array en data
+        let variante: any;
+        if (Array.isArray(response?.data)) {
+          // Si es un array, buscar la variante por ID o tomar la primera
+          variante = response.data.find((v: any) => v.id === idVariante) || response.data[0];
+        } else {
+          variante = response?.data || response;
+        }
+
+        if (!variante) {
+          console.error('[MapaComponent] Variante no encontrada');
+          return;
+        }
+
+        console.log('[MapaComponent] Variante obtenida:', variante);
+
+        // Obtener coordenadas de inicio y fin - probar diferentes formatos
+        let inicio = this.readLatLng(variante?.puntoInicio?.coordenadas);
+        if (!inicio) {
+          inicio = this.readLatLng(variante?.puntoInicio);
+        }
+        if (!inicio && variante?.puntoInicio) {
+          // Intentar leer directamente si tiene lat/lng
+          inicio = { lat: variante.puntoInicio.lat, lng: variante.puntoInicio.lng };
+        }
+
+        let fin = this.readLatLng(variante?.puntoFin?.coordenadas);
+        if (!fin) {
+          fin = this.readLatLng(variante?.puntoFin);
+        }
+        if (!fin && variante?.puntoFin) {
+          // Intentar leer directamente si tiene lat/lng
+          fin = { lat: variante.puntoFin.lat, lng: variante.puntoFin.lng };
+        }
+
+        if (!inicio || !fin) {
+          console.error('[MapaComponent] Variante sin coordenadas válidas', {
+            puntoInicio: variante?.puntoInicio,
+            puntoFin: variante?.puntoFin,
+            inicio,
+            fin
+          });
+          return;
+        }
+
+        // Obtener recorrido detallado
+        const recorrido: Array<{ lat: number; lng: number; nombre?: string }> = Array.isArray(variante?.recorridoDetallado)
+          ? variante.recorridoDetallado
+              .map((p: any) => {
+                const punto = this.readLatLng(p) || (p?.lat !== undefined && p?.lng !== undefined ? { lat: Number(p.lat), lng: Number(p.lng) } : null);
+                if (!punto) return null;
+                const nombre = p?.nombre ? String(p.nombre).trim() : undefined;
+                return nombre ? { ...punto, nombre } : punto;
+              })
+              .filter((p: any): p is { lat: number; lng: number; nombre?: string } => !!p)
+          : [];
+
+        console.log('[MapaComponent] Dibujando variante:', { inicio, fin, puntosRecorrido: recorrido.length });
+        this.dibujarRutaEnMapa(inicio, fin, recorrido);
+      },
+      error: (error) => {
+        console.error('[MapaComponent] Error al obtener variante:', error);
+      }
+    });
+  }
+
+  /**
+   * Dibuja una ruta en el mapa
+   */
+  dibujarRuta(idRuta: number): void {
+    if (!this.mapaInicializado || !this.map) {
+      console.warn('[MapaComponent] Mapa no inicializado, esperando...');
+      setTimeout(() => this.dibujarRuta(idRuta), 500);
+      return;
+    }
+
+    // Limpiar variante si hay una seleccionada
+    if (this.varianteControl.value) {
+      this.varianteControl.setValue(null, { emitEvent: false });
+    }
+
+    this.rutasService.obtenerRuta(idRuta).subscribe({
+      next: (response: any) => {
+        // La respuesta puede venir como objeto directo o como array en data
+        let ruta: any;
+        if (Array.isArray(response?.data)) {
+          // Si es un array, buscar la ruta por ID o tomar la primera
+          ruta = response.data.find((r: any) => r.id === idRuta) || response.data[0];
+        } else {
+          ruta = response?.data || response;
+        }
+
+        if (!ruta) {
+          console.error('[MapaComponent] Ruta no encontrada');
+          return;
+        }
+
+        console.log('[MapaComponent] Ruta obtenida:', ruta);
+
+        // Obtener coordenadas de inicio y fin - probar diferentes formatos
+        let inicio = this.readLatLng(ruta?.inicio);
+        if (!inicio) {
+          inicio = this.readLatLng(ruta?.puntoInicio?.coordenadas) || this.readLatLng(ruta?.puntoInicio);
+        }
+        if (!inicio && ruta?.puntoInicio) {
+          // Intentar leer directamente si tiene lat/lng
+          inicio = { lat: ruta.puntoInicio.lat, lng: ruta.puntoInicio.lng };
+        }
+
+        let fin = this.readLatLng(ruta?.fin);
+        if (!fin) {
+          fin = this.readLatLng(ruta?.puntoFin?.coordenadas) || this.readLatLng(ruta?.puntoFin);
+        }
+        if (!fin && ruta?.puntoFin) {
+          // Intentar leer directamente si tiene lat/lng
+          fin = { lat: ruta.puntoFin.lat, lng: ruta.puntoFin.lng };
+        }
+
+        if (!inicio || !fin) {
+          console.error('[MapaComponent] Ruta sin coordenadas válidas', {
+            inicio: ruta?.inicio,
+            fin: ruta?.fin,
+            puntoInicio: ruta?.puntoInicio,
+            puntoFin: ruta?.puntoFin,
+            inicioLeido: inicio,
+            finLeido: fin
+          });
+          return;
+        }
+
+        // Las rutas no tienen recorrido detallado, solo inicio y fin
+        console.log('[MapaComponent] Dibujando ruta:', { inicio, fin });
+        this.dibujarRutaEnMapa(inicio, fin, []);
+      },
+      error: (error) => {
+        console.error('[MapaComponent] Error al obtener ruta:', error);
+      }
+    });
+  }
+
+  /**
+   * Dibuja la ruta/variante en el mapa
+   */
+  private dibujarRutaEnMapa(
+    inicio: { lat: number; lng: number },
+    fin: { lat: number; lng: number },
+    recorrido: Array<{ lat: number; lng: number; nombre?: string }> = []
+  ): void {
+    if (!this.map) return;
+
+    // Limpiar dibujos anteriores
+    this.limpiarRutaVariante();
+
+    // Crear path: usar recorrido si existe, sino línea directa inicio-fin
+    const path: Array<{ lat: number; lng: number }> = 
+      (Array.isArray(recorrido) && recorrido.length > 0) 
+        ? recorrido.map(p => ({ lat: p.lat, lng: p.lng }))
+        : [inicio, fin];
+
+    // Dibujar polyline
+    this.routePolyline = new google.maps.Polyline({
+      map: this.map,
+      path: path,
+      strokeColor: '#1F5AA8',
+      strokeOpacity: 0.95,
+      strokeWeight: 4,
+      zIndex: 1
+    });
+
+    // Crear marcadores de inicio y fin
+    this.routeStartMarker = new google.maps.Marker({
+      map: this.map,
+      position: inicio,
+      title: 'Inicio',
+      icon: {
+        url: this.svgPinUrl('#16a34a'),
+        scaledSize: new google.maps.Size(40, 40),
+        anchor: new google.maps.Point(20, 38)
+      },
+      zIndex: 2
+    });
+
+    this.routeEndMarker = new google.maps.Marker({
+      map: this.map,
+      position: fin,
+      title: 'Fin',
+      icon: {
+        url: this.svgPinUrl('#ef4444'),
+        scaledSize: new google.maps.Size(40, 40),
+        anchor: new google.maps.Point(20, 38)
+      },
+      zIndex: 2
+    });
+
+    // Ajustar vista para mostrar toda la ruta
+    const bounds = new google.maps.LatLngBounds();
+    bounds.extend(inicio);
+    bounds.extend(fin);
+    if (path.length > 0) {
+      path.forEach(p => bounds.extend(p));
+    }
+    this.map.fitBounds(bounds, { top: 40, bottom: 40, left: 40, right: 40 });
+  }
+
+  /**
+   * Limpia los dibujos de ruta/variante del mapa
+   */
+  private limpiarRutaVariante(): void {
+    if (this.routePolyline) {
+      this.routePolyline.setMap(null);
+      this.routePolyline = null;
+    }
+    if (this.routeStartMarker) {
+      this.routeStartMarker.setMap(null);
+      this.routeStartMarker = null;
+    }
+    if (this.routeEndMarker) {
+      this.routeEndMarker.setMap(null);
+      this.routeEndMarker = null;
+    }
+  }
+
+  /**
+   * Limpia el polígono de zona del mapa
+   */
+  private limpiarZona(): void {
+    if (this.zonaPolygon) {
+      this.zonaPolygon.setMap(null);
+      this.zonaPolygon = null;
+    }
+  }
+
+  /**
+   * Extrae el path de coordenadas desde diferentes formatos GeoJSON
+   */
+  private extractPathFromGeo(gx: any): Array<{ lat: number; lng: number }> {
+    if (!gx) return [];
+
+    // FeatureCollection
+    if (
+      gx.type === 'FeatureCollection' &&
+      Array.isArray(gx.features) &&
+      gx.features.length
+    ) {
+      const geom = gx.features[0]?.geometry;
+      return this.extractPathFromGeo(geom);
+    }
+
+    // Feature
+    if (gx.type === 'Feature' && gx.geometry) {
+      return this.extractPathFromGeo(gx.geometry);
+    }
+
+    // Polygon con coordenadas GeoJSON [lng, lat]
+    if (gx.type === 'Polygon' && Array.isArray(gx.coordinates)) {
+      const ring = gx.coordinates[0] || [];
+      return ring
+        .map((p: any) =>
+          Array.isArray(p) && p.length >= 2
+            ? { lat: Number(p[1]), lng: Number(p[0]) }
+            : null
+        )
+        .filter(Boolean) as Array<{ lat: number; lng: number }>;
+    }
+
+    // Array directo de coordenadas {lat, lng}
+    if (Array.isArray(gx)) {
+      return gx
+        .map((p: any) => {
+          if (p?.lat !== undefined && p?.lng !== undefined) {
+            return { lat: Number(p.lat), lng: Number(p.lng) };
+          }
+          if (Array.isArray(p) && p.length >= 2) {
+            // Puede venir como [lng, lat] o [lat, lng]
+            return { lat: Number(p[1] || p[0]), lng: Number(p[0] || p[1]) };
+          }
+          return null;
+        })
+        .filter((p): p is { lat: number; lng: number } => 
+          p !== null && Number.isFinite(p.lat) && Number.isFinite(p.lng)
+        );
+    }
+
+    return [];
+  }
+
+  /**
+   * Dibuja una zona en el mapa
+   */
+  dibujarZona(idZona: number): void {
+    if (!this.mapaInicializado || !this.map) {
+      console.warn('[MapaComponent] Mapa no inicializado, esperando...');
+      setTimeout(() => this.dibujarZona(idZona), 500);
+      return;
+    }
+
+    this.zonasService.obtenerZona(idZona).subscribe({
+      next: (response: any) => {
+        // La respuesta puede venir como objeto directo o como array en data
+        let zona: any;
+        if (Array.isArray(response?.data)) {
+          zona = response.data.find((z: any) => z.id === idZona) || response.data[0];
+        } else {
+          zona = response?.data || response;
+        }
+
+        if (!zona) {
+          console.error('[MapaComponent] Zona no encontrada');
+          return;
+        }
+
+        console.log('[MapaComponent] Zona obtenida:', zona);
+
+        // Extraer geocerca/polígono de diferentes campos posibles
+        const geocerca: any =
+          zona?.geocerca ??
+          zona?.poligono ??
+          zona?.polygon ??
+          zona?.coordenadas ??
+          zona?.geometria ??
+          null;
+
+        const path = this.extractPathFromGeo(geocerca);
+
+        if (!Array.isArray(path) || path.length < 3) {
+          console.error('[MapaComponent] Zona sin geocerca válida', {
+            geocerca,
+            path,
+            pathLength: path?.length
+          });
+          return;
+        }
+
+        console.log('[MapaComponent] Dibujando zona con', path.length, 'puntos');
+        this.dibujarZonaEnMapa(path);
+      },
+      error: (error) => {
+        console.error('[MapaComponent] Error al obtener zona:', error);
+      }
+    });
+  }
+
+  /**
+   * Dibuja el polígono de la zona en el mapa
+   */
+  private dibujarZonaEnMapa(path: Array<{ lat: number; lng: number }>): void {
+    if (!this.map || !Array.isArray(path) || path.length < 3) return;
+
+    // Limpiar polígono anterior
+    this.limpiarZona();
+
+    // Crear polígono
+    this.zonaPolygon = new google.maps.Polygon({
+      paths: path,
+      fillColor: '#1E88E5',
+      fillOpacity: 0.15,
+      strokeColor: '#1E88E5',
+      strokeOpacity: 0.9,
+      strokeWeight: 2,
+      editable: false,
+      draggable: false,
+      map: this.map,
+      zIndex: 10,
+    });
+
+    // Ajustar vista para mostrar toda la zona
+    const bounds = new google.maps.LatLngBounds();
+    path.forEach(p => bounds.extend(p));
+    this.map.fitBounds(bounds, { top: 40, bottom: 40, left: 40, right: 40 });
+  }
 
 }

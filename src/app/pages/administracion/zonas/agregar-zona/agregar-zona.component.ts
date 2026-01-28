@@ -41,7 +41,7 @@ export class AgregarZonaComponent implements OnInit, AfterViewInit, OnDestroy {
   private drawingManager?: any;
   private polygon?: any;
 
-  private readonly defaultCenter = { lat: 19.2826, lng: -99.6557 };
+  private readonly defaultCenter = { lat: 21.110778, lng: -86.762590 };
   private readonly defaultZoom = 13;
 
   constructor(
@@ -546,6 +546,7 @@ export class AgregarZonaComponent implements OnInit, AfterViewInit, OnDestroy {
       mapTypeControl: false,
       fullscreenControl: false,
       streetViewControl: false,
+      clickableIcons: false,
     });
 
     setTimeout(() => {

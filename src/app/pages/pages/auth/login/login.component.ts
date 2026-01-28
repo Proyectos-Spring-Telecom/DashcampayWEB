@@ -108,7 +108,14 @@ onSubmit() {
       }).then((res) => {
         if (res === 'confirm') {
           this.auth.setData(user);        // <-- ahora sí guardas el usuario real
-          this.router.navigate(['/administracion/dashboard']);
+          
+          // Verificar el rol del usuario para redirigir
+          const rolNombre = user?.rol?.nombre?.toLowerCase() || '';
+          if (rolNombre === 'pasajero') {
+            this.router.navigate(['/administracion/perfil-pasajero']);
+          } else {
+            this.router.navigate(['/administracion/dashboard']);
+          }
         }
       });
     },

@@ -95,9 +95,27 @@
           <div class="col-12 col-md-6">
             <mat-form-field class="w-100">
               <mat-label>Número de Serie del Monedero</mat-label>
-              <input matInput formControlName="numeroSerieMonedero" required maxlength="50" />
-              <mat-error *ngIf="afiliacionPasajero.get('numeroSerieMonedero')?.hasError('required')">Campo
-                requerido</mat-error>
+              <input matInput formControlName="numeroSerieMonedero" maxlength="50" />
+            </mat-form-field>
+          </div>
+
+          <div class="col-12 col-md-6">
+            <mat-form-field class="w-100">
+              <mat-label>Compañía de transporte</mat-label>
+              <mat-select formControlName="idCliente" [disabled]="loadingClientes || (afiliacionPasajero.get('idCliente')?.disabled ?? false)">
+                <mat-option *ngIf="loadingClientes" [disabled]="true">
+                  Cargando...
+                </mat-option>
+                <mat-option *ngIf="!loadingClientes && listaClientes.length === 0" [disabled]="true" [value]="null">
+                  Sin registros
+                </mat-option>
+                <mat-option *ngFor="let cliente of listaClientes" [value]="cliente.id">
+                  {{ cliente.nombreCliente || cliente.nombre }}
+                </mat-option>
+              </mat-select>
+              <mat-error *ngIf="afiliacionPasajero.get('idCliente')?.hasError('required')">
+                Campo requerido
+              </mat-error>
             </mat-form-field>
           </div>
         </div>

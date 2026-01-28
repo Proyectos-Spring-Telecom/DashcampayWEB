@@ -200,23 +200,12 @@ export class AgregarVehiculoComponent implements OnInit {
           'PasajerosParados',
           'pasajerosParados'
         ]);
-        const fechaExp = get(raw, [
-          'fechaExpedicion',
-          'FechaExpedicion',
-          'fechaExpedicion'
+        const cantidadPuertas = get(raw, [
+          'cantidadPuertas',
+          'cantidadpuertas',
+          'CantidadPuertas',
+          'cantidadPuertas'
         ]);
-        const fechaExpir = get(raw, [
-          'fechaExpiracion',
-          'FechaExpiracion',
-          'fechaExpiracion'
-        ]);
-
-        const fechaExpedicionFormatted = fechaExp
-          ? fechaExp.split('T')[0]
-          : null;
-        const fechaExpiracionFormatted = fechaExpir
-          ? fechaExpir.split('T')[0]
-          : null;
 
         this.vehiculosForm.patchValue({
           marca: marca ?? '',
@@ -236,8 +225,7 @@ export class AgregarVehiculoComponent implements OnInit {
           capacidadLitros: capacidad != null && !Number.isNaN(Number(capacidad)) ? Number(capacidad) : null,
           pasajerosSentados: pasajerosSent != null && !Number.isNaN(Number(pasajerosSent)) ? Number(pasajerosSent) : null,
           pasajerosParados: pasajerosPar != null && !Number.isNaN(Number(pasajerosPar)) ? Number(pasajerosPar) : null,
-          fechaExpedicion: fechaExpedicionFormatted,
-          fechaExpiracion: fechaExpiracionFormatted
+          cantidadPuertas: cantidadPuertas != null && !Number.isNaN(Number(cantidadPuertas)) ? Number(cantidadPuertas) : null
         });
       });
   }
@@ -261,8 +249,7 @@ export class AgregarVehiculoComponent implements OnInit {
       capacidadLitros: [null, Validators.required],
       pasajerosSentados: [null, Validators.required],
       pasajerosParados: [null, Validators.required],
-      fechaExpedicion: [null, Validators.required],
-      fechaExpiracion: [null, Validators.required]
+      cantidadPuertas: [null, Validators.required]
       // idOperador: ['', Validators.required],
       // idDispositivo: ['', Validators.required],
     });
@@ -303,8 +290,6 @@ export class AgregarVehiculoComponent implements OnInit {
     capacidadLitros: 'Capacidad de Combustible',
     pasajerosSentados: 'Pasajeros Sentados',
     pasajerosParados: 'Pasajeros Parados',
-    fechaExpedicion: 'Fecha de Expedición',
-    fechaExpiracion: 'Fecha de Expiración',
   };
 
   const camposFaltantes: string[] = [];
@@ -400,8 +385,6 @@ export class AgregarVehiculoComponent implements OnInit {
     capacidadLitros: 'Capacidad de Combustible',
     pasajerosSentados: 'Pasajeros Sentados',
     pasajerosParados: 'Pasajeros Parados',
-    fechaExpedicion: 'Fecha de Expedición',
-    fechaExpiracion: 'Fecha de Expiración',
   };
 
   const camposFaltantes: string[] = [];

@@ -1,10 +1,11 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import {
+  AbstractControl,
   FormArray,
   FormBuilder,
   FormGroup,
   UntypedFormControl,
-  Validators
+  Validators,
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { fadeInRight400ms } from '@vex/animations/fade-in-right.animation';
@@ -53,6 +54,7 @@ export class AgregarInstalacionComponent implements OnInit {
   listaValidadores: any[] = [];
   listaContadores: any[] = [];
   listaVehiculos: any[] = [];
+  private placeholderVehiculo: any[] = []; // Para guardar el vehículo placeholder con cantidadPuertas
 
   idClienteUser!: number;
   idRolUser!: number;
@@ -79,20 +81,20 @@ export class AgregarInstalacionComponent implements OnInit {
 
   // --- campos para payload de actualización (valores de esta sesión) ---
   estatusValidadorAnterior: number | null = null;
-  estatusContadorAnterior: number | null = null;
+  contadoresAnteriores: Array<{ idContador: number; estatusAnterior: number }> = [];
   comentariosValidador: string | null = null;
   comentariosContador: string | null = null;
 
   // --- buffer persistente de lo ÚLTIMO ENVIADO (para reusar si no cambias uno de los dos) ---
   private lastSubmittedMeta: {
     estatusValidadorAnterior: number | null;
+    contadoresAnteriores: Array<{ idContador: number; estatusAnterior: number }>;
     comentariosValidador: string | null;
-    estatusContadorAnterior: number | null;
     comentariosContador: string | null;
   } = {
     estatusValidadorAnterior: null,
+    contadoresAnteriores: [],
     comentariosValidador: null,
-    estatusContadorAnterior: null,
     comentariosContador: null
   };
 
@@ -112,6 +114,8 @@ export class AgregarInstalacionComponent implements OnInit {
   estadoContadorSel: number | null = null;
   comentarioContadorText = '';
   private pendingNuevoContadorId: number | null = null;
+  private pendingContadorIndex: number | null = null;
+  private initialContadoresIds: (number | null)[] = [];
 
   // opciones de estado para los selects del modal
   estadoEntries = [
@@ -146,9 +150,10 @@ export class AgregarInstalacionComponent implements OnInit {
     this.initForm();
     this.suscribirCambioCliente();
     this.suscribirCambioEquipos();
+    this.suscribirCambioVehiculo();
     this.obtenerClientes();
 
-    this.activatedRouted.params.subscribe((params) => {
+    this.activatedRouted.params.subscribe((params:any) => {
       this.idInstalacion = Number(params['idInstalacion']);
       if (this.idInstalacion) {
         this.title = 'Actualizar Instalación';
@@ -184,11 +189,24 @@ export class AgregarInstalacionComponent implements OnInit {
   }
 
   agregarContador(): void {
+    // Validar que se pueda agregar antes de hacerlo
+    if (!this.puedeAgregarContador()) {
+      this.alerts.open({
+        type: 'warning',
+        title: '¡Atención!',
+        message: 'No se puede agregar más contadores. El número máximo permitido es igual a la cantidad de puertas del vehículo seleccionado.',
+        confirmText: 'Entendido',
+        backdropClose: false
+      });
+      return;
+    }
+
     const nuevoContador = this.fb.control({ value: null, disabled: true }, Validators.required);
     this.idContadoresArray.push(nuevoContador);
     const opts = { emitEvent: false };
     const idCliente = this.instalacionesForm.get('idCliente')?.value;
-    if (idCliente && !this.instalacionesForm.get('idCliente')?.disabled) {
+    // Habilitar el contador si hay un cliente seleccionado (incluso si está deshabilitado en modo edición)
+    if (idCliente) {
       nuevoContador.enable(opts);
     }
   }
@@ -201,25 +219,72 @@ export class AgregarInstalacionComponent implements OnInit {
 
   obtenerContadoresDisponibles(index: number): any[] {
     const contadoresSeleccionados = this.idContadoresArray.controls
-      .map((control, i) => i !== index ? control.value : null)
-      .filter(id => id != null && id !== '');
+      .map((control: AbstractControl, i: number) => i !== index ? control.value : null)
+      .filter((id: any) => id != null && id !== '');
     
-    if (contadoresSeleccionados.length === 0) {
-      return this.listaContadores;
+    let contadoresFiltrados = this.listaContadores;
+    
+    // Si estamos en modo agregar (no editar), filtrar los que contengan "Asignado"
+    if (!this.idInstalacion) {
+      contadoresFiltrados = contadoresFiltrados.filter((contador: any) => {
+        const numeroSerie = (contador.numeroSerie || '').toString().toLowerCase();
+        return !numeroSerie.includes('asignado');
+      });
     }
     
-    return this.listaContadores.filter(
+    if (contadoresSeleccionados.length === 0) {
+      return contadoresFiltrados;
+    }
+    
+    return contadoresFiltrados.filter(
       contador => !contadoresSeleccionados.includes(Number(contador.id))
     );
   }
 
+  estaAsignado(item: any): boolean {
+    if (!item) return false;
+    const numeroSerie = (item.numeroSerie || '').toString().toLowerCase();
+    return numeroSerie.includes('asignado');
+  }
+
+  esModoAgregar(): boolean {
+    return !this.idInstalacion;
+  }
+
   puedeAgregarContador(): boolean {
-    const contadoresSeleccionados = this.idContadoresArray.controls
-      .map(control => control.value)
-      .filter(id => id != null && id !== '');
-    
-    // Si todos los contadores disponibles ya están seleccionados, no se puede agregar más
-    return this.listaContadores.length > contadoresSeleccionados.length;
+    // Primero verificar que haya un vehículo seleccionado
+    const idVehiculo = this.instalacionesForm.get('idVehiculo')?.value;
+    if (!idVehiculo) {
+      return false; // No se puede agregar contador si no hay vehículo seleccionado
+    }
+
+    // Obtener el vehículo seleccionado de la lista
+    const vehiculoSeleccionado = this.listaVehiculos.find((v: any) => {
+      const vid = Number(v?.id ?? v?.Id ?? v?.ID);
+      return vid === Number(idVehiculo);
+    });
+
+    if (!vehiculoSeleccionado) {
+      return false; // No se puede agregar si no se encuentra el vehículo
+    }
+
+    // Obtener cantidadPuertas del vehículo
+    const cantidadPuertas = Number(
+      vehiculoSeleccionado?.cantidadPuertas ?? 
+      vehiculoSeleccionado?.cantidadpuertas ?? 
+      vehiculoSeleccionado?.CantidadPuertas ?? 
+      0
+    );
+
+    if (cantidadPuertas <= 0) {
+      return false; // No se puede agregar si cantidadPuertas es 0 o no existe
+    }
+
+    // Contar contadores actuales (incluyendo los que tienen valor null pero están en el array)
+    const cantidadContadoresActuales = this.idContadoresArray.length;
+
+    // Solo se puede agregar si la cantidad actual es menor a cantidadPuertas
+    return cantidadContadoresActuales < cantidadPuertas;
   }
 
   private keepEditLocks(): void {
@@ -239,11 +304,11 @@ export class AgregarInstalacionComponent implements OnInit {
 
     if (disabled) {
       idValidador?.disable(opts);
-      idContadores.controls.forEach(control => control.disable(opts));
+      idContadores.controls.forEach((control: AbstractControl) => control.disable(opts));
       idVehiculo?.disable(opts);
     } else {
       idValidador?.enable(opts);
-      idContadores.controls.forEach(control => control.enable(opts));
+      idContadores.controls.forEach((control: AbstractControl) => control.enable(opts));
       idVehiculo?.enable(opts);
       this.keepEditLocks();
     }
@@ -350,17 +415,89 @@ export class AgregarInstalacionComponent implements OnInit {
       if (this.bootstrapping || !this.idInstalacion) return; // solo en edición
       
       // Verificar cada cambio en los contadores
-      valores.forEach((nuevo, index) => {
+      for (let index = 0; index < valores.length; index++) {
+        const nuevo = valores[index];
         const nuevoId = this.toNumOrNull(nuevo);
+        const anteriorId = this.initialContadoresIds[index] ?? null;
+        
+        // Si no cambió, continuar
+        if (nuevoId === anteriorId) continue;
+        
+        // Validar que el nuevo contador pertenezca al cliente seleccionado
         const pertenece = this.listaContadores.some(
           (c) => Number(c?.id) === Number(nuevoId)
         );
-        if (nuevoId && !pertenece) {
-          // Revertir si no pertenece al cliente
-          this.idContadoresArray.at(index).setValue(null, { emitEvent: false });
+        if (!pertenece) {
+          await this.alerts.open({
+            type: 'error',
+            title: '¡Ops!',
+            message: 'El contador seleccionado no pertenece al cliente actual.',
+            confirmText: 'Entendido',
+            backdropClose: false
+          });
+          this.idContadoresArray.at(index).setValue(anteriorId, { emitEvent: false });
+          return;
         }
-      });
+        
+        // Abrir modal y guardar "pendiente"
+        this.pendingNuevoContadorId = nuevoId;
+        this.pendingContadorIndex = index;
+        this.estadoContadorSel = null;
+        this.comentarioContadorText = '';
+        this.abrirModalContador();
+        break; // Solo manejar un cambio a la vez
+      }
     });
+  }
+
+  private suscribirCambioVehiculo(): void {
+    // Suscribirse a cambios en el vehículo para validar y actualizar el estado del botón
+    this.instalacionesForm
+      .get('idVehiculo')
+      ?.valueChanges.pipe(debounceTime(100))
+      .subscribe((idVehiculo: any) => {
+        if (this.bootstrapping) return;
+
+        // Si no hay vehículo seleccionado, no hacer nada
+        if (!idVehiculo) {
+          this.cdr.detectChanges();
+          return;
+        }
+
+        // Obtener el vehículo seleccionado
+        const vehiculoSeleccionado = this.listaVehiculos.find((v: any) => {
+          const vid = Number(v?.id ?? v?.Id ?? v?.ID);
+          return vid === Number(idVehiculo);
+        });
+
+        if (!vehiculoSeleccionado) {
+          this.cdr.detectChanges();
+          return;
+        }
+
+        // Obtener cantidadPuertas del vehículo
+        const cantidadPuertas = Number(
+          vehiculoSeleccionado?.cantidadPuertas ?? 
+          vehiculoSeleccionado?.cantidadpuertas ?? 
+          vehiculoSeleccionado?.CantidadPuertas ?? 
+          0
+        );
+
+        // Si hay más contadores que cantidadPuertas, eliminar los excedentes
+        const cantidadContadoresActuales = this.idContadoresArray.length;
+        if (cantidadContadoresActuales > cantidadPuertas && cantidadPuertas > 0) {
+          const excedentes = cantidadContadoresActuales - cantidadPuertas;
+          // Eliminar los últimos contadores excedentes
+          for (let i = 0; i < excedentes; i++) {
+            if (this.idContadoresArray.length > 1) {
+              this.idContadoresArray.removeAt(this.idContadoresArray.length - 1);
+            }
+          }
+        }
+
+        // Forzar detección de cambios para actualizar el estado del botón
+        this.cdr.detectChanges();
+      });
   }
 
   // ---------- Helpers visuales select options ----------
@@ -440,12 +577,14 @@ export class AgregarInstalacionComponent implements OnInit {
       this.modalContadorClosing = false;
 
       if (cancelar) {
-        // Revertir selección
-        this.instalacionesForm
-          .get('idContador')
-          ?.setValue(this.initialBlueVoxId ?? null, { emitEvent: false });
+        // Revertir selección del contador en el índice correspondiente
+        if (this.pendingContadorIndex !== null) {
+          const anteriorId = this.initialContadoresIds[this.pendingContadorIndex] ?? null;
+          this.idContadoresArray.at(this.pendingContadorIndex).setValue(anteriorId, { emitEvent: false });
+        }
         // limpiar temporales
         this.pendingNuevoContadorId = null;
+        this.pendingContadorIndex = null;
         this.estadoContadorSel = null;
         this.comentarioContadorText = '';
         this.cdr.detectChanges();
@@ -466,11 +605,36 @@ export class AgregarInstalacionComponent implements OnInit {
       });
       return;
     }
-    this.estatusContadorAnterior = this.estadoContadorSel;
+
+    // Obtener el ID anterior del contador que se está cambiando
+    if (this.pendingContadorIndex !== null) {
+      const idContadorAnterior = this.initialContadoresIds[this.pendingContadorIndex];
+      
+      if (idContadorAnterior != null) {
+        // Verificar si ya existe un registro para este contador y actualizarlo, o agregar uno nuevo
+        const indexExistente = this.contadoresAnteriores.findIndex(
+          c => c.idContador === idContadorAnterior
+        );
+        
+        if (indexExistente >= 0) {
+          // Actualizar el estatus si ya existe
+          this.contadoresAnteriores[indexExistente].estatusAnterior = this.estadoContadorSel;
+        } else {
+          // Agregar nuevo objeto al array
+          this.contadoresAnteriores.push({
+            idContador: idContadorAnterior,
+            estatusAnterior: this.estadoContadorSel
+          });
+        }
+      }
+    }
+
     this.comentariosContador = this.comentarioContadorText?.trim() || null;
 
-    this.initialBlueVoxId =
-      this.pendingNuevoContadorId ?? this.initialBlueVoxId;
+    // Actualizar el ID inicial del contador en el índice correspondiente
+    if (this.pendingContadorIndex !== null && this.pendingNuevoContadorId !== null) {
+      this.initialContadoresIds[this.pendingContadorIndex] = this.pendingNuevoContadorId;
+    }
 
     this.cerrarModalContador(false);
   }
@@ -595,7 +759,13 @@ export class AgregarInstalacionComponent implements OnInit {
             ),
             placa: x.placa ?? x.placaVehiculo ?? x.placavehiculo ?? '',
             numeroEconomico:
-              x.numeroEconomico ?? x.numeroEconomicoVehiculo ?? ''
+              x.numeroEconomico ?? x.numeroEconomicoVehiculo ?? '',
+            cantidadPuertas: this.toNumOrNull(
+              x.cantidadPuertas ?? 
+              x.cantidadpuertas ?? 
+              x.CantidadPuertas ?? 
+              null
+            )
           });
 
           let devs: any[] = [];
@@ -656,10 +826,44 @@ export class AgregarInstalacionComponent implements OnInit {
               ? null
               : Number(this.pendingSelecciones.idVehiculo);
           if (sidVeh != null && !vehs.some((x) => Number(x.id) === sidVeh)) {
+            // Buscar cantidadPuertas en placeholderVehiculo si está disponible
+            const placeholderVeh = this.placeholderVehiculo.find((v: any) => Number(v.id) === Number(sidVeh));
             vehs.unshift({
               id: sidVeh,
               placa: this.pendingLabels.vehiculo ?? '',
-              numeroEconomico: ''
+              numeroEconomico: '',
+              cantidadPuertas: placeholderVeh?.cantidadPuertas ?? null
+            });
+          }
+
+          // Fusionar placeholderVehiculo con vehículos reales para mantener cantidadPuertas
+          if (this.placeholderVehiculo.length > 0 && vehs.length > 0) {
+            const placeholderVeh = this.placeholderVehiculo[0];
+            const vehIndex = vehs.findIndex((v: any) => Number(v.id) === Number(placeholderVeh.id));
+            if (vehIndex >= 0 && placeholderVeh.cantidadPuertas != null) {
+              // Si el vehículo está en la lista real, actualizar cantidadPuertas del placeholder
+              vehs[vehIndex].cantidadPuertas = placeholderVeh.cantidadPuertas;
+            } else if (vehIndex < 0 && placeholderVeh.cantidadPuertas != null) {
+              // Si el vehículo no está en la lista real, agregarlo con cantidadPuertas
+              vehs.unshift({
+                ...placeholderVeh,
+                cantidadPuertas: placeholderVeh.cantidadPuertas
+              });
+            }
+          } else if (this.placeholderVehiculo.length > 0) {
+            // Si no hay vehículos reales, usar el placeholder
+            vehs = [...this.placeholderVehiculo];
+          }
+
+          // Si estamos en modo agregar (no editar), filtrar los que contengan "Asignado"
+          if (!this.idInstalacion) {
+            devs = devs.filter((validador: any) => {
+              const numeroSerie = (validador.numeroSerie || '').toString().toLowerCase();
+              return !numeroSerie.includes('asignado');
+            });
+            bvx = bvx.filter((contador: any) => {
+              const numeroSerie = (contador.numeroSerie || '').toString().toLowerCase();
+              return !numeroSerie.includes('asignado');
             });
           }
 
@@ -760,9 +964,11 @@ export class AgregarInstalacionComponent implements OnInit {
             raw?.IDVehiculo
         );
 
-        // Guardar IDs iniciales (tomar el primero si hay múltiples)
+        // Guardar IDs iniciales
         this.initialDispositivoId = idValidador ?? null;
         this.initialBlueVoxId = idContadores.length > 0 ? idContadores[0] : null;
+        // Guardar todos los IDs iniciales de contadores
+        this.initialContadoresIds = [...idContadores];
 
         // Cliente fijo en edición si no es admin
         const idCliente = this.isAdmin ? idClienteSrv : this.idClienteUser;
@@ -821,42 +1027,56 @@ export class AgregarInstalacionComponent implements OnInit {
             ]
           : [];
         const placeholderContador = idContadores.length > 0
-          ? idContadores.map(id => ({
-              id: id,
-                numeroSerie: (
-                  raw.numeroSerie ??
-                  raw.NumeroSerie ??
-                  raw.numeroSerieContadores ??
-                  raw.NumeroSerieContadores ??
-                  raw.numeroSerieContador ??
-                  raw.NumeroSerieContador ??
-                  raw.numeroSerieBlueVox ??
-                  raw.NumeroSerieBlueVox ??
-                  ''
-                ).toString(),
-                marca: (
-                  raw.marca ??
-                  raw.Marca ??
-                  raw.marcaContadores ??
-                  raw.MarcaContadores ??
-                  raw.marcaContador ??
-                  raw.MarcaContador ??
-                  raw.marcaBlueVox ??
-                  raw.MarcaBlueVox ??
-                  ''
-                ).toString(),
-                modelo: (
-                  raw.modelo ??
-                  raw.Modelo ??
-                  raw.modeloContadores ??
-                  raw.ModeloContadores ??
-                  raw.modeloContador ??
-                  raw.ModeloContador ??
-                  raw.modeloBlueVox ??
-                  raw.ModeloBlueVox ??
-                  ''
-                ).toString()
-              }))
+          ? idContadores.map((id, index) => {
+              // Obtener arrays de datos de contadores
+              const numeroSerieContadores = Array.isArray(raw.numeroSerieContadores) 
+                ? raw.numeroSerieContadores 
+                : (raw.NumeroSerieContadores && Array.isArray(raw.NumeroSerieContadores) ? raw.NumeroSerieContadores : []);
+              const marcaContadores = Array.isArray(raw.marcaContadores) 
+                ? raw.marcaContadores 
+                : (raw.MarcaContadores && Array.isArray(raw.MarcaContadores) ? raw.MarcaContadores : []);
+              const modeloContadores = Array.isArray(raw.modeloContadores) 
+                ? raw.modeloContadores 
+                : (raw.ModeloContadores && Array.isArray(raw.ModeloContadores) ? raw.ModeloContadores : []);
+              
+              // Obtener valores del índice correspondiente o valores de respaldo
+              const numeroSerie = (numeroSerieContadores[index] && numeroSerieContadores[index].trim()) 
+                ? numeroSerieContadores[index]
+                : (raw.numeroSerie ?? 
+                   raw.NumeroSerie ?? 
+                   raw.numeroSerieContador ?? 
+                   raw.NumeroSerieContador ?? 
+                   raw.numeroSerieBlueVox ?? 
+                   raw.NumeroSerieBlueVox ?? 
+                   '');
+              
+              const marca = (marcaContadores[index] && marcaContadores[index].trim())
+                ? marcaContadores[index]
+                : (raw.marca ?? 
+                   raw.Marca ?? 
+                   raw.marcaContador ?? 
+                   raw.MarcaContador ?? 
+                   raw.marcaBlueVox ?? 
+                   raw.MarcaBlueVox ?? 
+                   '');
+              
+              const modelo = (modeloContadores[index] && modeloContadores[index].trim())
+                ? modeloContadores[index]
+                : (raw.modelo ?? 
+                   raw.Modelo ?? 
+                   raw.modeloContador ?? 
+                   raw.ModeloContador ?? 
+                   raw.modeloBlueVox ?? 
+                   raw.ModeloBlueVox ?? 
+                   '');
+              
+              return {
+                id: id,
+                numeroSerie: String(numeroSerie),
+                marca: String(marca),
+                modelo: String(modelo)
+              };
+            })
           : [];
         const placeholderVehiculo = idVehiculo
           ? [
@@ -867,7 +1087,16 @@ export class AgregarInstalacionComponent implements OnInit {
                   raw.numeroEconomicoVehiculo ??
                   raw.numeroEconomico ??
                   ''
-                ).toString()
+                ).toString(),
+                cantidadPuertas: this.toNumOrNull(
+                  raw.cantidadPuertasVehiculo ??
+                  raw.cantidadPuertas ??
+                  raw.cantidadpuertas ??
+                  raw.CantidadPuertas ??
+                  raw?.vehiculo?.cantidadPuertas ??
+                  raw?.vehiculos?.cantidadPuertas ??
+                  null
+                )
               }
             ]
           : [];
@@ -875,13 +1104,17 @@ export class AgregarInstalacionComponent implements OnInit {
         this.listaValidadores = placeholderValidador;
         this.listaContadores = placeholderContador;
         this.listaVehiculos = placeholderVehiculo;
+        // Guardar placeholderVehiculo para usarlo en la fusión posterior
+        this.placeholderVehiculo = placeholderVehiculo;
 
         // En edición: bloquear cliente/vehículo y permitir validador/contador
         this.keepEditLocks();
         const opts = { emitEvent: false };
         this.instalacionesForm.get('idValidador')?.enable(opts);
         const contadoresArrayEdit = this.instalacionesForm.get('idContadores') as FormArray;
-        contadoresArrayEdit.controls.forEach(control => control.enable(opts));
+        contadoresArrayEdit.controls.forEach((control: AbstractControl): void => {
+          control.enable(opts);
+        });
 
         // Pedir listas reales y fusionar
         const idClienteParaServicios =
@@ -984,7 +1217,14 @@ export class AgregarInstalacionComponent implements OnInit {
               const devsRaw = this.ensureArray(
                 resp?.dispositivos ?? resp?.data?.dispositivos ?? resp?.data
               );
-              const devs = devsRaw.map(mapValidador);
+              let devs = devsRaw.map(mapValidador);
+              // Si estamos en modo agregar (no editar), filtrar los que contengan "Asignado"
+              if (!this.idInstalacion) {
+                devs = devs.filter((validador: any) => {
+                  const numeroSerie = (validador.numeroSerie || '').toString().toLowerCase();
+                  return !numeroSerie.includes('asignado');
+                });
+              }
               this.listaValidadores = this.mergeUniqueByIdPreferFilled(
                 devs,
                 placeholderValidador
@@ -997,7 +1237,14 @@ export class AgregarInstalacionComponent implements OnInit {
               const bvxRaw = this.ensureArray(
                 resp?.bluevox ?? resp?.data?.bluevox ?? resp?.data
               );
-              const bvx = bvxRaw.map(mapContador);
+              let bvx = bvxRaw.map(mapContador);
+              // Si estamos en modo agregar (no editar), filtrar los que contengan "Asignado"
+              if (!this.idInstalacion) {
+                bvx = bvx.filter((contador: any) => {
+                  const numeroSerie = (contador.numeroSerie || '').toString().toLowerCase();
+                  return !numeroSerie.includes('asignado');
+                });
+              }
               this.listaContadores = this.mergeUniqueByIdPreferFilled(
                 bvx,
                 placeholderContador
@@ -1008,7 +1255,7 @@ export class AgregarInstalacionComponent implements OnInit {
               .get('idValidador')
               ?.enable({ emitEvent: false });
             const contadoresArrayFork = this.instalacionesForm.get('idContadores') as FormArray;
-            contadoresArrayFork.controls.forEach(control => control.enable({ emitEvent: false }));
+            contadoresArrayFork.controls.forEach((control: AbstractControl) => control.enable({ emitEvent: false }));
             this.cdr.detectChanges();
 
             if (errores.length) {
@@ -1185,9 +1432,10 @@ export class AgregarInstalacionComponent implements OnInit {
       this.lastSubmittedMeta.comentariosValidador ??
       null;
 
-    const _estatusConAnt =
-      this.estatusContadorAnterior ??
-      this.lastSubmittedMeta.estatusContadorAnterior;
+    const _contadoresAnteriores = 
+      this.contadoresAnteriores.length > 0
+        ? this.contadoresAnteriores
+        : this.lastSubmittedMeta.contadoresAnteriores;
     const _comentCon =
       this.comentariosContador ??
       this.lastSubmittedMeta.comentariosContador ??
@@ -1204,7 +1452,7 @@ export class AgregarInstalacionComponent implements OnInit {
       idCliente: this.toNumOrNull(raw.idCliente) ?? this.idClienteUser,
       estatus: this.toNumOrNull(raw.estatus) ?? 1,
       estatusValidadorAnterior: _estatusValAnt ?? null,
-      estatusContadorAnterior: _estatusConAnt ?? null,
+      contadoresAnteriores: _contadoresAnteriores,
       comentariosValidador: _comentVal,
       comentariosContador: _comentCon
     };
@@ -1249,8 +1497,8 @@ export class AgregarInstalacionComponent implements OnInit {
           // Actualizar "lo último enviado" para futuras actualizaciones parciales
           this.lastSubmittedMeta = {
             estatusValidadorAnterior: payload.estatusValidadorAnterior,
+            contadoresAnteriores: payload.contadoresAnteriores,
             comentariosValidador: payload.comentariosValidador,
-            estatusContadorAnterior: payload.estatusContadorAnterior,
             comentariosContador: payload.comentariosContador
           };
 
@@ -1258,7 +1506,7 @@ export class AgregarInstalacionComponent implements OnInit {
           // (así forzamos a que si no modificas de nuevo, se use el lastSubmittedMeta)
           this.estatusValidadorAnterior = null;
           this.comentariosValidador = null;
-          this.estatusContadorAnterior = null;
+          this.contadoresAnteriores = [];
           this.comentariosContador = null;
 
           this.alerts.open({
@@ -1425,23 +1673,39 @@ export class AgregarInstalacionComponent implements OnInit {
         if (esError(resp.dispositivos)) {
           errores.push(await this.getErrorMessage(resp.dispositivos.__error));
         } else {
-          this.listaValidadores = this.ensureArray(
+          let validadores = this.ensureArray(
             resp.dispositivos ?? resp?.data?.dispositivos ?? resp?.data
           ).map(mapValidador);
+          // Si estamos en modo agregar (no editar), filtrar los que contengan "Asignado"
+          if (!this.idInstalacion) {
+            validadores = validadores.filter((validador: any) => {
+              const numeroSerie = (validador.numeroSerie || '').toString().toLowerCase();
+              return !numeroSerie.includes('asignado');
+            });
+          }
+          this.listaValidadores = validadores;
         }
 
         if (esError(resp.bluevox)) {
           errores.push(await this.getErrorMessage(resp.bluevox.__error));
         } else {
-          this.listaContadores = this.ensureArray(
+          let contadores = this.ensureArray(
             resp.bluevox ?? resp?.data?.bluevox ?? resp?.data
           ).map(mapContador);
+          // Si estamos en modo agregar (no editar), filtrar los que contengan "Asignado"
+          if (!this.idInstalacion) {
+            contadores = contadores.filter((contador: any) => {
+              const numeroSerie = (contador.numeroSerie || '').toString().toLowerCase();
+              return !numeroSerie.includes('asignado');
+            });
+          }
+          this.listaContadores = contadores;
         }
 
         const opts = { emitEvent: false };
         this.instalacionesForm.get('idValidador')?.enable(opts);
         const idContadoresArray = this.instalacionesForm.get('idContadores') as FormArray;
-        idContadoresArray.controls.forEach(control => control.enable(opts));
+        idContadoresArray.controls.forEach((control: AbstractControl) => control.enable(opts));
         this.cdr.detectChanges();
 
         if (errores.length)

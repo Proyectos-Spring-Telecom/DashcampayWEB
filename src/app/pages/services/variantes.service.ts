@@ -18,6 +18,10 @@ export class VariantesService {
     return this.http.get(`${environment.API_SECURITY}/variantes/list`);
   }
 
+  obtenerVariantesByRuta(idRuta: number): Observable<any> {
+    return this.http.get(`${environment.API_SECURITY}/variantes/by-ruta/${idRuta}`);
+  }
+
   agregarVariante(data: any) {
     return this.http.post(environment.API_SECURITY + '/variantes', data);
   }
@@ -41,5 +45,9 @@ export class VariantesService {
     return this.http.patch(url, body, { responseType: 'text' }).pipe(
       catchError(error => throwError(() => error))
     );
+  }
+
+  obtenerTiposVariante(): Observable<any> {
+    return this.http.get(`${environment.API_SECURITY}/variantes/tipos-variante`);
   }
 }

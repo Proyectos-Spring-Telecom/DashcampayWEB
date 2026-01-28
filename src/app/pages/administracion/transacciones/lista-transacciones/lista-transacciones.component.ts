@@ -83,14 +83,18 @@ export class ListaTransaccionesComponent implements OnInit {
     this.filtroForm.reset();
     this.fechaInicio = null;
     this.fechaFin = null;
+    this.fechaInicioFiltro = null;
+    this.fechaFinFiltro = null;
     this.setupDataSource();
     this.dataGrid.instance.refresh();
   }
 
   buscar() {
     const formValue = this.filtroForm.getRawValue();
-    this.fechaInicio = formValue.fechaInicio ? this.formatDate(formValue.fechaInicio) : null;
-    this.fechaFin = formValue.fechaFin ? this.formatDate(formValue.fechaFin) : null;
+    this.fechaInicioFiltro = formValue.fechaInicio ? this.formatDate(formValue.fechaInicio) : null;
+    this.fechaFinFiltro = formValue.fechaFin ? this.formatDate(formValue.fechaFin) : null;
+    this.fechaInicio = this.fechaInicioFiltro;
+    this.fechaFin = this.fechaFinFiltro;
     this.setupDataSource();
     if (this.dataGrid?.instance) {
       this.dataGrid.instance.refresh();
