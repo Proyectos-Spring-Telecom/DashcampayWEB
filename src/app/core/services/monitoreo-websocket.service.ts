@@ -86,15 +86,32 @@ export class MonitoreoWebSocketService implements OnDestroy {
 
     this.isManualDisconnect = false;
 
-    // Socket.IO maneja automáticamente la conversión de HTTP a WebSocket
-    // Usar la misma URL base del API
+    // Socket.IO maneja automáticamente la conversión de HTTP(S) a WS(S).
+    // IMPORTANTE: si el API está publicado bajo un prefijo (ej. /apidev),
+    // el host/origen y el "path" de Socket.IO deben separarse:
+    // - origin: https://dashcampay.com
+    // - path:   /apidev/socket.io
+    // - namespace: /monitoreo
     const namespace = '/monitoreo';
-    const wsUrl = `${environment.API_SECURITY}${namespace}`;
+
+    const apiBase = environment.API_SECURITY;
+    if (!apiBase) {
+      console.error('[WebSocket] environment.API_SECURITY no está configurado. No se puede conectar.');
+      return;
+    }
+
+    const u = new URL(apiBase, window.location.origin);
+    const origin = u.origin; // https://dashcampay.com (o http://localhost:3000)
+    const basePath = (u.pathname || '/').replace(/\/+$/, ''); // '' | '/apidev'
+    const socketPath = `${basePath || ''}/socket.io`; // '/socket.io' | '/apidev/socket.io'
+
+    const wsUrl = `${origin}${namespace}`;
 
     console.log('[WebSocket] Conectando a:', wsUrl);
 
     // Crear conexión Socket.IO con autenticación
     this.socket = io(wsUrl, {
+      path: socketPath,
       auth: {
         token: token
       },
