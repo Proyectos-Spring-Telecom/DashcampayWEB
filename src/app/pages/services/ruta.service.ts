@@ -39,6 +39,14 @@ export class RutasService {
     return this.http.get(`${environment.API_SECURITY}/rutas/list`);
   }
 
+  obtenerRutasByZona(idZona: number): Observable<any> {
+    return this.http.get(`${environment.API_SECURITY}/rutas/by-zona/${idZona}`);
+  }
+
+  obtenerRutasByIdCliente(idCliente: number): Observable<any> {
+    return this.http.get(`${environment.API_SECURITY}/rutas/by-idCliente/${idCliente}`);
+  }
+
   agregarRuta(payload: any) {
     return this.http.post(`${environment.API_SECURITY}/rutas`, payload);
   }

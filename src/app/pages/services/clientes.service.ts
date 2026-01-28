@@ -15,8 +15,12 @@ export class ClientesService {
 	}
 
   obtenerClientes(): Observable<any> {
-		return this.http.get(`${environment.API_SECURITY}/clientes/list`);
+		return this.http.get(`${environment.API_SECURITY}/clientes/public`);
 	}
+
+  obtenerClientesList(): Observable<any> {
+    return this.http.get(`${environment.API_SECURITY}/clientes/list`);
+  }
 
   agregarCliente(data: FormData) {
     return this.http.post(environment.API_SECURITY + '/clientes', data);

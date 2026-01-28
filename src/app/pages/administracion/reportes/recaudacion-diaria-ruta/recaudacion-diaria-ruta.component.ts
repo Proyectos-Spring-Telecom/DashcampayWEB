@@ -62,14 +62,67 @@ export class RecaudacionDiariaRutaComponent implements OnInit {
       fechaInicio: [firstDay],
       fechaFin: [lastDay],
       idCliente: [null],
-      idRegion: [null],
-      idRuta: [null],
-      idVariante: [null]
+      idRegion: [{value: null, disabled: true}],
+      idRuta: [{value: null, disabled: true}],
+      idVariante: [{value: null, disabled: true}]
     });
   }
 
   ngOnInit(): void {
     this.cargarListas();
+    
+    // Suscribirse a cambios en el cliente para habilitar/deshabilitar zonas
+    this.filtrosForm.get('idCliente')?.valueChanges.subscribe((idCliente) => {
+      // Limpiar siempre los filtros dependientes cuando cambia el cliente
+      this.filtrosForm.get('idRegion')?.setValue(null, { emitEvent: false });
+      this.filtrosForm.get('idRuta')?.setValue(null, { emitEvent: false });
+      this.filtrosForm.get('idVariante')?.setValue(null, { emitEvent: false });
+      this.listaZonas = [];
+      this.listaRutas = [];
+      this.listaVariantes = [];
+
+      if (idCliente) {
+        // Habilitar campo de zonas y cargar zonas del cliente
+        this.filtrosForm.get('idRegion')?.enable();
+        this.cargarZonasByCliente(idCliente);
+      } else {
+        // Deshabilitar campos dependientes
+        this.filtrosForm.get('idRegion')?.disable();
+        this.filtrosForm.get('idRuta')?.disable();
+        this.filtrosForm.get('idVariante')?.disable();
+      }
+    });
+
+    // Suscribirse a cambios en la zona para habilitar/deshabilitar rutas
+    this.filtrosForm.get('idRegion')?.valueChanges.subscribe((idRegion) => {
+      if (idRegion) {
+        // Habilitar campo de rutas y cargar rutas de la zona
+        this.filtrosForm.get('idRuta')?.enable();
+        this.cargarRutasByZona(idRegion);
+      } else {
+        // Deshabilitar campos dependientes y limpiar valores
+        this.filtrosForm.get('idRuta')?.disable();
+        this.filtrosForm.get('idRuta')?.setValue(null);
+        this.filtrosForm.get('idVariante')?.disable();
+        this.filtrosForm.get('idVariante')?.setValue(null);
+        this.listaRutas = [];
+        this.listaVariantes = [];
+      }
+    });
+
+    // Suscribirse a cambios en la ruta para habilitar/deshabilitar variantes
+    this.filtrosForm.get('idRuta')?.valueChanges.subscribe((idRuta) => {
+      if (idRuta) {
+        // Habilitar campo de variantes y cargar variantes de la ruta
+        this.filtrosForm.get('idVariante')?.enable();
+        this.cargarVariantesByRuta(idRuta);
+      } else {
+        // Deshabilitar campo de variantes y limpiar valor
+        this.filtrosForm.get('idVariante')?.disable();
+        this.filtrosForm.get('idVariante')?.setValue(null);
+        this.listaVariantes = [];
+      }
+    });
   }
 
   cargarListas(): void {
@@ -83,33 +136,57 @@ export class RecaudacionDiariaRutaComponent implements OnInit {
       }
     });
 
-    // Cargar zonas
-    this.zonasService.obtenerZonas().subscribe({
+    // No cargar zonas inicialmente, se cargarán cuando se seleccione un cliente
+    this.listaZonas = [];
+
+    // No cargar rutas inicialmente, se cargarán cuando se seleccione una zona
+    this.listaRutas = [];
+
+    // No cargar variantes inicialmente, se cargarán cuando se seleccione una ruta
+    this.listaVariantes = [];
+  }
+
+  /**
+   * Carga las zonas filtradas por cliente
+   */
+  cargarZonasByCliente(idCliente: number): void {
+    this.zonasService.obtenerZonasByCliente(idCliente).subscribe({
       next: (response: any) => {
         this.listaZonas = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
       },
       error: (error) => {
-        console.error('Error al cargar zonas:', error);
+        console.error('Error al cargar zonas por cliente:', error);
+        this.listaZonas = [];
       }
     });
+  }
 
-    // Cargar rutas
-    this.rutasService.obtenerRutas().subscribe({
+  /**
+   * Carga las rutas filtradas por zona
+   */
+  cargarRutasByZona(idZona: number): void {
+    this.rutasService.obtenerRutasByZona(idZona).subscribe({
       next: (response: any) => {
         this.listaRutas = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
       },
       error: (error) => {
-        console.error('Error al cargar rutas:', error);
+        console.error('Error al cargar rutas por zona:', error);
+        this.listaRutas = [];
       }
     });
+  }
 
-    // Cargar variantes
-    this.variantesService.obtenerVariantes().subscribe({
+  /**
+   * Carga las variantes filtradas por ruta
+   */
+  cargarVariantesByRuta(idRuta: number): void {
+    this.variantesService.obtenerVariantesByRuta(idRuta).subscribe({
       next: (response: any) => {
         this.listaVariantes = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
       },
       error: (error) => {
-        console.error('Error al cargar variantes:', error);
+        console.error('Error al cargar variantes por ruta:', error);
+        this.listaVariantes = [];
       }
     });
   }
@@ -131,7 +208,6 @@ export class RecaudacionDiariaRutaComponent implements OnInit {
       fechaInicio: fechaInicio,
       fechaFin: fechaFin,
       idCliente: formValue.idCliente || null,
-      idRegion: formValue.idRegion || null,
       idRuta: formValue.idRuta || null,
       idVariante: formValue.idVariante || null
     };

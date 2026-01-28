@@ -131,9 +131,7 @@
                 <mat-error *ngIf="showRequiredMsgs && mantenimientoForm.get('kilometraje')?.hasError('required')">
                   El kilometraje es obligatorio.
                 </mat-error>
-              </div>
-
-              <!-- Fecha y Hora -->
+              </div>              <!-- Fecha y Hora -->
               <div class="col-12 col-md-6 col-lg-4">
                 <label class="form-label">
                   <i class="fa fa-calendar-alt"></i>
@@ -146,9 +144,7 @@
                   La fecha y hora es obligatoria.
                 </mat-error>
               </div>
-            </div>
-
-            <!-- Botones de acción -->
+            </div>            <!-- Botones de acción -->
             <div class="row g-3 mt-4">
               <div class="col-12 d-flex justify-content-end gap-3">
                 <button mat-raised-button type="button" (click)="regresar()" [disabled]="loading">

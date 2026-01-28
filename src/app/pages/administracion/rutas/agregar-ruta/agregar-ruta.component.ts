@@ -37,7 +37,7 @@ export class AgregarRutaComponent implements OnInit, OnDestroy {
   private resizeObserver?: ResizeObserver;
   private geocoder?: google.maps.Geocoder;
 
-  private readonly centroPolanco: google.maps.LatLngLiteral = { lat: 19.4336, lng: -99.1967 };
+  private readonly centroPolanco: google.maps.LatLngLiteral = { lat: 21.110778, lng: -86.762590 };
 
   constructor(
     private alerts: AlertsService,
@@ -114,7 +114,7 @@ export class AgregarRutaComponent implements OnInit, OnDestroy {
         mapTypeControl: false,
         fullscreenControl: true,
         streetViewControl: false,
-        clickableIcons: true,
+        clickableIcons: false,
         gestureHandling: 'greedy',
       });
 
@@ -232,22 +232,36 @@ export class AgregarRutaComponent implements OnInit, OnDestroy {
     return { inicio: this.inicio, fin: this.fin };
   }
 
-  finalizarTrayecto(): void {
-  if (!this.puedeGuardar) return;
+  async finalizarTrayecto(): Promise<void> {
+    if (!this.puedeGuardar) return;
 
-  const payload = {
-    nombre: (this.rutaForm.get('nombre')?.value || '').toString().trim(),
-    puntoInicio: this.inicio ? { lat: this.inicio.lat, lng: this.inicio.lng } : null,
-    nombreInicio: this.nombreInicio || null,
-    puntoFin: this.fin ? { lat: this.fin.lat, lng: this.fin.lng } : null,
-    nombreFin: this.nombreFin || null,
-    estatus: 1,
-    idZona: this.rutaForm.get('idRegion')?.value ?? null,
-    idZonaFin: null
-  };
+    // Abrir modal preguntando si desea registrar una ruta de regreso
+    const respuesta = await this.alerts.open({
+      type: 'warning',
+      title: 'Ruta de Regreso',
+      message: '¿Desea registrar una ruta de regreso para esta ruta?',
+      showCancel: true,
+      confirmText: 'Sí',
+      cancelText: 'No',
+      backdropClose: false,
+    });
 
-  this.agregar(payload);
-}
+    const registraRegreso = respuesta === 'confirm';
+
+    const payload = {
+      nombre: (this.rutaForm.get('nombre')?.value || '').toString().trim(),
+      puntoInicio: this.inicio ? { lat: this.inicio.lat, lng: this.inicio.lng } : null,
+      nombreInicio: this.nombreInicio || null,
+      puntoFin: this.fin ? { lat: this.fin.lat, lng: this.fin.lng } : null,
+      nombreFin: this.nombreFin || null,
+      estatus: 1,
+      idZona: this.rutaForm.get('idRegion')?.value ?? null,
+      idZonaFin: null,
+      registraRegreso: registraRegreso
+    };
+
+    this.agregar(payload);
+  }
 
   private svgPinUrl(color: string) {
     const svg = `
@@ -278,6 +292,7 @@ agregar(payload: {
   estatus: number;
   idZona: number | null;
   idZonaFin: number | null;
+  registraRegreso: boolean;
 }): void {
   this.submitButton = 'Cargando...';
   this.loading = true;

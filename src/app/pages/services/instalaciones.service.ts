@@ -18,6 +18,10 @@ export class InstalacionesService {
     return this.http.get(`${environment.API_SECURITY}/instalaciones/list`);
   }
 
+  obtenerInstalacionesByValidador(idValidador: number): Observable<any> {
+    return this.http.get(`${environment.API_SECURITY}/instalaciones/by-idValidador/${idValidador}`);
+  }
+
   agregarInstalacion(data: FormData): Observable<string> {
     return this.http.post<string>(
       `${environment.API_SECURITY}/instalaciones`,

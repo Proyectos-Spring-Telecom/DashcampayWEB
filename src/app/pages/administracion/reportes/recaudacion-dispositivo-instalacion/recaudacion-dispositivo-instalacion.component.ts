@@ -60,18 +60,53 @@ export class RecaudacionDispositivoInstalacionComponent implements OnInit {
           fechaInicio: [firstDay],
           fechaFin: [lastDay],
           idCliente: [null],
-          idValidador: [null],
-          idInstalacion: [null]
+          idValidador: [{value: null, disabled: true}],
+          idInstalacion: [{value: null, disabled: true}]
         });
       }
     
       ngOnInit(): void {
         this.cargarListas();
+        
+        // Suscribirse a cambios en el cliente para habilitar/deshabilitar validadores
+        this.filtrosForm.get('idCliente')?.valueChanges.subscribe((idCliente) => {
+          // Limpiar siempre los filtros dependientes cuando cambia el cliente
+          this.filtrosForm.get('idValidador')?.setValue(null, { emitEvent: false });
+          this.filtrosForm.get('idInstalacion')?.setValue(null, { emitEvent: false });
+          this.listaValidadores = [];
+          this.listaInstalaciones = [];
+
+          if (idCliente) {
+            // Habilitar campo de validadores y cargar validadores del cliente
+            this.filtrosForm.get('idValidador')?.enable();
+            this.cargarValidadoresByCliente(idCliente);
+          } else {
+            // Deshabilitar campos dependientes
+            this.filtrosForm.get('idValidador')?.disable();
+            this.filtrosForm.get('idInstalacion')?.disable();
+          }
+        });
+
+        // Suscribirse a cambios en el validador para habilitar/deshabilitar instalaciones
+        this.filtrosForm.get('idValidador')?.valueChanges.subscribe((idValidador) => {
+          // Limpiar siempre el filtro de instalación cuando cambia el validador
+          this.filtrosForm.get('idInstalacion')?.setValue(null, { emitEvent: false });
+          this.listaInstalaciones = [];
+
+          if (idValidador) {
+            // Habilitar campo de instalaciones y cargar instalaciones del validador
+            this.filtrosForm.get('idInstalacion')?.enable();
+            this.cargarInstalacionesByValidador(idValidador);
+          } else {
+            // Deshabilitar campo de instalaciones
+            this.filtrosForm.get('idInstalacion')?.disable();
+          }
+        });
       }
 
       cargarListas(): void {
-        // Cargar clientes
-        this.clientesService.obtenerClientes().subscribe({
+        // Cargar clientes usando clientes/list
+        this.clientesService.obtenerClientesList().subscribe({
           next: (response: any) => {
             this.listaClientes = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
           },
@@ -80,23 +115,37 @@ export class RecaudacionDispositivoInstalacionComponent implements OnInit {
           }
         });
 
-        // Cargar validadores
-        this.dispositivosService.obtenerDispositivos().subscribe({
+        // No cargar validadores e instalaciones inicialmente, se cargarán cuando se seleccione un cliente/validador
+        this.listaValidadores = [];
+        this.listaInstalaciones = [];
+      }
+
+      /**
+       * Carga los validadores filtrados por cliente
+       */
+      cargarValidadoresByCliente(idCliente: number): void {
+        this.dispositivosService.obtenerDispositivosByCliente(idCliente).subscribe({
           next: (response: any) => {
             this.listaValidadores = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
           },
           error: (error) => {
-            console.error('Error al cargar validadores:', error);
+            console.error('Error al cargar validadores por cliente:', error);
+            this.listaValidadores = [];
           }
         });
+      }
 
-        // Cargar instalaciones
-        this.instalacionesService.obtenerInstalaciones().subscribe({
+      /**
+       * Carga las instalaciones filtradas por validador
+       */
+      cargarInstalacionesByValidador(idValidador: number): void {
+        this.instalacionesService.obtenerInstalacionesByValidador(idValidador).subscribe({
           next: (response: any) => {
             this.listaInstalaciones = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
           },
           error: (error) => {
-            console.error('Error al cargar instalaciones:', error);
+            console.error('Error al cargar instalaciones por validador:', error);
+            this.listaInstalaciones = [];
           }
         });
       }

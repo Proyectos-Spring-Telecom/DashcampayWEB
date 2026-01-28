@@ -1,0 +1,28 @@
+{
+    "data": [
+        {
+            "id": 4,
+            "codigo": "NEML930903",
+            "modelo": "EMGRAND GF",
+            "conductor": "OPERADOR LUIS BACKEND",
+            "ultimoPing": "23:16",
+            "velocidad": "0 km/h",
+            "estado": "ruta",
+            "posicion": {
+                "lat": 18.9529017,
+                "lng": -99.235385
+            },
+            "idInstalacion": 2,
+            "idTurno": 6,
+            "turnoEstatus": 1,
+            "turnoInicio": "2026-01-06T17:48:47.000Z",
+            "turnoFin": null,
+            "idViaje": 4,
+            "viajeEstatus": 1,
+            "viajeInicio": "2026-01-06T17:49:27.000Z",
+            "viajeFin": null,
+            "idVariante": 3,
+            "nombreVariante": "Cuernavaca"
+        }
+    ]
+}

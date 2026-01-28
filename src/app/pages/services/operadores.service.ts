@@ -18,6 +18,10 @@ export class OperadoresService {
     return this.http.get(`${environment.API_SECURITY}/operadores/list`);
   }
 
+  obtenerOperadoresByCliente(idCliente: number): Observable<any> {
+    return this.http.get(`${environment.API_SECURITY}/operadores/by-cliente/${idCliente}`);
+  }
+
   agregarOperador(data: FormData) {
     return this.http.post(environment.API_SECURITY + '/operadores', data);
   }

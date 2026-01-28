@@ -18,6 +18,10 @@ export class ZonasService {
     return this.http.get(`${environment.API_SECURITY}/zonas/list`);
   }
 
+  obtenerZonasByCliente(idCliente: number): Observable<any> {
+    return this.http.get(`${environment.API_SECURITY}/zonas/by-idCliente/${idCliente}`);
+  }
+
   agregarZona(data: any) {
     return this.http.post(environment.API_SECURITY + '/zonas', data);
   }

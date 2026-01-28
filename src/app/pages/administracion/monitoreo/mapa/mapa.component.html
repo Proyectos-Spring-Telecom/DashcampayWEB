@@ -26,6 +26,39 @@
                       </div>
                     </div>
 
+                    <!-- Selects de filtros -->
+                    <div class="d-flex flex-wrap gap-3 mb-3 px-3" style="width: 100%;">
+                      <mat-form-field appearance="outline" style="min-width: 250px;">
+                        <mat-label>Variante</mat-label>
+                        <mat-select [formControl]="varianteControl">
+                          <mat-option [value]="null">Todas las variantes</mat-option>
+                          <mat-option *ngFor="let variante of listaVariantes" [value]="variante.id">
+                            {{ variante.nombre || variante.nombreVariantes || variante.descripcion || 'Variante ' + variante.id }}
+                          </mat-option>
+                        </mat-select>
+                      </mat-form-field>
+
+                      <mat-form-field appearance="outline" style="min-width: 250px;">
+                        <mat-label>Ruta</mat-label>
+                        <mat-select [formControl]="rutaControl">
+                          <mat-option [value]="null">Todas las rutas</mat-option>
+                          <mat-option *ngFor="let ruta of listaRutas" [value]="ruta.id">
+                            {{ ruta.nombre || (ruta.nombreInicio || '') + (ruta.nombreInicio && ruta.nombreFin ? ' - ' : '') + (ruta.nombreFin || '') || 'Ruta ' + ruta.id }}
+                          </mat-option>
+                        </mat-select>
+                      </mat-form-field>
+
+                      <mat-form-field appearance="outline" style="min-width: 250px;">
+                        <mat-label>Zona</mat-label>
+                        <mat-select [formControl]="zonaControl">
+                          <mat-option [value]="null">Todas las zonas</mat-option>
+                          <mat-option *ngFor="let zona of listaZonas" [value]="zona.id">
+                            {{ zona.nombre || zona.descripcion || 'Zona ' + zona.id }}
+                          </mat-option>
+                        </mat-select>
+                      </mat-form-field>
+                    </div>
+
                     <div id="map" #mapContainer class="dc-map"></div>
                   </div>
                 </div>
@@ -33,96 +66,78 @@
 
               <!-- Cards inferiores -->
               <div class="row g-3 g-lg-4 mt-3">
-                <div class="col-12 col-md-4">
+                <div *ngIf="loadingUnidades" class="col-12 text-center py-4">
+                  <span>Cargando unidades...</span>
+                </div>
+                <div *ngIf="!loadingUnidades && unidades.length === 0" class="col-12 text-center py-4">
+                  <span>No hay unidades disponibles</span>
+                </div>
+                <div *ngFor="let unidad of unidades" class="col-12 col-md-4">
                   <div class="dc-block dc-mini-card h-100">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                      <div class="dc-mini-title">U-143 · Boxer 2022</div>
-                      <span class="badge rounded-pill dc-badge-ok">En ruta</span>
+                      <div class="dc-mini-title">{{ unidad.codigo }}<span *ngIf="unidad.modelo"> · {{ unidad.modelo }}</span></div>
+                      <div class="d-flex align-items-center gap-2">
+                        <span class="badge rounded-pill" 
+                              [ngClass]="{
+                                'dc-badge-ok': unidad.estado === 'ruta',
+                                'dc-badge-warn': unidad.estado === 'pausa',
+                                'dc-badge-error': unidad.estado === 'desvio'
+                              }">
+                          {{ unidad.estado === 'ruta' ? 'En ruta' : unidad.estado === 'pausa' ? 'En pausa' : 'Fuera de ruta' }}
+                        </span>
+                        <span *ngIf="unidad.nombreVariante" class="dc-mini-value" style="font-size: 0.85rem; font-weight: 600;">
+                          {{ unidad.nombreVariante }}
+                        </span>
+                      </div>
                     </div>
                     <div class="dc-mini-body">
                       <div class="d-flex justify-content-between">
                         <span class="dc-mini-label">Conductor</span>
-                        <span class="dc-mini-value">R. García</span>
+                        <span class="dc-mini-value">{{ unidad.conductor || 'Sin asignar' }}</span>
                       </div>
                       <div class="d-flex justify-content-between">
-                        <span class="dc-mini-label">Última Ubicación</span>
-                        <span class="dc-mini-value">08:14</span>
+                        <span class="dc-mini-label">Último ping</span>
+                        <span class="dc-mini-value">{{ unidad.ultimoPing || 'N/A' }}</span>
                       </div>
-                      <div class="d-flex justify-content-between">
+                      <div class="d-flex justify-content-between" *ngIf="unidad.velocidad">
                         <span class="dc-mini-label">Velocidad</span>
-                        <span class="dc-mini-value">67 km/h</span>
-                      </div>
-                    </div>
-                    <div class="d-flex gap-2 mt-3">
-                      <button type="button" class="btn btn-outline-primary btn-sm dc-btn-pill"
-                        (click)="centrarUnidad(143)">
-                        Centrar
-                      </button>
-                      <button type="button" class="btn btn-primary btn-sm dc-btn-pill">
-                        Detalles
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="col-12 col-md-4">
-                  <div class="dc-block dc-mini-card h-100">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                      <div class="dc-mini-title">U-092 · Worker 15.190</div>
-                      <span class="badge rounded-pill dc-badge-ok">En ruta</span>
-                    </div>
-                    <div class="dc-mini-body">
-                      <div class="d-flex justify-content-between">
-                        <span class="dc-mini-label">Conductor</span>
-                        <span class="dc-mini-value">M. Ruiz</span>
+                        <span class="dc-mini-value">{{ unidad.velocidad }}</span>
                       </div>
                       <div class="d-flex justify-content-between">
-                        <span class="dc-mini-label">Último ping</span>
-                        <span class="dc-mini-value">08:06</span>
+                        <span class="dc-mini-label">Turno</span>
+                        <span class="dc-mini-value">
+                          {{ unidad.horaInicioTurno || '--' }} - {{ unidad.horaFinTurno || '--' }}
+                        </span>
                       </div>
                       <div class="d-flex justify-content-between">
-                        <span class="dc-mini-label">Tiempo parado</span>
-                        <span class="dc-mini-value">18 min</span>
+                        <span class="dc-mini-label">Viaje</span>
+                        <span class="dc-mini-value">
+                          {{ unidad.horaInicioViaje || '--' }} - {{ unidad.horaFinViaje || '--' }}
+                        </span>
                       </div>
-                    </div>
-                    <div class="d-flex gap-2 mt-3">
-                      <button type="button" class="btn btn-outline-primary btn-sm dc-btn-pill"
-                        (click)="centrarUnidad(92)">
-                        Centrar
-                      </button>
-                      <button type="button" class="btn btn-primary btn-sm dc-btn-pill">
-                        Detalles
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="col-12 col-md-4">
-                  <div class="dc-block dc-mini-card h-100">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                      <div class="dc-mini-title">U-218 · Boxer 2021</div>
-                      <span class="badge rounded-pill dc-badge-error">Fuera de ruta</span>
-                    </div>
-                    <div class="dc-mini-body">
-                      <div class="d-flex justify-content-between">
-                        <span class="dc-mini-label">Conductor</span>
-                        <span class="dc-mini-value">J. Flores</span>
-                      </div>
-                      <div class="d-flex justify-content-between">
-                        <span class="dc-mini-label">Último ping</span>
-                        <span class="dc-mini-value">07:58</span>
-                      </div>
-                      <div class="d-flex justify-content-between">
+                      <div class="d-flex justify-content-between" *ngIf="unidad.desvioKm">
                         <span class="dc-mini-label">Desvío</span>
-                        <span class="dc-mini-value">3.1 km</span>
+                        <span class="dc-mini-value">{{ unidad.desvioKm }}</span>
+                      </div>
+                      <div class="d-flex justify-content-between" *ngIf="unidad.sumSubidas !== undefined">
+                        <span class="dc-mini-label">Ascensos</span>
+                        <span class="dc-mini-value">{{ unidad.sumSubidas }}</span>
+                      </div>
+                      <div class="d-flex justify-content-between" *ngIf="unidad.sumBajadas !== undefined">
+                        <span class="dc-mini-label">Descensos</span>
+                        <span class="dc-mini-value">{{ unidad.sumBajadas }}</span>
+                      </div>
+                      <div class="d-flex justify-content-between" *ngIf="unidad.diferencia !== undefined">
+                        <span class="dc-mini-label">Diferencia</span>
+                        <span class="dc-mini-value">{{ unidad.diferencia }}</span>
                       </div>
                     </div>
                     <div class="d-flex gap-2 mt-3">
                       <button type="button" class="btn btn-outline-primary btn-sm dc-btn-pill"
-                        (click)="centrarUnidad(218)">
+                        (click)="centrarUnidad(unidad.id)">
                         Centrar
                       </button>
-                      <button type="button" class="btn btn-primary btn-sm dc-btn-pill">
+                      <button type="button" class="btn btn-sm dc-btn-pill" style="background-color: #1F5AA8; color: white; border-color: #1F5AA8;">
                         Detalles
                       </button>
                     </div>

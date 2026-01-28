@@ -19,6 +19,8 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { DxDataGridModule } from 'devextreme-angular';
 
 
@@ -44,6 +46,8 @@ import { DxDataGridModule } from 'devextreme-angular';
     FormsModule,
     MatDialogModule,
     MatInputModule,
+    MatSelectModule,
+    MatFormFieldModule,
     DxDataGridModule
   ]
 })

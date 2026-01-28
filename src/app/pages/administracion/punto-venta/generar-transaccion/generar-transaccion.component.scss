@@ -1301,18 +1301,118 @@
 
   .tarjeta-item {
     perspective: 1000px;
+    position: relative;
+    overflow: visible;
+  }
+
+  .tarjeta-swipe-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 16px;
+    touch-action: pan-y;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  }
+
+  .tarjeta-swipe-background {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+    z-index: 0;
+    
+    .tarjeta-delete-action {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      color: white;
+      padding: 12px;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      
+      mat-icon {
+        font-size: 28px;
+        width: 28px;
+        height: 28px;
+        animation: pulse-delete 1.5s ease-in-out infinite;
+      }
+      
+      span {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+    }
+    
+    @keyframes pulse-delete {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.1);
+      }
+    }
+  }
+
+  .tarjeta-wrapper {
+    position: relative;
+    z-index: 1;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: grab;
+    user-select: none;
+    
+    &.swiping {
+      transition: none;
+      cursor: grabbing;
+    }
+    
+    &:active {
+      cursor: grabbing;
+    }
+    
+    // Indicador sutil de que se puede deslizar
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      right: 8px;
+      transform: translateY(-50%);
+      width: 4px;
+      height: 40px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 2px;
+      pointer-events: none;
+      opacity: 0.5;
+      transition: opacity 0.3s ease;
+    }
+    
+    &:hover::after {
+      opacity: 0.8;
+    }
+    
+    &.swiping::after {
+      opacity: 0;
+    }
   }
 
   .tarjeta-card {
-    position: relative;
     width: 100%;
+    position: relative;
     min-height: 180px;
     height: auto;
     border-radius: 16px;
     padding: 20px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    box-shadow: none;
     transition: all 0.3s ease;
     cursor: pointer;
     overflow: visible;
@@ -1342,13 +1442,13 @@
     }
 
     &:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+      // No aplicar transform porque ahora se usa en el wrapper para el swipe
+      opacity: 0.95;
     }
 
     &.selected {
       border: 3px solid #0284C7;
-      box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.1), 0 12px 32px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.1);
       
       &::after {
         content: '✓';
@@ -1576,5 +1676,62 @@
       font-size: 14px;
       color: #64748B;
     }
+  }
+}
+
+/* ====== LOADING OVERLAY ====== */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease-in;
+
+  .loading-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    background: white;
+    padding: 40px 60px;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: scaleIn 0.3s ease-out;
+
+    p {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: #0F172A;
+      text-align: center;
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
   }
 }

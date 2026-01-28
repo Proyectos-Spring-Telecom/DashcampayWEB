@@ -9,16 +9,18 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { fadeInUp400ms } from '@vex/animations/fade-in-up.animation';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatIconModule } from '@angular/material/icon';
-import { NgClass, NgIf } from '@angular/common';
+import { NgClass, NgFor, NgIf } from '@angular/common';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatButtonModule } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
 import { animate, style, transition, trigger } from '@angular/animations';
 import { Credentials } from 'src/app/entities/Credentials';
 import { Subscription } from 'rxjs';
 import { AuthenticationService } from 'src/app/core/services/auth.service';
 import { PasajerosService } from 'src/app/pages/services/pasajeros.service';
+import { ClientesService } from 'src/app/pages/services/clientes.service';
 import { AlertsService } from '../../modal/alerts.service';
 import { fadeInRight400ms } from '@vex/animations/fade-in-right.animation';
 
@@ -52,8 +54,10 @@ import { fadeInRight400ms } from '@vex/animations/fade-in-right.animation';
     MatButtonModule,
     MatTooltipModule,
     NgIf,
+    NgFor,
     MatIconModule,
     MatCheckboxModule,
+    MatSelectModule,
     RouterLink,
     NgClass
   ]
@@ -92,6 +96,8 @@ export class RegisterComponent implements OnInit, OnDestroy {
   resendDisabled = false;
   resendSeconds = 60;
   private resendTimer: any;
+  listaClientes: any[] = [];
+  loadingClientes = false;
 
   togglePassword(): void {
     this.hide = !this.hide;
@@ -112,6 +118,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
     private auth: AuthenticationService,
     private fb: FormBuilder,
     private pasajService: PasajerosService,
+    private clientesService: ClientesService,
     private cdr: ChangeDetectorRef,
     private route: ActivatedRoute,
     private alerts: AlertsService,
@@ -132,8 +139,38 @@ export class RegisterComponent implements OnInit, OnDestroy {
           Validators.pattern(/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[^A-Za-z0-9])\S{7,15}$/)
         ]
       ],
-      numeroSerieMonedero: ['', [Validators.required, Validators.maxLength(50)]],
+      numeroSerieMonedero: ['', [Validators.maxLength(50)]],
+      idCliente: [null]
     });
+
+    // Validación condicional: idCliente es obligatorio solo si numeroSerieMonedero está vacío
+    this.afiliacionPasajero.get('numeroSerieMonedero')?.valueChanges.subscribe((numeroSerie: string) => {
+      const idClienteControl = this.afiliacionPasajero.get('idCliente');
+      if (!numeroSerie || numeroSerie.trim() === '') {
+        // Si no hay número de serie, idCliente es obligatorio y habilitado
+        idClienteControl?.enable({ emitEvent: false });
+        idClienteControl?.setValidators([Validators.required]);
+      } else {
+        // Si hay número de serie, idCliente se pone en null, se deshabilita y no es obligatorio
+        idClienteControl?.setValue(null, { emitEvent: false });
+        idClienteControl?.disable({ emitEvent: false });
+        idClienteControl?.clearValidators();
+      }
+      idClienteControl?.updateValueAndValidity({ emitEvent: false });
+    });
+
+    // También validar al inicio
+    const numeroSerieValue = this.afiliacionPasajero.get('numeroSerieMonedero')?.value;
+    const idClienteControl = this.afiliacionPasajero.get('idCliente');
+    if (!numeroSerieValue || numeroSerieValue.trim() === '') {
+      idClienteControl?.enable({ emitEvent: false });
+      idClienteControl?.setValidators([Validators.required]);
+    } else {
+      idClienteControl?.setValue(null, { emitEvent: false });
+      idClienteControl?.disable({ emitEvent: false });
+      idClienteControl?.clearValidators();
+    }
+    idClienteControl?.updateValueAndValidity({ emitEvent: false });
   }
 
   ngOnInit(): void {
@@ -141,6 +178,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
       codigo: ['', [Validators.required]],
     });
     this.initForm();
+    this.cargarClientes();
     this.subs.push(
       this.afiliacionPasajero.get('passwordHash')!.valueChanges.subscribe((raw: string) => {
         const v = (raw || '').trim();
@@ -209,6 +247,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
         correo: 'Correo Electrónico',
         passwordHash: 'Contraseña',
         numeroSerieMonedero: 'Número de Serie',
+        idCliente: 'Compañía de transporte',
       };
 
       const camposFaltantes: string[] = [];
@@ -481,5 +520,44 @@ export class RegisterComponent implements OnInit, OnDestroy {
 
   closeOtpModal(): void {
     window.location.hash = '';
+  }
+
+  cargarClientes(): void {
+    this.loadingClientes = true;
+    this.clientesService.obtenerClientes().subscribe({
+      next: (response: any) => {
+        console.log('Respuesta del API clientes/public:', response);
+        // Manejar diferentes estructuras de respuesta
+        let clientes: any[] = [];
+        if (Array.isArray(response)) {
+          clientes = response;
+        } else if (response?.data && Array.isArray(response.data)) {
+          clientes = response.data;
+        } else if (response?.data && !Array.isArray(response.data)) {
+          clientes = [response.data];
+        }
+        
+        // Mapear los clientes para asegurar que tengan el formato correcto
+        this.listaClientes = clientes.map((cliente: any) => ({
+          id: cliente.id,
+          nombre: cliente.nombre || '',
+          apellidoPaterno: cliente.apellidoPaterno || null,
+          apellidoMaterno: cliente.apellidoMaterno || null,
+          tipoPersona: cliente.tipoPersona || 1,
+          // Crear nombreCliente para compatibilidad
+          nombreCliente: cliente.tipoPersona === 2 
+            ? cliente.nombre 
+            : `${cliente.nombre || ''} ${cliente.apellidoPaterno || ''} ${cliente.apellidoMaterno || ''}`.trim()
+        }));
+        
+        console.log('Lista de clientes procesada:', this.listaClientes);
+        this.loadingClientes = false;
+      },
+      error: (err) => {
+        console.error('Error al cargar clientes:', err);
+        this.listaClientes = [];
+        this.loadingClientes = false;
+      }
+    });
   }
 }

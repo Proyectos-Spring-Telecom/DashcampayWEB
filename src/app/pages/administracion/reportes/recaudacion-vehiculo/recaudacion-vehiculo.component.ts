@@ -7,6 +7,7 @@ import { ReportesService } from 'src/app/pages/services/reportes.service';
 import { ClientesService } from 'src/app/pages/services/clientes.service';
 import { VehiculosService } from 'src/app/pages/services/vehiculos.service';
 import { RutasService } from 'src/app/pages/services/ruta.service';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'vex-recaudacion-vehiculo',
@@ -60,18 +61,38 @@ export class RecaudacionVehiculoComponent implements OnInit {
         fechaInicio: [firstDay],
         fechaFin: [lastDay],
         idCliente: [null],
-        idVehiculo: [null],
-        idRuta: [null]
+        idVehiculo: [{value: null, disabled: true}],
+        idRuta: [{value: null, disabled: true}]
       });
     }
   
     ngOnInit(): void {
       this.cargarListas();
+      
+      // Suscribirse a cambios en el cliente para habilitar/deshabilitar vehículos y rutas
+      this.filtrosForm.get('idCliente')?.valueChanges.subscribe((idCliente) => {
+        // Limpiar siempre los filtros dependientes cuando cambia el cliente
+        this.filtrosForm.get('idVehiculo')?.setValue(null, { emitEvent: false });
+        this.filtrosForm.get('idRuta')?.setValue(null, { emitEvent: false });
+        this.listaVehiculos = [];
+        this.listaRutas = [];
+
+        if (idCliente) {
+          // Habilitar campos y cargar vehículos y rutas simultáneamente
+          this.filtrosForm.get('idVehiculo')?.enable();
+          this.filtrosForm.get('idRuta')?.enable();
+          this.cargarVehiculosYRutasByCliente(idCliente);
+        } else {
+          // Deshabilitar campos dependientes
+          this.filtrosForm.get('idVehiculo')?.disable();
+          this.filtrosForm.get('idRuta')?.disable();
+        }
+      });
     }
 
     cargarListas(): void {
-      // Cargar clientes
-      this.clientesService.obtenerClientes().subscribe({
+      // Cargar clientes usando clientes/list
+      this.clientesService.obtenerClientesList().subscribe({
         next: (response: any) => {
           this.listaClientes = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
         },
@@ -80,23 +101,35 @@ export class RecaudacionVehiculoComponent implements OnInit {
         }
       });
 
-      // Cargar vehículos
-      this.vehiculosService.obtenerVehiculos().subscribe({
-        next: (response: any) => {
-          this.listaVehiculos = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
-        },
-        error: (error) => {
-          console.error('Error al cargar vehículos:', error);
-        }
-      });
+      // No cargar vehículos y rutas inicialmente, se cargarán cuando se seleccione un cliente
+      this.listaVehiculos = [];
+      this.listaRutas = [];
+    }
 
-      // Cargar rutas
-      this.rutasService.obtenerRutas().subscribe({
-        next: (response: any) => {
-          this.listaRutas = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
+    /**
+     * Carga vehículos y rutas simultáneamente por cliente
+     */
+    cargarVehiculosYRutasByCliente(idCliente: number): void {
+      // Ejecutar ambas peticiones simultáneamente usando forkJoin
+      forkJoin({
+        vehiculos: this.vehiculosService.obtenerVehiculosByCliente(idCliente),
+        rutas: this.rutasService.obtenerRutasByIdCliente(idCliente)
+      }).subscribe({
+        next: ({ vehiculos, rutas }) => {
+          // Procesar respuesta de vehículos
+          this.listaVehiculos = Array.isArray(vehiculos?.data) 
+            ? vehiculos.data 
+            : (Array.isArray(vehiculos) ? vehiculos : []);
+
+          // Procesar respuesta de rutas
+          this.listaRutas = Array.isArray(rutas?.data) 
+            ? rutas.data 
+            : (Array.isArray(rutas) ? rutas : []);
         },
         error: (error) => {
-          console.error('Error al cargar rutas:', error);
+          console.error('Error al cargar vehículos y rutas por cliente:', error);
+          this.listaVehiculos = [];
+          this.listaRutas = [];
         }
       });
     }

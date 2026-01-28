@@ -51,6 +51,26 @@ export class AgregarVarianteComponent implements OnInit, AfterViewInit, OnDestro
   tarifaForm!: FormGroup;
   listaTiposTarifa: any[] = [];
 
+  // TIPO VARIANTE (Paso 2)
+  listaTiposVariante: any[] = [];
+  idTipoVariante: number | null = null;
+
+  esEstacionaria(): boolean {
+    if (!this.idTipoVariante) return false;
+    const tipoVariante = this.listaTiposVariante.find(t => t.id === this.idTipoVariante);
+    return this.idTipoVariante === 3 || 
+           tipoVariante?.nombre?.toLowerCase().includes('estacionaria') ||
+           tipoVariante?.nombre?.toLowerCase().includes('estacionario');
+  }
+
+  esTipoTarifaEstacionaria(): boolean {
+    const idTipoTarifa = this.tarifaForm.get('idTipoTarifa')?.value;
+    if (!idTipoTarifa) return false;
+    const tipoTarifa = this.listaTiposTarifa.find(t => t.id === idTipoTarifa);
+    const nombreTipo = tipoTarifa?.nombre?.toLowerCase() || '';
+    return nombreTipo.includes('estacionaria') || nombreTipo.includes('estacionario');
+  }
+
   constructor(
     private variaService: VariantesService,
     private fb: FormBuilder,
@@ -70,7 +90,7 @@ export class AgregarVarianteComponent implements OnInit, AfterViewInit, OnDestro
     zoomControl: true,
     streetViewControl: false,
     clickableIcons: false,
-    center: { lat: 19.4326, lng: -99.1332 }, // CDMX
+    center: { lat: 21.110778, lng: -86.762590 },
     zoom: 12,
   };
 
@@ -80,7 +100,7 @@ export class AgregarVarianteComponent implements OnInit, AfterViewInit, OnDestro
 
   private mapClickListener: google.maps.MapsEventListener | null = null;
   private pathPolyline: google.maps.Polyline | null = null;
-  private pathPoints: google.maps.LatLngLiteral[] = [];
+  private pathPoints: (google.maps.LatLngLiteral & { nombre?: string })[] = [];
   private pathPointMarkers: google.maps.Marker[] = [];
 
   private readonly polylineStyle: google.maps.PolylineOptions = {
@@ -103,7 +123,7 @@ export class AgregarVarianteComponent implements OnInit, AfterViewInit, OnDestro
   isRouteFinalized = false;
   isDrawing = false;
   get canFinalize(): boolean {
-    return this.pathPoints.length >= 2 && !this.isRouteFinalized;
+    return this.idTipoVariante !== null && this.pathPoints.length >= 2 && !this.isRouteFinalized;
   }
 
   // ==========================
@@ -112,12 +132,14 @@ export class AgregarVarianteComponent implements OnInit, AfterViewInit, OnDestro
   ngOnInit(): void {
     this.obtenerRutas();
     this.obtenerTiposTarifa();
+    this.obtenerTiposVariante();
     this.tarifaForm = this.fb.group({
       idTipoTarifa: [null, Validators.required],
       tarifaBase: [null, [Validators.required, Validators.min(0)]],
       distanciaBaseKm: [{value: null, disabled: true}, [Validators.min(0)]],
       incrementoCadaMetros: [{value: null, disabled: true}, [Validators.min(0)]],
       costoAdicional: [{value: null, disabled: true}, [Validators.min(0)]],
+      costoPorEstacion: [{value: null, disabled: true}, [Validators.min(0)]],
       estatus: [1],
       idVariante: [null, [Validators.required, Validators.min(0)]],
     });
@@ -126,6 +148,10 @@ export class AgregarVarianteComponent implements OnInit, AfterViewInit, OnDestro
     this.tarifaForm.get('idTipoTarifa')?.valueChanges.subscribe((idTipoTarifa) => {
       this.actualizarCamposSegunTipo(idTipoTarifa);
     });
+
+    // Suscribirse a cambios en idTipoVariante para habilitar/deshabilitar campos
+    // Necesitamos usar un observable o watch manual ya que idTipoVariante no está en el form
+    // Usaremos un setter o método que se llame cuando cambie idTipoVariante
   }
 
   obtenerTiposTarifa(): void {
@@ -144,65 +170,153 @@ export class AgregarVarianteComponent implements OnInit, AfterViewInit, OnDestro
     });
   }
 
+  obtenerTiposVariante(): void {
+    this.variaService.obtenerTiposVariante().subscribe({
+      next: (response: any) => {
+        const data = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
+        this.listaTiposVariante = data.map((t: any) => ({
+          id: Number(t?.id ?? t?.Id ?? t?.ID ?? 0),
+          nombre: t?.nombre ?? t?.Nombre ?? ''
+        })).filter((t: any) => Number.isFinite(t.id) && t.id > 0);
+      },
+      error: (error) => {
+        console.error('Error al obtener tipos de variante:', error);
+        this.listaTiposVariante = [];
+      }
+    });
+  }
+
+  actualizarCamposSegunTipoVariante(): void {
+    // Este método se mantiene por compatibilidad, pero la lógica de campos
+    // ahora se maneja en actualizarCamposSegunTipo basado en el tipo de tarifa
+    // Si hay un tipo de tarifa seleccionado, aplicar su lógica
+    const idTipoTarifa = this.tarifaForm.get('idTipoTarifa')?.value;
+    if (idTipoTarifa) {
+      this.actualizarCamposSegunTipo(idTipoTarifa);
+    }
+  }
+
   actualizarCamposSegunTipo(idTipoTarifa: number | null): void {
     const distanciaControl = this.tarifaForm.get('distanciaBaseKm');
     const incrementoControl = this.tarifaForm.get('incrementoCadaMetros');
     const costoControl = this.tarifaForm.get('costoAdicional');
+    const tarifaBaseControl = this.tarifaForm.get('tarifaBase');
+    const costoPorEstacionControl = this.tarifaForm.get('costoPorEstacion');
 
     if (!idTipoTarifa) {
       // Si no hay tipo seleccionado, deshabilitar todos excepto tarifaBase
       distanciaControl?.disable({ emitEvent: false });
       incrementoControl?.disable({ emitEvent: false });
       costoControl?.disable({ emitEvent: false });
+      costoPorEstacionControl?.disable({ emitEvent: false });
       // Limpiar validadores de campos deshabilitados
       distanciaControl?.clearValidators();
       incrementoControl?.clearValidators();
       costoControl?.clearValidators();
+      costoPorEstacionControl?.clearValidators();
       // Limpiar valores (habilitar temporalmente para setValue)
       distanciaControl?.enable({ emitEvent: false });
       incrementoControl?.enable({ emitEvent: false });
       costoControl?.enable({ emitEvent: false });
+      costoPorEstacionControl?.enable({ emitEvent: false });
       distanciaControl?.setValue(null, { emitEvent: false });
       incrementoControl?.setValue(null, { emitEvent: false });
       costoControl?.setValue(null, { emitEvent: false });
+      costoPorEstacionControl?.setValue(null, { emitEvent: false });
       distanciaControl?.disable({ emitEvent: false });
       incrementoControl?.disable({ emitEvent: false });
       costoControl?.disable({ emitEvent: false });
+      costoPorEstacionControl?.disable({ emitEvent: false });
       // Actualizar validadores
       distanciaControl?.updateValueAndValidity({ onlySelf: true });
       incrementoControl?.updateValueAndValidity({ onlySelf: true });
       costoControl?.updateValueAndValidity({ onlySelf: true });
+      costoPorEstacionControl?.updateValueAndValidity({ onlySelf: true });
       return;
     }
 
-    // Buscar el tipo de tarifa para verificar si es "Fija" o "Incremental"
+    // Buscar el tipo de tarifa para verificar si es "Estacionaria", "Fija" o "Incremental"
     const tipoTarifa = this.listaTiposTarifa.find(t => t.id === idTipoTarifa);
     const nombreTipo = tipoTarifa?.nombre?.toLowerCase() || '';
 
-    if (nombreTipo.includes('fija') || nombreTipo.includes('fijo')) {
-      // Tipo Fija: solo habilitar Tarifa Base, deshabilitar los demás
+    if (nombreTipo.includes('estacionaria') || nombreTipo.includes('estacionario')) {
+      // Tipo Estacionaria: solo habilitar Costo por Estación
+      // Deshabilitar todos los demás campos
       distanciaControl?.disable({ emitEvent: false });
       incrementoControl?.disable({ emitEvent: false });
       costoControl?.disable({ emitEvent: false });
-      // Limpiar validadores
+      tarifaBaseControl?.disable({ emitEvent: false });
+
+      // Limpiar validadores de campos deshabilitados
       distanciaControl?.clearValidators();
       incrementoControl?.clearValidators();
       costoControl?.clearValidators();
+      tarifaBaseControl?.clearValidators();
+
       // Limpiar valores (habilitar temporalmente para setValue)
       distanciaControl?.enable({ emitEvent: false });
       incrementoControl?.enable({ emitEvent: false });
       costoControl?.enable({ emitEvent: false });
+      tarifaBaseControl?.enable({ emitEvent: false });
       distanciaControl?.setValue(null, { emitEvent: false });
       incrementoControl?.setValue(null, { emitEvent: false });
       costoControl?.setValue(null, { emitEvent: false });
+      tarifaBaseControl?.setValue(0, { emitEvent: false });
       distanciaControl?.disable({ emitEvent: false });
       incrementoControl?.disable({ emitEvent: false });
       costoControl?.disable({ emitEvent: false });
-    } else if (nombreTipo.includes('incremental')) {
-      // Tipo Incremental: habilitar todos los campos y hacerlos obligatorios
+      tarifaBaseControl?.disable({ emitEvent: false });
+
+      // Habilitar y hacer obligatorio costoPorEstacion
+      costoPorEstacionControl?.enable({ emitEvent: false });
+      costoPorEstacionControl?.setValidators([Validators.required, Validators.min(0)]);
+
+      // Actualizar validadores
+      distanciaControl?.updateValueAndValidity({ onlySelf: true });
+      incrementoControl?.updateValueAndValidity({ onlySelf: true });
+      costoControl?.updateValueAndValidity({ onlySelf: true });
+      tarifaBaseControl?.updateValueAndValidity({ onlySelf: true });
+      costoPorEstacionControl?.updateValueAndValidity({ onlySelf: true });
+    } else if (nombreTipo.includes('fija') || nombreTipo.includes('fijo')) {
+      // Tipo Fija: habilitar Tarifa Base (obligatoria), deshabilitar los demás
+      tarifaBaseControl?.enable({ emitEvent: false });
+      tarifaBaseControl?.setValidators([Validators.required, Validators.min(0)]);
+      
+      distanciaControl?.disable({ emitEvent: false });
+      incrementoControl?.disable({ emitEvent: false });
+      costoControl?.disable({ emitEvent: false });
+      costoPorEstacionControl?.disable({ emitEvent: false });
+      // Limpiar validadores
+      distanciaControl?.clearValidators();
+      incrementoControl?.clearValidators();
+      costoControl?.clearValidators();
+      costoPorEstacionControl?.clearValidators();
+      // Limpiar valores (habilitar temporalmente para setValue)
       distanciaControl?.enable({ emitEvent: false });
       incrementoControl?.enable({ emitEvent: false });
       costoControl?.enable({ emitEvent: false });
+      costoPorEstacionControl?.enable({ emitEvent: false });
+      distanciaControl?.setValue(null, { emitEvent: false });
+      incrementoControl?.setValue(null, { emitEvent: false });
+      costoControl?.setValue(null, { emitEvent: false });
+      costoPorEstacionControl?.setValue(null, { emitEvent: false });
+      distanciaControl?.disable({ emitEvent: false });
+      incrementoControl?.disable({ emitEvent: false });
+      costoControl?.disable({ emitEvent: false });
+      costoPorEstacionControl?.disable({ emitEvent: false });
+    } else if (nombreTipo.includes('incremental')) {
+      // Tipo Incremental: habilitar todos los campos (incluyendo Tarifa Base) y hacerlos obligatorios
+      tarifaBaseControl?.enable({ emitEvent: false });
+      tarifaBaseControl?.setValidators([Validators.required, Validators.min(0)]);
+      
+      distanciaControl?.enable({ emitEvent: false });
+      incrementoControl?.enable({ emitEvent: false });
+      costoControl?.enable({ emitEvent: false });
+      costoPorEstacionControl?.disable({ emitEvent: false });
+      costoPorEstacionControl?.clearValidators();
+      costoPorEstacionControl?.enable({ emitEvent: false });
+      costoPorEstacionControl?.setValue(null, { emitEvent: false });
+      costoPorEstacionControl?.disable({ emitEvent: false });
       // Agregar validadores requeridos
       distanciaControl?.setValidators([Validators.required, Validators.min(0)]);
       incrementoControl?.setValidators([Validators.required, Validators.min(0)]);
@@ -210,9 +324,11 @@ export class AgregarVarianteComponent implements OnInit, AfterViewInit, OnDestro
     }
     
     // Actualizar validadores
+    tarifaBaseControl?.updateValueAndValidity({ onlySelf: true });
     distanciaControl?.updateValueAndValidity({ onlySelf: true });
     incrementoControl?.updateValueAndValidity({ onlySelf: true });
     costoControl?.updateValueAndValidity({ onlySelf: true });
+    costoPorEstacionControl?.updateValueAndValidity({ onlySelf: true });
   }
 
   regresar() { this.route.navigateByUrl('/administracion/variantes'); }
@@ -320,8 +436,8 @@ export class AgregarVarianteComponent implements OnInit, AfterViewInit, OnDestro
 
     if (on) {
       this.gmap.setOptions({ draggableCursor: 'crosshair' });
-      this.mapClickListener = this.gmap.addListener('click', (ev: google.maps.MapMouseEvent) => {
-        if (ev.latLng) this.addPathPoint(ev.latLng);
+      this.mapClickListener = this.gmap.addListener('click', async (ev: google.maps.MapMouseEvent) => {
+        if (ev.latLng) await this.addPathPoint(ev.latLng);
       });
     } else {
       this.gmap.setOptions({ draggableCursor: undefined });
@@ -342,18 +458,72 @@ export class AgregarVarianteComponent implements OnInit, AfterViewInit, OnDestro
     this.setDrawingEnabled(true);
   }
 
-  private addPathPoint(latLng: google.maps.LatLng | google.maps.LatLngLiteral): void {
+  private async addPathPoint(latLng: google.maps.LatLng | google.maps.LatLngLiteral): Promise<void> {
+    // Validar que haya un tipo de variante seleccionado antes de agregar puntos
+    if (!this.idTipoVariante) {
+      this.alerts.open({
+        type: 'warning',
+        title: 'Tipo de Variante Requerido',
+        message: 'Por favor, selecciona un tipo de variante antes de comenzar el recorrido detallado.',
+        confirmText: 'Entendido',
+        backdropClose: false,
+      });
+      return;
+    }
+
     const ll =
       (latLng as google.maps.LatLng).toJSON
         ? (latLng as google.maps.LatLng).toJSON()
         : (latLng as google.maps.LatLngLiteral);
 
-    this.pathPoints.push(ll);
+    // Si el tipo de variante es estacionaria (id 2), pedir el nombre de la estación
+    let nombreEstacion: string | undefined = undefined;
+    if (this.idTipoVariante === 2) {
+      const resultado = await this.alerts.open({
+        type: 'info',
+        title: 'Nombre de la Estación',
+        message: 'Ingresa el nombre de la estación para este punto:',
+        confirmText: 'Guardar',
+        cancelText: 'Cancelar',
+        showCancel: true,
+        backdropClose: false,
+        inputEnabled: true,
+        inputLabel: 'Nombre de la estación',
+        inputPlaceholder: 'Ej: Estación Central, Terminal Norte, etc.',
+        inputValue: '',
+      });
+
+      if (resultado === 'confirm') {
+        nombreEstacion = this.alerts.getInputValue()?.trim() || undefined;
+        if (!nombreEstacion) {
+          this.alerts.open({
+            type: 'warning',
+            title: 'Nombre Requerido',
+            message: 'El nombre de la estación es obligatorio para variantes estacionarias.',
+            confirmText: 'Entendido',
+            backdropClose: false,
+          });
+          return; // No agregar el punto si no hay nombre
+        }
+      } else {
+        // Si canceló, no agregar el punto
+        return;
+      }
+    }
+
+    // Crear el punto con nombre si existe
+    const punto: google.maps.LatLngLiteral & { nombre?: string } = {
+      ...ll,
+      ...(nombreEstacion ? { nombre: nombreEstacion } : {})
+    };
+
+    this.pathPoints.push(punto);
 
     const marker = new google.maps.Marker({
       map: this.gmap!,
       position: ll,
       icon: this.circlePoint,
+      title: nombreEstacion || undefined, // Mostrar el nombre en el tooltip del marcador
     });
     this.pathPointMarkers.push(marker);
 
@@ -374,7 +544,7 @@ export class AgregarVarianteComponent implements OnInit, AfterViewInit, OnDestro
     this.setDrawingEnabled(true);
   }
 
-  public obtenerTrazo(): google.maps.LatLngLiteral[] {
+  public obtenerTrazo(): (google.maps.LatLngLiteral & { nombre?: string })[] {
     return [...this.pathPoints];
   }
 
@@ -624,7 +794,21 @@ async agregarVariante(): Promise<void> {
     return;
   }
 
-  // Confirmación
+  // Preguntar si desea registrar una variante de regreso (ANTES de la confirmación de guardar)
+  const respuestaRegreso = await this.alerts.open({
+    type: 'warning',
+    title: 'Variante de Regreso',
+    message: '¿Desea registrar una variante de regreso para esta variante?',
+    showCancel: true,
+    confirmText: 'Sí',
+    cancelText: 'No',
+    backdropClose: false,
+  });
+
+  const registraRegreso = respuestaRegreso === 'confirm';
+  body.registraRegreso = registraRegreso;
+
+  // Confirmación de guardar
   const res = await this.alerts.open({
     type: 'warning',
     title: '¡Confirmar!',
@@ -665,6 +849,9 @@ async agregarVariante(): Promise<void> {
 
     this.tarifaForm.get('idVariante')?.markAsDirty();
     this.tarifaForm.get('idVariante')?.updateValueAndValidity({ onlySelf: true });
+
+    // Actualizar campos según el tipo de variante antes de ir al paso 3
+    this.actualizarCamposSegunTipoVariante();
 
     // Ir directo a Paso 3 (sin alertas de éxito)
     this.step = 3;
@@ -724,6 +911,7 @@ async agregarVariante(): Promise<void> {
       distanciaKm,              // calculada arriba
       estatus: 1,               // fijo a 1
       idRuta: this.selectedRuta.id, // de la ruta seleccionada
+      idTipoVariante: this.idTipoVariante ?? null, // tipo de variante seleccionado
     };
 
     return payload;
@@ -787,19 +975,28 @@ agregarTarifa(): void {
   const tipoTarifa = this.listaTiposTarifa.find(t => t.id === v.idTipoTarifa);
   const nombreTipo = tipoTarifa?.nombre?.toLowerCase() || '';
   const esFija = nombreTipo.includes('fija') || nombreTipo.includes('fijo');
+  const esEstacionaria = nombreTipo.includes('estacionaria') || nombreTipo.includes('estacionario');
   
   const payload: any = {
     idTipoTarifa: this.toNum(v.idTipoTarifa),
-    tarifaBase: this.toNum(v.tarifaBase),
     estatus: this.toNum(v.estatus),
     idVariante: this.toNum(v.idVariante),
   };
 
-  // Solo agregar campos adicionales si es Incremental (no Fija)
-  if (!esFija) {
-    payload.distanciaBaseKm = this.toNum(v.distanciaBaseKm);
-    payload.incrementoCadaMetros = this.toNum(v.incrementoCadaMetros);
-    payload.costoAdicional = this.toNum(v.costoAdicional);
+  // Si es Estacionaria, solo agregar costoPorEstacion
+  if (esEstacionaria) {
+    payload.costoPorEstacion = this.toNum(v.costoPorEstacion);
+    payload.tarifaBase = 0; // Estacionaria tiene tarifa base en 0
+  } else {
+    // Para Fija e Incremental, agregar tarifaBase
+    payload.tarifaBase = this.toNum(v.tarifaBase);
+    
+    // Solo agregar campos adicionales si es Incremental (no Fija)
+    if (!esFija) {
+      payload.distanciaBaseKm = this.toNum(v.distanciaBaseKm);
+      payload.incrementoCadaMetros = this.toNum(v.incrementoCadaMetros);
+      payload.costoAdicional = this.toNum(v.costoAdicional);
+    }
   }
 
   const etiquetasNum: Record<string, string> = {
@@ -808,11 +1005,26 @@ agregarTarifa(): void {
     distanciaBaseKm: 'Distancia Base KM',
     incrementoCadaMetros: 'Incremento por cada 100 m adicionales',
     costoAdicional: 'Costo Adicional',
+    costoPorEstacion: 'Costo por Estación',
     estatus: 'Estatus',
     idVariante: 'Variante', // <-- clave correcta
   };
 
-  const invalidNums = Object.entries(payload)
+  // Filtrar campos que no deben validarse según el tipo de tarifa
+  const camposAValidar: Record<string, number> = {};
+  Object.entries(payload).forEach(([key, value]) => {
+    // Si es Estacionaria, no validar distanciaBaseKm ni incrementoCadaMetros
+    if (esEstacionaria && (key === 'distanciaBaseKm' || key === 'incrementoCadaMetros' || key === 'costoAdicional' || key === 'tarifaBase')) {
+      return; // No agregar estos campos a la validación
+    }
+    // Si es Fija, no validar distanciaBaseKm, incrementoCadaMetros ni costoAdicional
+    if (esFija && (key === 'distanciaBaseKm' || key === 'incrementoCadaMetros' || key === 'costoAdicional')) {
+      return; // No agregar estos campos a la validación
+    }
+    camposAValidar[key] = value as number;
+  });
+
+  const invalidNums = Object.entries(camposAValidar)
     .filter(([, val]) => Number.isNaN(val))
     .map(([k]) => etiquetasNum[k] || k);
 

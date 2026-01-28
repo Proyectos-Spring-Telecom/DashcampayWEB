@@ -183,12 +183,42 @@ export class ListaInstalacionComponent implements OnInit {
             toNum(meta.lastPage) ??
             toNum(resp?.pages) ??
             Math.max(1, Math.ceil(totalRegistros / take));
-          const dataTransformada = rows.map((item: any) => ({
-            ...item,
-            estatusTexto:
-              item?.estatus === 1 ? 'Activo' :
-                item?.estatus === 0 ? 'Inactivo' : null
-          }));
+          const dataTransformada = rows.map((item: any) => {
+            // Extraer solo el número de serie del validador
+            let numeroSerieValidador = null;
+            if (item?.numeroSerieValidador) {
+              numeroSerieValidador = item.numeroSerieValidador;
+            } else if (item?.validadores && Array.isArray(item.validadores) && item.validadores.length > 0) {
+              numeroSerieValidador = item.validadores[0]?.numeroSerie || item.validadores[0]?.numeroSerieValidador || null;
+            } else if (item?.validador) {
+              numeroSerieValidador = item.validador.numeroSerie || item.validador.numeroSerieValidador || null;
+            }
+
+            // Extraer solo el número de serie de los contadores (puede ser un array)
+            let numeroSerieContador = null;
+            if (item?.numeroSerieContador) {
+              numeroSerieContador = item.numeroSerieContador;
+            } else if (item?.numeroSerieContadores && Array.isArray(item.numeroSerieContadores)) {
+              numeroSerieContador = item.numeroSerieContadores.map((c: any) => 
+                c?.numeroSerie || c?.numeroSerieContador || c
+              ).filter(Boolean).join(', ');
+            } else if (item?.contadores && Array.isArray(item.contadores) && item.contadores.length > 0) {
+              numeroSerieContador = item.contadores.map((c: any) => 
+                c?.numeroSerie || c?.numeroSerieContador || c?.numeroSerieBlueVox || null
+              ).filter(Boolean).join(', ');
+            } else if (item?.contador) {
+              numeroSerieContador = item.contador.numeroSerie || item.contador.numeroSerieContador || null;
+            }
+
+            return {
+              ...item,
+              numeroSerieValidador: numeroSerieValidador,
+              numeroSerieContador: numeroSerieContador,
+              estatusTexto:
+                item?.estatus === 1 ? 'Activo' :
+                  item?.estatus === 0 ? 'Inactivo' : null
+            };
+          });
           this.totalRegistros = totalRegistros;
           this.paginaActual = paginaActual;
           this.totalPaginas = totalPaginas;

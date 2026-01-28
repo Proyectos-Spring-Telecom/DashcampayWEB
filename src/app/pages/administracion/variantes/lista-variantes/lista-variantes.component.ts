@@ -248,7 +248,7 @@ selectedDerrotero: {
   nombre: string;
   inicio?: { lat: number; lng: number };
   fin?: { lat: number; lng: number };
-  recorrido: Array<{ lat: number; lng: number }>;
+  recorrido: Array<{ lat: number; lng: number; nombre?: string }>;
 } | null = null;
 
 
@@ -262,11 +262,17 @@ async abrirModalVariante(raw: any) {
   const inicio = this.readLatLng(raw?.puntoInicio?.coordenadas) ?? this.readLatLng(raw?.puntoInicio);
   const fin    = this.readLatLng(raw?.puntoFin?.coordenadas)    ?? this.readLatLng(raw?.puntoFin);
 
-  // Recorrido detallado: array de puntos {lat,lng}
-  const recorrido: Array<{ lat: number; lng: number }> = Array.isArray(raw?.recorridoDetallado)
+  // Recorrido detallado: array de puntos {lat,lng} con nombre opcional
+  const recorrido: Array<{ lat: number; lng: number; nombre?: string }> = Array.isArray(raw?.recorridoDetallado)
     ? raw.recorridoDetallado
-        .map((p: any) => this.readLatLng(p))
-        .filter((p: any): p is { lat: number; lng: number } => !!p)
+        .map((p: any) => {
+          const punto = this.readLatLng(p);
+          if (!punto) return null;
+          // Preservar el nombre si existe
+          const nombre = p?.nombre ? String(p.nombre).trim() : undefined;
+          return nombre ? { ...punto, nombre } : punto;
+        })
+        .filter((p: any): p is { lat: number; lng: number; nombre?: string } => !!p)
     : [];
 
   // Estado seleccionado
@@ -396,14 +402,14 @@ private createFaMarker(iconClass: string, color: string, sizePx = 38): HTMLEleme
 private initializeMapDerrotero(
   inicio: { lat: number; lng: number },
   fin: { lat: number; lng: number },
-  recorrido: Array<{ lat: number; lng: number }>
+  recorrido: Array<{ lat: number; lng: number; nombre?: string }>
 ) {
   const el = document.getElementById('map');
   if (!el) return;
   el.innerHTML = '';
 
-  const center = { lat: (inicio.lat + fin.lat) / 2, lng: (inicio.lng + fin.lng) / 2 };
-  const options: any = { center, zoom: 14 };
+  const defaultCenter = { lat: 21.110778, lng: -86.762590 };
+  const options: any = { center: defaultCenter, zoom: 14, clickableIcons: false };
   if (this.MAP_ID) options.mapId = this.MAP_ID;
 
   const map = new google.maps.Map(el, options);
@@ -419,6 +425,7 @@ private initializeMapDerrotero(
 
   const Advanced = (google.maps as any)?.marker?.AdvancedMarkerElement;
   const canAdvanced = Boolean(this.MAP_ID) && Advanced;
+  const infoWindow = new google.maps.InfoWindow();
 
   // Marcadores (Font Awesome si Advanced; si no, Marker normal)
   if (canAdvanced) {
@@ -440,6 +447,42 @@ private initializeMapDerrotero(
     strokeOpacity: 0.95,
     strokeWeight: 4
   });
+
+  // Agregar marcadores discretos para puntos con nombre (estaciones)
+  if (Array.isArray(recorrido) && recorrido.length > 0) {
+    recorrido.forEach((punto) => {
+      if (punto.nombre) {
+        // Crear marcador discreto para estaciones
+        const markerOptions: any = {
+          map,
+          position: { lat: punto.lat, lng: punto.lng },
+          title: punto.nombre,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            fillColor: '#1F5AA8',
+            fillOpacity: 0.8,
+            strokeColor: '#ffffff',
+            strokeWeight: 2,
+            scale: 8
+          },
+          zIndex: google.maps.Marker.MAX_ZINDEX + 1
+        };
+
+        const marker = new google.maps.Marker(markerOptions);
+
+        // Agregar InfoWindow con el nombre de la estación
+        marker.addListener('click', () => {
+          infoWindow.setContent(`
+            <div style="padding: 8px; font-weight: 500; color: #1F5AA8;">
+              <i class="fa fa-map-marker-alt" style="margin-right: 6px;"></i>
+              ${punto.nombre}
+            </div>
+          `);
+          infoWindow.open(map, marker);
+        });
+      }
+    });
+  }
 }
 
 

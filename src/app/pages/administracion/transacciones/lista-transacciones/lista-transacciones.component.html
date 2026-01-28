@@ -37,10 +37,11 @@
           <form [formGroup]="filtroForm" class="row g-3">
             <div class="col-12 col-md-4 d-flex flex-column">
               <label class="form-label">
-                <i class="fa fa-calendar"></i>
+                <i class="fa fa-calendar me-2"></i>
                 <span>Fecha Inicio</span>
               </label>
               <mat-form-field appearance="fill" class="w-100 filtro-date-field">
+                <mat-label>Fecha Inicio</mat-label>
                 <input matInput [matDatepicker]="pickerInicio" formControlName="fechaInicio"
                   placeholder="Seleccione fecha inicio">
                 <mat-datepicker-toggle matSuffix [for]="pickerInicio"></mat-datepicker-toggle>
@@ -49,10 +50,11 @@
             </div>
             <div class="col-12 col-md-4 d-flex flex-column">
               <label class="form-label">
-                <i class="fa fa-calendar"></i>
+                <i class="fa fa-calendar me-2"></i>
                 <span>Fecha Fin</span>
               </label>
               <mat-form-field appearance="fill" class="w-100 filtro-date-field">
+                <mat-label>Fecha Fin</mat-label>
                 <input matInput [matDatepicker]="pickerFin" formControlName="fechaFin"
                   placeholder="Seleccione fecha fin">
                 <mat-datepicker-toggle matSuffix [for]="pickerFin"></mat-datepicker-toggle>

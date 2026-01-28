@@ -180,16 +180,19 @@
                                                         <!-- Selección de Método de Pago -->
                                                         <div class="metodo-pago-section">
                                                             <div class="metodo-pago-options">
-                                                                <label class="metodo-pago-option">
+                                                                <!-- Solo mostrar Efectivo si NO es Pasajero -->
+                                                                <label class="metodo-pago-option" *ngIf="!esPasajero">
                                                                     <input type="radio" name="metodoPago" 
                                                                            [(ngModel)]="metodoPago" 
                                                                            value="efectivo"
-                                                                           (change)="tarjetaSeleccionada = null">
+                                                                           (change)="tarjetaSeleccionada = null; tarjetaInfo = {}">
                                                                     <span class="radio-custom"></span>
                                                                     <i class="fa fa-money"></i>
                                                                     <span>Efectivo</span>
                                                                 </label>
+                                                                <!-- Solo mostrar Tarjeta si es Pasajero -->
                                                                 <label class="metodo-pago-option" 
+                                                                       *ngIf="esPasajero"
                                                                        [class.disabled]="!monederoSeleccionado?.customerId">
                                                                     <input type="radio" name="metodoPago" 
                                                                            [(ngModel)]="metodoPago" 
@@ -225,43 +228,57 @@
                                                                 <span>Cargando tarjetas...</span>
                                                             </div>
                                                             <div class="tarjetas-list" *ngIf="!cargandoTarjetas">
-                                                                <div class="tarjeta-item" *ngFor="let tarjeta of tarjetasCliente">
-                                                                    <div class="tarjeta-card" 
-                                                                         [class.visa-card]="tarjeta.card?.brand === 'visa'" 
-                                                                         [class.mastercard-card]="tarjeta.card?.brand === 'mastercard'" 
-                                                                         [class.amex-card]="tarjeta.card?.brand === 'amex'"
-                                                                         [class.selected]="tarjetaSeleccionada === tarjeta"
-                                                                         (click)="seleccionarTarjeta(tarjeta)">
-                                                                        <div class="tarjeta-card-header">
-                                                                            <div class="tarjeta-chip">
-                                                                                <div class="chip-lines"></div>
-                                                                            </div>
-                                                                            <div class="tarjeta-brand-logo">
-                                                                                <i class="fa fa-credit-card" [class.visa-icon]="tarjeta.card?.brand === 'visa'" 
-                                                                                   [class.mastercard-icon]="tarjeta.card?.brand === 'mastercard'" 
-                                                                                   [class.amex-icon]="tarjeta.card?.brand === 'amex'"></i>
+                                                                <div class="tarjeta-item" *ngFor="let tarjeta of tarjetasCliente; let i = index">
+                                                                    <div class="tarjeta-swipe-container">
+                                                                        <div class="tarjeta-swipe-background">
+                                                                            <div class="tarjeta-delete-action">
+                                                                                <mat-icon>delete</mat-icon>
+                                                                                <span>Eliminar</span>
                                                                             </div>
                                                                         </div>
-                                                                        <div class="tarjeta-card-body">
-                                                                            <div class="tarjeta-number">
-                                                                                <span class="tarjeta-masked">**** **** ****</span>
-                                                                                <span class="tarjeta-last4">{{ tarjeta.card?.lastFourDigits || '****' }}</span>
-                                                                            </div>
-                                                                            <div class="tarjeta-card-footer">
-                                                                                <div class="tarjeta-holder">
-                                                                                    <div class="tarjeta-label">Banco</div>
-                                                                                    <div class="tarjeta-value">{{ tarjeta.card?.bank || '—' }}</div>
-                                                                                </div>
-                                                                                <div class="tarjeta-expiry">
-                                                                                    <div class="tarjeta-label">Válida hasta</div>
-                                                                                    <div class="tarjeta-value" *ngIf="tarjeta.card?.expMonth && tarjeta.card?.expYear">
-                                                                                        {{ tarjeta.card?.expMonth }}/{{ tarjeta.card?.expYear }}
+                                                                        <div class="tarjeta-wrapper"
+                                                                             [style.transform]="'translateX(' + (tarjeta._swipeX || 0) + 'px)'"
+                                                                             [class.swiping]="tarjeta._isSwiping"
+                                                                             (mousedown)="onSwipeStart($event, tarjeta, i)"
+                                                                             (touchstart)="onSwipeStart($event, tarjeta, i)">
+                                                                            <div class="tarjeta-card" 
+                                                                                 [class.visa-card]="tarjeta.card?.brand === 'visa'" 
+                                                                                 [class.mastercard-card]="tarjeta.card?.brand === 'mastercard'" 
+                                                                                 [class.amex-card]="tarjeta.card?.brand === 'amex'"
+                                                                                 [class.selected]="tarjetaSeleccionada === tarjeta"
+                                                                                 (click)="onTarjetaClick(tarjeta)">
+                                                                                <div class="tarjeta-card-header">
+                                                                                    <div class="tarjeta-chip">
+                                                                                        <div class="chip-lines"></div>
                                                                                     </div>
-                                                                                    <div class="tarjeta-value" *ngIf="!tarjeta.card?.expMonth || !tarjeta.card?.expYear">—</div>
+                                                                                    <div class="tarjeta-brand-logo">
+                                                                                        <i class="fa fa-credit-card" [class.visa-icon]="tarjeta.card?.brand === 'visa'" 
+                                                                                           [class.mastercard-icon]="tarjeta.card?.brand === 'mastercard'" 
+                                                                                           [class.amex-icon]="tarjeta.card?.brand === 'amex'"></i>
+                                                                                    </div>
                                                                                 </div>
-                                                                                <div class="tarjeta-type">
-                                                                                    <div class="tarjeta-label">Tipo</div>
-                                                                                    <div class="tarjeta-value">{{ tarjeta.card?.type === 'credit' ? 'Crédito' : tarjeta.card?.type === 'debit' ? 'Débito' : (tarjeta.card?.type || '—') | titlecase }}</div>
+                                                                                <div class="tarjeta-card-body">
+                                                                                    <div class="tarjeta-number">
+                                                                                        <span class="tarjeta-masked">**** **** ****</span>
+                                                                                        <span class="tarjeta-last4">{{ tarjeta.card?.lastFourDigits || '****' }}</span>
+                                                                                    </div>
+                                                                                    <div class="tarjeta-card-footer">
+                                                                                        <div class="tarjeta-holder">
+                                                                                            <div class="tarjeta-label">Banco</div>
+                                                                                            <div class="tarjeta-value">{{ tarjeta.card?.bank || '—' }}</div>
+                                                                                        </div>
+                                                                                        <div class="tarjeta-expiry">
+                                                                                            <div class="tarjeta-label">Válida hasta</div>
+                                                                                            <div class="tarjeta-value" *ngIf="tarjeta.card?.expMonth && tarjeta.card?.expYear">
+                                                                                                {{ tarjeta.card?.expMonth }}/{{ tarjeta.card?.expYear }}
+                                                                                            </div>
+                                                                                            <div class="tarjeta-value" *ngIf="!tarjeta.card?.expMonth || !tarjeta.card?.expYear">—</div>
+                                                                                        </div>
+                                                                                        <div class="tarjeta-type">
+                                                                                            <div class="tarjeta-label">Tipo</div>
+                                                                                            <div class="tarjeta-value">{{ tarjeta.card?.type === 'credit' ? 'Crédito' : tarjeta.card?.type === 'debit' ? 'Débito' : (tarjeta.card?.type || '—') | titlecase }}</div>
+                                                                                        </div>
+                                                                                    </div>
                                                                                 </div>
                                                                             </div>
                                                                         </div>
@@ -276,7 +293,6 @@
                                                         
                                                         <div class="summary-foot">
                                                             <button mat-raised-button color="accent"
-                                                                [disabled]="!monto || monto<=0"
                                                                 (click)="pagarConTarjeta()">
                                                                 <mat-icon>credit_card</mat-icon>
                                                                 Agregar Tarjeta
@@ -305,4 +321,12 @@
             </div>
         </div>
     </vex-page-layout-content>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" *ngIf="cargando">
+        <div class="loading-content">
+            <mat-spinner diameter="60"></mat-spinner>
+            <p>Procesando...</p>
+        </div>
+    </div>
 </vex-page-layout>

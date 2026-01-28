@@ -51,8 +51,8 @@
                     <mat-option *ngIf="listaValidadores.length === 0" [disabled]="true" [value]="null">
                       Sin registros
                     </mat-option>
-                    <mat-option *ngFor="let d of listaValidadores" [value]="d.id">
-                      {{ d.numeroSerie }} - {{ d.marca }} - {{ d.modelo }}
+                    <mat-option *ngFor="let d of listaValidadores" [value]="d.id" [disabled]="!esModoAgregar() && estaAsignado(d)">
+                      {{ d.numeroSerie }}
                     </mat-option>
                   </mat-select>
                 </mat-form-field>
@@ -70,8 +70,8 @@
                           <mat-option *ngIf="obtenerContadoresDisponibles(i).length === 0" [disabled]="true" [value]="null">
                             Sin registros disponibles
                           </mat-option>
-                          <mat-option *ngFor="let b of obtenerContadoresDisponibles(i)" [value]="b.id">
-                            {{ b.numeroSerie }} - {{ b.marca }} - {{ b.modelo }}
+                          <mat-option *ngFor="let b of obtenerContadoresDisponibles(i)" [value]="b.id" [disabled]="!esModoAgregar() && estaAsignado(b)">
+                            {{ b.numeroSerie }}
                           </mat-option>
                         </mat-select>
                       </mat-form-field>
