@@ -63,6 +63,17 @@
 
               <div class="col-12 col-md-6 col-lg-4">
                 <label class="form-label">
+                  <i class="fa fa-map-marker-alt"></i><span>Cantidad Estaciones Base</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput type="text" class="form-control" formControlName="cantidadEstacionesBase"
+                    placeholder="Ej: 5" inputmode="numeric" (keydown)="estacionesKeydown($event)"
+                    (input)="estacionesInput($event)" (paste)="estacionesPaste($event)" />
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
                   <i class="fa fa-ruler-horizontal"></i><span>Incremento Por Metros</span>
                 </label>
                 <mat-form-field appearance="fill" class="w-100">

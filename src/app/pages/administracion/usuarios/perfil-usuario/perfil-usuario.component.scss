@@ -68,6 +68,10 @@
 .toggle .fa{font-size:15px; line-height:1}
 .err{margin-top:6px; color:#d22; font-weight:800; font-size:12px}
 
+.avatar-wrapper{
+  position: relative;
+  display: inline-block;
+}
 .avatar{
   width: 96px;      /* antes 64px */
   height: 96px;     /* antes 64px */
@@ -81,11 +85,52 @@
   height: 100%;
   object-fit: cover;
 }
+.avatar-file-input{
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.btn-avatar-upload{
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,.9);
+  background: linear-gradient(180deg, #1F5AA8, #0A2E57);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,.2);
+  transition: transform .15s ease, background .15s ease;
+}
+.btn-avatar-upload:hover:not(:disabled){
+  transform: scale(1.08);
+  background: linear-gradient(180deg, #2a6bc4, #0d3d6b);
+}
+.btn-avatar-upload:disabled{
+  opacity: .8;
+  cursor: not-allowed;
+}
+.btn-avatar-upload mat-icon{
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
 /* Ajustes finos para mantener la alineación y aire */
 .barra .d-flex.gap-3 { gap: 16px !important; } /* separa un poco más el texto del avatar */
 
 @media (max-width: 576px){
   .avatar{ width: 80px; height: 80px; border-width: 3px; }  /* responsive en móviles */
+  .btn-avatar-upload{ width: 28px; height: 28px; min-width: 28px; right: -2px; bottom: -2px; }
+  .btn-avatar-upload mat-icon{ font-size: 14px; width: 14px; height: 14px; }
 }
 
 .hint{display:block; margin-top:4px; font-size:.9rem; transition:color 160ms ease}

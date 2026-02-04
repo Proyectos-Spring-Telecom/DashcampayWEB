@@ -17,5 +17,10 @@ export class BitacoraService {
   obtenerBitacora(): Observable<any> {
     return this.http.get(`${environment.API_SECURITY}/bitacora/list`);
   }
-  
+
+  obtenerConteoPasajerosRangoAgrupado(fechaInicio: string, fechaFin: string): Observable<any> {
+    return this.http.get(
+      `${environment.API_SECURITY}/conteopasajeros/rango-agrupado/${fechaInicio}/${fechaFin}`
+    );
+  }
 }

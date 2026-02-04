@@ -1,10 +1,11 @@
 import { Component, DestroyRef, inject, OnInit, ViewChild } from '@angular/core';
-import { UntypedFormControl } from '@angular/forms';
+import { FormBuilder, FormGroup, UntypedFormControl } from '@angular/forms';
 import { Router } from '@angular/router';
 import { fadeInRight400ms } from '@vex/animations/fade-in-right.animation';
 import { DxDataGridComponent } from 'devextreme-angular';
 import { lastValueFrom } from 'rxjs';
 import { AlertsService } from 'src/app/pages/pages/modal/alerts.service';
+import { BitacoraService } from 'src/app/pages/services/bitacora.service';
 import { ModulosService } from 'src/app/pages/services/modulos.service';
 import { UsuariosService } from 'src/app/pages/services/usuarios.service';
 import CustomStore from 'devextreme/data/custom_store';
@@ -21,7 +22,7 @@ export class BitacoraViajesComponent implements OnInit {
   public mensajeAgrupar: string = 'Arrastre un encabezado de columna aquí para agrupar por esa columna';
   public showFilterRow: boolean;
   public showHeaderFilter: boolean;
-  public loading!: boolean;
+  public loading: boolean = false;
   public loadingMessage: string = 'Cargando...';
   public showExportGrid!: boolean;
   public paginaActual: number = 1;
@@ -34,58 +35,22 @@ export class BitacoraViajesComponent implements OnInit {
   public paginaActualData: any[] = [];
   public filtroActivo: string = '';
   public listaModuloss: any;
+  filtroForm!: FormGroup;
+  fechaInicio: Date | null = null;
+  fechaFin: Date | null = null;
 
-
-public listaModulos = [
-  { id: 1,  diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 4, salidas: 1, fhRegistro: new Date(2025, 10, 26, 6, 0, 0) },
-  { id: 2,  diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 5, salidas: 2, fhRegistro: new Date(2025, 10, 26, 6, 17, 0) },
-  { id: 3,  diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 6, salidas: 3, fhRegistro: new Date(2025, 10, 26, 6, 39, 0) },
-  { id: 4,  diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 7, salidas: 4, fhRegistro: new Date(2025, 10, 26, 7, 2, 0) },
-  { id: 5,  diferencia: 2, contadora: 'AMG-1003-GHI', entradas: 3, salidas: 1, fhRegistro: new Date(2025, 10, 26, 7, 21, 0) },
-  { id: 6,  diferencia: 2, contadora: 'AMG-1003-GHI', entradas: 4, salidas: 2, fhRegistro: new Date(2025, 10, 26, 7, 47, 0) },
-  { id: 7,  diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 4, salidas: 1, fhRegistro: new Date(2025, 10, 26, 8, 5, 0) },
-  { id: 8,  diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 5, salidas: 2, fhRegistro: new Date(2025, 10, 26, 8, 33, 0) },
-  { id: 9,  diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 6, salidas: 3, fhRegistro: new Date(2025, 10, 26, 8, 56, 0) },
-  { id: 10, diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 7, salidas: 4, fhRegistro: new Date(2025, 10, 26, 9, 14, 0) },
-  { id: 11, diferencia: 2, contadora: 'AMG-1003-GHI', entradas: 3, salidas: 1, fhRegistro: new Date(2025, 10, 26, 9, 37, 0) },
-  { id: 12, diferencia: 2, contadora: 'AMG-1003-GHI', entradas: 4, salidas: 2, fhRegistro: new Date(2025, 10, 26, 10, 1, 0) },
-  { id: 13, diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 4, salidas: 1, fhRegistro: new Date(2025, 10, 26, 10, 26, 0) },
-  { id: 14, diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 5, salidas: 2, fhRegistro: new Date(2025, 10, 26, 10, 49, 0) },
-  { id: 15, diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 6, salidas: 3, fhRegistro: new Date(2025, 10, 26, 11, 5, 0) },
-  { id: 16, diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 7, salidas: 4, fhRegistro: new Date(2025, 10, 26, 11, 32, 0) },
-  { id: 17, diferencia: 2, contadora: 'AMG-1003-GHI', entradas: 3, salidas: 1, fhRegistro: new Date(2025, 10, 26, 11, 57, 0) },
-  { id: 18, diferencia: 2, contadora: 'AMG-1003-GHI', entradas: 4, salidas: 2, fhRegistro: new Date(2025, 10, 26, 12, 19, 0) },
-  { id: 19, diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 4, salidas: 1, fhRegistro: new Date(2025, 10, 26, 12, 43, 0) },
-  { id: 20, diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 5, salidas: 2, fhRegistro: new Date(2025, 10, 26, 13, 8, 0) },
-  { id: 21, diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 6, salidas: 3, fhRegistro: new Date(2025, 10, 26, 13, 27, 0) },
-  { id: 22, diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 7, salidas: 4, fhRegistro: new Date(2025, 10, 26, 13, 51, 0) },
-  { id: 23, diferencia: 2, contadora: 'AMG-1003-GHI', entradas: 3, salidas: 1, fhRegistro: new Date(2025, 10, 26, 14, 16, 0) },
-  { id: 24, diferencia: 2, contadora: 'AMG-1003-GHI', entradas: 4, salidas: 2, fhRegistro: new Date(2025, 10, 26, 14, 39, 0) },
-  { id: 25, diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 4, salidas: 1, fhRegistro: new Date(2025, 10, 26, 15, 4, 0) },
-  { id: 26, diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 5, salidas: 2, fhRegistro: new Date(2025, 10, 26, 15, 29, 0) },
-  { id: 27, diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 6, salidas: 3, fhRegistro: new Date(2025, 10, 26, 15, 53, 0) },
-  { id: 28, diferencia: 3, contadora: 'AMG-1003-GHI', entradas: 7, salidas: 4, fhRegistro: new Date(2025, 10, 26, 16, 18, 0) },
-  { id: 29, diferencia: 2, contadora: 'AMG-1003-GHI', entradas: 3, salidas: 1, fhRegistro: new Date(2025, 10, 26, 16, 44, 0) },
-  { id: 30, diferencia: 2, contadora: 'AMG-1003-GHI', entradas: 4, salidas: 2, fhRegistro: new Date(2025, 10, 26, 17, 10, 0) }
-];
+  public listaModulos: any[] = [];
 
 
 customizeTooltip(info: any) {
-  const fecha = info.argument as Date;
-  const hora = fecha.toLocaleTimeString('es-MX', {
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-
   const datos = info.point.data;
-
   return {
     text:
-      'Hora: ' + hora +
-      '\nValidador: ' + datos.contadora +
-      '\nEntradas: ' + datos.entradas +
-      '\nSalidas: ' + datos.salidas +
-      '\nDiferencia: ' + datos.diferencia
+      'Viaje: ' + (datos?.contadora ?? datos?.idViaje ?? '') +
+      '\nSubidas: ' + (datos?.entradas ?? 0) +
+      '\nBajadas: ' + (datos?.salidas ?? 0) +
+      '\nDiferencia: ' + (datos?.diferencia ?? 0) +
+      '\nRegistros: ' + (datos?.cantidadRegistros ?? 0)
   };
 }
 
@@ -95,15 +60,91 @@ customizeTooltip(info: any) {
   constructor(
     private route: Router,
     private moduloService: ModulosService,
+    private bitacoraService: BitacoraService,
     private alerts: AlertsService,
+    private fb: FormBuilder
   ) {
     this.showFilterRow = true;
     this.showHeaderFilter = true;
+    this.initFiltroForm();
+  }
+
+  initFiltroForm() {
+    this.filtroForm = this.fb.group({
+      fechaInicio: [null],
+      fechaFin: [null]
+    });
+  }
+
+  get datosFiltrados(): any[] {
+    return this.listaModulos || [];
   }
 
   ngOnInit() {
     // this.setupDataSource();
     // this.obtenerListaModulos();
+  }
+
+  formatDate(date: Date): string {
+    if (!date) return '';
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  buscar() {
+    const formValue = this.filtroForm.getRawValue();
+    const fechaInicio = formValue.fechaInicio ? new Date(formValue.fechaInicio) : null;
+    const fechaFin = formValue.fechaFin ? new Date(formValue.fechaFin) : null;
+
+    if (!fechaInicio || !fechaFin) {
+      this.alerts.open({
+        type: 'warning',
+        title: 'Fechas requeridas',
+        message: 'Debe seleccionar Fecha Inicio y Fecha Fin para buscar.',
+        confirmText: 'Aceptar',
+        backdropClose: false
+      });
+      return;
+    }
+
+    this.fechaInicio = fechaInicio;
+    this.fechaFin = fechaFin;
+    this.loading = true;
+
+    const fechaInicioStr = this.formatDate(fechaInicio);
+    const fechaFinStr = this.formatDate(fechaFin);
+
+    this.bitacoraService.obtenerConteoPasajerosRangoAgrupado(fechaInicioStr, fechaFinStr).subscribe({
+      next: (resp: any) => {
+        this.loading = false;
+        const data = Array.isArray(resp) ? resp : (resp?.data ?? resp?.result ?? []);
+        this.listaModulos = data.map((item: any, idx: number) => ({
+          id: item.idViaje ?? idx + 1,
+          idViaje: item.idViaje,
+          diferencia: item.diferencia ?? 0,
+          contadora: 'Viaje ' + (item.idViaje ?? idx + 1),
+          entradas: item.subidas ?? 0,
+          salidas: item.bajadas ?? 0,
+          cantidadRegistros: item.cantidadRegistros ?? 0
+        }));
+        if (this.dataGrid?.instance) {
+          this.dataGrid.instance.refresh();
+        }
+      },
+      error: (err) => {
+        this.loading = false;
+        this.alerts.open({
+          type: 'error',
+          title: 'Error',
+          message: err?.error?.message ?? err?.message ?? 'Error al obtener datos del conteo de pasajeros.',
+          confirmText: 'Aceptar',
+          backdropClose: false
+        });
+      }
+    });
   }
 
   // hasPermission(permission: string): boolean {
@@ -270,7 +311,7 @@ customizeTooltip(info: any) {
     const texto = (e.value ?? '').toString().trim().toLowerCase();
     if (!texto) {
       this.filtroActivo = '';
-      grid?.option('dataSource', this.listaModulos);
+      grid?.option('dataSource', this.datosFiltrados);
       return;
     }
     this.filtroActivo = texto;
@@ -295,11 +336,12 @@ customizeTooltip(info: any) {
       }
       return String(val).toLowerCase();
     };
-    const dataFiltrada = (this.paginaActualData || []).filter((row: any) => {
+    const dataFiltrada = (this.datosFiltrados || []).filter((row: any) => {
       const hitEnColumnas = dataFields.some((df) => normalizar(row?.[df]).includes(texto));
       const extras = [
         normalizar(row?.id),
-        normalizar(row?.estatusTexto)
+        normalizar(row?.idViaje),
+        normalizar(row?.contadora)
       ];
 
       return hitEnColumnas || extras.some((s) => s.includes(texto));
@@ -308,11 +350,15 @@ customizeTooltip(info: any) {
   }
 
   limpiarCampos() {
-    const today = new Date();
     this.dataGrid.instance.clearGrouping();
     this.isGrouped = false;
-    this.setupDataSource();
-    this.dataGrid.instance.refresh();
+    this.filtroForm.reset();
+    this.fechaInicio = null;
+    this.fechaFin = null;
+    this.listaModulos = [];
+    if (this.dataGrid?.instance) {
+      this.dataGrid.instance.refresh();
+    }
   }
 
   toggleExpandGroups() {

@@ -346,7 +346,17 @@ export class ListaZonasComponent implements OnInit, AfterViewInit, OnDestroy {
       mapTypeControl: false,
       fullscreenControl: false,
       streetViewControl: false,
-      clickableIcons: false,
+      clickableIcons: false,styles: [
+        {
+          featureType: 'poi',
+          elementType: 'labels',
+          stylers: [{ visibility: 'off' }]
+        },
+        {
+          featureType: 'poi',
+          stylers: [{ visibility: 'off' }]
+        }
+      ]
     });
 
     // Dibujar polígono si existe geocerca

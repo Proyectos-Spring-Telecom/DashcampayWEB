@@ -5,8 +5,15 @@
     <div class="col-12">
       <div class="barra d-flex flex-wrap align-items-center justify-content-between">
         <div class="d-flex align-items-center gap-3">
-          <div class="avatar">
-            <img [src]="showImage || 'assets/img/avatar-placeholder.png'" alt="Foto de perfil">
+          <div class="avatar-wrapper">
+            <div class="avatar">
+              <img [src]="showImage || defaultAvatar" alt="Foto de perfil" (error)="onAvatarError($event)">
+            </div>
+            <input #fileInput type="file" accept="image/*" class="avatar-file-input" (change)="onFileSelected($event)">
+            <button type="button" class="btn-avatar-upload" (click)="fileInput.click()" [disabled]="uploadingFoto"
+              matTooltip="Subir foto de perfil" aria-label="Subir foto de perfil">
+              <mat-icon inline>{{ uploadingFoto ? 'hourglass_empty' : 'photo_camera' }}</mat-icon>
+            </button>
           </div>
           <div>
             <div class="nombre">
