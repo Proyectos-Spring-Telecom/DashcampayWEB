@@ -137,7 +137,17 @@ export class AgregarTransaccionComponent implements OnInit {
     const el = document.getElementById('map') as HTMLElement;
     if (!el) return;
 
-    this.map = new google.maps.Map(el, { center: this.POLANCO, zoom: 15 });
+    this.map = new google.maps.Map(el, { center: this.POLANCO, zoom: 15,styles: [
+      {
+        featureType: 'poi',
+        elementType: 'labels',
+        stylers: [{ visibility: 'off' }]
+      },
+      {
+        featureType: 'poi',
+        stylers: [{ visibility: 'off' }]
+      }
+    ] });
     this.geocoder = new google.maps.Geocoder();
     this.infoWindow = new google.maps.InfoWindow();
 

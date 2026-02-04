@@ -192,6 +192,17 @@ export class AgregarTallerComponent implements OnInit, AfterViewInit, OnDestroy 
       center: center,
       zoom: this.hasCoords ? 15 : 10,
       mapTypeId: this.mapType === 'satellite' ? google.maps.MapTypeId.SATELLITE : google.maps.MapTypeId.ROADMAP
+    ,styles: [
+      {
+        featureType: 'poi',
+        elementType: 'labels',
+        stylers: [{ visibility: 'off' }]
+      },
+      {
+        featureType: 'poi',
+        stylers: [{ visibility: 'off' }]
+      }
+    ]
     });
 
     this.geocoder = new google.maps.Geocoder();

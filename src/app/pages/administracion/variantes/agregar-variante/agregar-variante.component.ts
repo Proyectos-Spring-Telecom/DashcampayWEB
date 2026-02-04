@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
-import { FormBuilder, FormGroup, UntypedFormControl, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, UntypedFormControl, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { fadeInRight400ms } from '@vex/animations/fade-in-right.animation';
 import { AlertsService } from 'src/app/pages/pages/modal/alerts.service';
@@ -54,6 +54,7 @@ export class AgregarVarianteComponent implements OnInit, AfterViewInit, OnDestro
   // TIPO VARIANTE (Paso 2)
   listaTiposVariante: any[] = [];
   idTipoVariante: number | null = null;
+  nombreVariante: string = '';
 
   esEstacionaria(): boolean {
     if (!this.idTipoVariante) return false;
@@ -136,6 +137,7 @@ export class AgregarVarianteComponent implements OnInit, AfterViewInit, OnDestro
     this.tarifaForm = this.fb.group({
       idTipoTarifa: [null, Validators.required],
       tarifaBase: [null, [Validators.required, Validators.min(0)]],
+      cantidadEstacionesBase: [{value: null, disabled: true}, [Validators.min(0)]],
       distanciaBaseKm: [{value: null, disabled: true}, [Validators.min(0)]],
       incrementoCadaMetros: [{value: null, disabled: true}, [Validators.min(0)]],
       costoAdicional: [{value: null, disabled: true}, [Validators.min(0)]],
@@ -202,6 +204,7 @@ export class AgregarVarianteComponent implements OnInit, AfterViewInit, OnDestro
     const costoControl = this.tarifaForm.get('costoAdicional');
     const tarifaBaseControl = this.tarifaForm.get('tarifaBase');
     const costoPorEstacionControl = this.tarifaForm.get('costoPorEstacion');
+    const cantidadEstacionesBaseControl = this.tarifaForm.get('cantidadEstacionesBase');
 
     if (!idTipoTarifa) {
       // Si no hay tipo seleccionado, deshabilitar todos excepto tarifaBase
@@ -209,29 +212,35 @@ export class AgregarVarianteComponent implements OnInit, AfterViewInit, OnDestro
       incrementoControl?.disable({ emitEvent: false });
       costoControl?.disable({ emitEvent: false });
       costoPorEstacionControl?.disable({ emitEvent: false });
+      cantidadEstacionesBaseControl?.disable({ emitEvent: false });
       // Limpiar validadores de campos deshabilitados
       distanciaControl?.clearValidators();
       incrementoControl?.clearValidators();
       costoControl?.clearValidators();
       costoPorEstacionControl?.clearValidators();
+      cantidadEstacionesBaseControl?.clearValidators();
       // Limpiar valores (habilitar temporalmente para setValue)
       distanciaControl?.enable({ emitEvent: false });
       incrementoControl?.enable({ emitEvent: false });
       costoControl?.enable({ emitEvent: false });
       costoPorEstacionControl?.enable({ emitEvent: false });
+      cantidadEstacionesBaseControl?.enable({ emitEvent: false });
       distanciaControl?.setValue(null, { emitEvent: false });
       incrementoControl?.setValue(null, { emitEvent: false });
       costoControl?.setValue(null, { emitEvent: false });
       costoPorEstacionControl?.setValue(null, { emitEvent: false });
+      cantidadEstacionesBaseControl?.setValue(null, { emitEvent: false });
       distanciaControl?.disable({ emitEvent: false });
       incrementoControl?.disable({ emitEvent: false });
       costoControl?.disable({ emitEvent: false });
       costoPorEstacionControl?.disable({ emitEvent: false });
+      cantidadEstacionesBaseControl?.disable({ emitEvent: false });
       // Actualizar validadores
       distanciaControl?.updateValueAndValidity({ onlySelf: true });
       incrementoControl?.updateValueAndValidity({ onlySelf: true });
       costoControl?.updateValueAndValidity({ onlySelf: true });
       costoPorEstacionControl?.updateValueAndValidity({ onlySelf: true });
+      cantidadEstacionesBaseControl?.updateValueAndValidity({ onlySelf: true });
       return;
     }
 
@@ -240,32 +249,39 @@ export class AgregarVarianteComponent implements OnInit, AfterViewInit, OnDestro
     const nombreTipo = tipoTarifa?.nombre?.toLowerCase() || '';
 
     if (nombreTipo.includes('estacionaria') || nombreTipo.includes('estacionario')) {
-      // Tipo Estacionaria: solo habilitar Costo por Estación
-      // Deshabilitar todos los demás campos
+      // Tipo Estacionaria: habilitar Tarifa Base, Número de estaciones y Costo por Estación
+      // Deshabilitar distancia, incremento, costo adicional
       distanciaControl?.disable({ emitEvent: false });
       incrementoControl?.disable({ emitEvent: false });
       costoControl?.disable({ emitEvent: false });
-      tarifaBaseControl?.disable({ emitEvent: false });
 
       // Limpiar validadores de campos deshabilitados
       distanciaControl?.clearValidators();
       incrementoControl?.clearValidators();
       costoControl?.clearValidators();
-      tarifaBaseControl?.clearValidators();
 
       // Limpiar valores (habilitar temporalmente para setValue)
       distanciaControl?.enable({ emitEvent: false });
       incrementoControl?.enable({ emitEvent: false });
       costoControl?.enable({ emitEvent: false });
-      tarifaBaseControl?.enable({ emitEvent: false });
       distanciaControl?.setValue(null, { emitEvent: false });
       incrementoControl?.setValue(null, { emitEvent: false });
       costoControl?.setValue(null, { emitEvent: false });
-      tarifaBaseControl?.setValue(0, { emitEvent: false });
       distanciaControl?.disable({ emitEvent: false });
       incrementoControl?.disable({ emitEvent: false });
       costoControl?.disable({ emitEvent: false });
-      tarifaBaseControl?.disable({ emitEvent: false });
+
+      // Habilitar tarifa base (editable para Estacionaria)
+      tarifaBaseControl?.enable({ emitEvent: false });
+      tarifaBaseControl?.setValidators([Validators.required, Validators.min(0)]);
+
+      // Habilitar y hacer obligatorio cantidadEstacionesBase (no puede superar puntos del recorrido)
+      cantidadEstacionesBaseControl?.enable({ emitEvent: false });
+      cantidadEstacionesBaseControl?.setValidators([
+        Validators.required,
+        Validators.min(0),
+        this.cantidadEstacionesBaseMaxValidator(),
+      ]);
 
       // Habilitar y hacer obligatorio costoPorEstacion
       costoPorEstacionControl?.enable({ emitEvent: false });
@@ -276,12 +292,18 @@ export class AgregarVarianteComponent implements OnInit, AfterViewInit, OnDestro
       incrementoControl?.updateValueAndValidity({ onlySelf: true });
       costoControl?.updateValueAndValidity({ onlySelf: true });
       tarifaBaseControl?.updateValueAndValidity({ onlySelf: true });
+      cantidadEstacionesBaseControl?.updateValueAndValidity({ onlySelf: true });
       costoPorEstacionControl?.updateValueAndValidity({ onlySelf: true });
     } else if (nombreTipo.includes('fija') || nombreTipo.includes('fijo')) {
       // Tipo Fija: habilitar Tarifa Base (obligatoria), deshabilitar los demás
       tarifaBaseControl?.enable({ emitEvent: false });
       tarifaBaseControl?.setValidators([Validators.required, Validators.min(0)]);
-      
+
+      cantidadEstacionesBaseControl?.enable({ emitEvent: false });
+      cantidadEstacionesBaseControl?.setValue(null, { emitEvent: false });
+      cantidadEstacionesBaseControl?.clearValidators();
+      cantidadEstacionesBaseControl?.disable({ emitEvent: false });
+
       distanciaControl?.disable({ emitEvent: false });
       incrementoControl?.disable({ emitEvent: false });
       costoControl?.disable({ emitEvent: false });
@@ -291,24 +313,33 @@ export class AgregarVarianteComponent implements OnInit, AfterViewInit, OnDestro
       incrementoControl?.clearValidators();
       costoControl?.clearValidators();
       costoPorEstacionControl?.clearValidators();
+      cantidadEstacionesBaseControl?.clearValidators();
       // Limpiar valores (habilitar temporalmente para setValue)
       distanciaControl?.enable({ emitEvent: false });
       incrementoControl?.enable({ emitEvent: false });
       costoControl?.enable({ emitEvent: false });
       costoPorEstacionControl?.enable({ emitEvent: false });
+      cantidadEstacionesBaseControl?.enable({ emitEvent: false });
       distanciaControl?.setValue(null, { emitEvent: false });
       incrementoControl?.setValue(null, { emitEvent: false });
       costoControl?.setValue(null, { emitEvent: false });
       costoPorEstacionControl?.setValue(null, { emitEvent: false });
+      cantidadEstacionesBaseControl?.setValue(null, { emitEvent: false });
       distanciaControl?.disable({ emitEvent: false });
       incrementoControl?.disable({ emitEvent: false });
       costoControl?.disable({ emitEvent: false });
       costoPorEstacionControl?.disable({ emitEvent: false });
+      cantidadEstacionesBaseControl?.disable({ emitEvent: false });
     } else if (nombreTipo.includes('incremental')) {
       // Tipo Incremental: habilitar todos los campos (incluyendo Tarifa Base) y hacerlos obligatorios
       tarifaBaseControl?.enable({ emitEvent: false });
       tarifaBaseControl?.setValidators([Validators.required, Validators.min(0)]);
-      
+
+      cantidadEstacionesBaseControl?.enable({ emitEvent: false });
+      cantidadEstacionesBaseControl?.setValue(null, { emitEvent: false });
+      cantidadEstacionesBaseControl?.clearValidators();
+      cantidadEstacionesBaseControl?.disable({ emitEvent: false });
+
       distanciaControl?.enable({ emitEvent: false });
       incrementoControl?.enable({ emitEvent: false });
       costoControl?.enable({ emitEvent: false });
@@ -322,9 +353,10 @@ export class AgregarVarianteComponent implements OnInit, AfterViewInit, OnDestro
       incrementoControl?.setValidators([Validators.required, Validators.min(0)]);
       costoControl?.setValidators([Validators.required, Validators.min(0)]);
     }
-    
+
     // Actualizar validadores
     tarifaBaseControl?.updateValueAndValidity({ onlySelf: true });
+    cantidadEstacionesBaseControl?.updateValueAndValidity({ onlySelf: true });
     distanciaControl?.updateValueAndValidity({ onlySelf: true });
     incrementoControl?.updateValueAndValidity({ onlySelf: true });
     costoControl?.updateValueAndValidity({ onlySelf: true });
@@ -548,6 +580,23 @@ export class AgregarVarianteComponent implements OnInit, AfterViewInit, OnDestro
     return [...this.pathPoints];
   }
 
+  /** Máximo permitido para cantidadEstacionesBase: cantidad de puntos del recorrido detallado */
+  get maxCantidadEstacionesBase(): number {
+    return this.obtenerTrazo().length;
+  }
+
+  private cantidadEstacionesBaseMaxValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const val = control.value;
+      if (val == null || val === '') return null;
+      const n = Number(val);
+      if (Number.isNaN(n)) return null;
+      const max = this.maxCantidadEstacionesBase;
+      if (n > max) return { cantidadEstacionesBaseMax: { max, actual: n } };
+      return null;
+    };
+  }
+
   private resetDrawing(): void {
     this.pathPointMarkers.forEach((m) => m.setMap(null));
     this.pathPointMarkers = [];
@@ -749,6 +798,7 @@ private destroyMap(): void {
     // ahora step 1 = Rutas
     this.step = 1;
     this.selectedRuta = null;
+    this.nombreVariante = '';
     this.isRouteFinalized = false;
     this.destroyMap();
   }
@@ -756,6 +806,7 @@ private destroyMap(): void {
 goStep2(): void {
   if (!this.selectedRuta) return;
   this.step = 2;
+  this.nombreVariante = this.selectedRuta.nombre || '';
   // esperar a que el DOM monte el nuevo #map
   setTimeout(() => this.renderGoogleMap(), 0);
 }
@@ -898,7 +949,7 @@ async agregarVariante(): Promise<void> {
       : Math.round(haversineKm(start.lat, start.lng, end.lat, end.lng) * 10) / 10;
 
     const payload = {
-      nombre: this.selectedRuta.nombre || '',
+      nombre: (this.nombreVariante || '').trim() || this.selectedRuta.nombre || '',
       puntoInicio: {
         coordenadas: { lat: start.lat, lng: start.lng },
         direccion: this.selectedRuta.origen ?? null,   // viene de la ruta
@@ -935,18 +986,23 @@ agregarTarifa(): void {
     const etiquetas: Record<string, string> = {
       idTipoTarifa: 'Tipo Tarifa',
       tarifaBase: 'Tarifa Base',
+      cantidadEstacionesBase: 'Cantidad Estaciones Base',
       distanciaBaseKm: 'Distancia Base KM',
       incrementoCadaMetros: 'Incremento por cada 100 m adicionales',
       costoAdicional: 'Costo Adicional',
+      costoPorEstacion: 'Costo por Estación',
       estatus: 'Estatus',
-      idVariante: 'Variante', // <-- antes decía Derrotero
+      idVariante: 'Variante',
     };
 
     const faltantes: string[] = [];
     Object.keys(this.tarifaForm.controls).forEach((key) => {
       const control = this.tarifaForm.get(key);
-      if (control?.invalid && control.errors?.['required']) {
+      if (!control?.invalid) return;
+      if (control.errors?.['required']) {
         faltantes.push(etiquetas[key] || key);
+      } else if (control.errors?.['cantidadEstacionesBaseMax']) {
+        faltantes.push(`Cantidad Estaciones Base no puede superar las ${this.maxCantidadEstacionesBase} estaciones del recorrido`);
       }
     });
 
@@ -983,10 +1039,11 @@ agregarTarifa(): void {
     idVariante: this.toNum(v.idVariante),
   };
 
-  // Si es Estacionaria, solo agregar costoPorEstacion
+  // Si es Estacionaria: tarifaBase, cantidadEstacionesBase y costoPorEstacion
   if (esEstacionaria) {
+    payload.tarifaBase = this.toNum(v.tarifaBase);
+    payload.cantidadEstacionesBase = this.toNum(v.cantidadEstacionesBase);
     payload.costoPorEstacion = this.toNum(v.costoPorEstacion);
-    payload.tarifaBase = 0; // Estacionaria tiene tarifa base en 0
   } else {
     // Para Fija e Incremental, agregar tarifaBase
     payload.tarifaBase = this.toNum(v.tarifaBase);
@@ -1002,19 +1059,20 @@ agregarTarifa(): void {
   const etiquetasNum: Record<string, string> = {
     idTipoTarifa: 'Tipo Tarifa',
     tarifaBase: 'Tarifa Base',
+    cantidadEstacionesBase: 'Cantidad Estaciones Base',
     distanciaBaseKm: 'Distancia Base KM',
     incrementoCadaMetros: 'Incremento por cada 100 m adicionales',
     costoAdicional: 'Costo Adicional',
     costoPorEstacion: 'Costo por Estación',
     estatus: 'Estatus',
-    idVariante: 'Variante', // <-- clave correcta
+    idVariante: 'Variante',
   };
 
   // Filtrar campos que no deben validarse según el tipo de tarifa
   const camposAValidar: Record<string, number> = {};
   Object.entries(payload).forEach(([key, value]) => {
-    // Si es Estacionaria, no validar distanciaBaseKm ni incrementoCadaMetros
-    if (esEstacionaria && (key === 'distanciaBaseKm' || key === 'incrementoCadaMetros' || key === 'costoAdicional' || key === 'tarifaBase')) {
+    // Si es Estacionaria, no validar distanciaBaseKm ni incrementoCadaMetros ni costoAdicional
+    if (esEstacionaria && (key === 'distanciaBaseKm' || key === 'incrementoCadaMetros' || key === 'costoAdicional')) {
       return; // No agregar estos campos a la validación
     }
     // Si es Fija, no validar distanciaBaseKm, incrementoCadaMetros ni costoAdicional

@@ -547,6 +547,17 @@ export class AgregarZonaComponent implements OnInit, AfterViewInit, OnDestroy {
       fullscreenControl: false,
       streetViewControl: false,
       clickableIcons: false,
+      styles: [
+        {
+          featureType: 'poi',
+          elementType: 'labels',
+          stylers: [{ visibility: 'off' }]
+        },
+        {
+          featureType: 'poi',
+          stylers: [{ visibility: 'off' }]
+        }
+      ]
     });
 
     setTimeout(() => {

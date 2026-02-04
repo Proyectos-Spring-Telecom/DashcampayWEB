@@ -116,6 +116,17 @@ export class AgregarRutaComponent implements OnInit, OnDestroy {
         streetViewControl: false,
         clickableIcons: false,
         gestureHandling: 'greedy',
+        styles: [
+          {
+            featureType: 'poi',
+            elementType: 'labels',
+            stylers: [{ visibility: 'off' }]
+          },
+          {
+            featureType: 'poi',
+            stylers: [{ visibility: 'off' }]
+          }
+        ]
       });
 
       this.geocoder = new google.maps.Geocoder();

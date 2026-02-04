@@ -68,6 +68,7 @@ export class AgregarTarifaComponent implements OnInit {
         const dto = {
           tarifaBase: this.toNumber(item.tarifaBase ?? item.TarifaBase),
           distanciaBaseKm: this.toNumber(item.distanciaBaseKm ?? item.DistanciaBaseKm),
+          cantidadEstacionesBase: this.toNumber(item.cantidadEstacionesBase ?? item.CantidadEstacionesBase),
           incrementoCadaMetros: this.toNumber(item.incrementoCadaMetros ?? item.IncrementoCadaMetros),
           costoAdicional: this.toNumber(item.costoAdicional ?? item.CostoAdicional),
           estatus: (item.estatus ?? item.estatusTarifa ?? 1),
@@ -92,6 +93,7 @@ export class AgregarTarifaComponent implements OnInit {
     this.tarifaForm = this.fb.group({
       tarifaBase: [null, Validators.required],
       distanciaBaseKm: [null, Validators.required],
+      cantidadEstacionesBase: [null, Validators.required],
       incrementoCadaMetros: [null, Validators.required],
       costoAdicional: [null, Validators.required],
       estatus: [1, Validators.required],
@@ -120,6 +122,7 @@ export class AgregarTarifaComponent implements OnInit {
       const etiquetas: Record<string, string> = {
         tarifaBase: 'Tarifa Base',
         distanciaBaseKm: 'Distancia Base Km',
+        cantidadEstacionesBase: 'Cantidad Estaciones Base',
         incrementoCadaMetros: 'Incremento Por Metros',
         costoAdicional: 'Costo Adicional',
         idVariante: 'Variante',
@@ -205,6 +208,7 @@ export class AgregarTarifaComponent implements OnInit {
       const etiquetas: Record<string, string> = {
         tarifaBase: 'Tarifa Base',
         distanciaBaseKm: 'Distancia Base Km',
+        cantidadEstacionesBase: 'Cantidad Estaciones Base',
         incrementoCadaMetros: 'Incremento Por Metros',
         costoAdicional: 'Costo Adicional',
         idVariante: 'Variante',
@@ -524,5 +528,29 @@ export class AgregarTarifaComponent implements OnInit {
     this.tarifaForm.get('distanciaBaseKm')?.setValue(v, { emitEvent: false });
   }
 
+  estacionesKeydown(e: KeyboardEvent) {
+    const allowed = ['Backspace', 'Tab', 'ArrowLeft', 'ArrowRight', 'Delete', 'Home', 'End'];
+    if (allowed.includes(e.key)) return;
+    if (!/^\d$/.test(e.key)) {
+      e.preventDefault();
+    }
+  }
+
+  estacionesInput(e: Event) {
+    const input = e.target as HTMLInputElement;
+    const v = (input.value || '').replace(/[^0-9]/g, '');
+    input.value = v;
+    const n = v === '' ? null : Number(v);
+    this.tarifaForm.get('cantidadEstacionesBase')?.setValue(n, { emitEvent: false });
+  }
+
+  estacionesPaste(e: ClipboardEvent) {
+    e.preventDefault();
+    const input = e.target as HTMLInputElement;
+    const v = (e.clipboardData?.getData('text') || '').replace(/[^0-9]/g, '');
+    input.value = v;
+    const n = v === '' ? null : Number(v);
+    this.tarifaForm.get('cantidadEstacionesBase')?.setValue(n, { emitEvent: false });
+  }
 
 }

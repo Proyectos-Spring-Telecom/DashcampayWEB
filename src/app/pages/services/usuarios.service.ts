@@ -46,6 +46,10 @@ export class UsuariosService {
     return this.http.put(`${environment.API_SECURITY}/usuarios/actualizar/contrasena/` + idUsuario, data);
   }
 
+  subirFotoPerfil(formData: FormData): Observable<any> {
+    return this.http.post(`${environment.API_SECURITY}/usuarios/foto-perfil`, formData);
+  }
+
   private apiUrl = `${environment.API_SECURITY}/usuarios`;
   updateEstatus(id: number, estatus: number): Observable<string> {
     const url = `${this.apiUrl}/estatus/${id}`;
