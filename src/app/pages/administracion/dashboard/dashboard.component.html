@@ -30,7 +30,7 @@
         <div class="col-12 col-sm-6 col-lg-3">
           <div class="kpi-card kpi-primary shadow-sm">
             <div class="kpi-top"><span>{{ obtenerTextoIngresos() }}</span><i class="material-icons">paid</i></div>
-            <div class="kpi-value">{{ kpis.ingresosHoy | currency:'MXN':'symbol':'1.0-0' }}</div>
+            <div class="kpi-value">{{ kpis.ingresosHoy | currency:'MXN':'symbol':'1.2-2' }}</div>
             <div class="kpi-foot" *ngIf="filtroSeleccionado.valor === 1">
               vs ayer <span class="trend" [class.up]="kpis.deltaIngresos>=0"
                 [class.down]="kpis.deltaIngresos<0">{{ kpis.deltaIngresos | number:'1.0-1' }}%</span>
@@ -107,9 +107,9 @@
                 <tbody>
                   <tr *ngFor="let r of topRutas">
                     <td>{{ r.ruta }}</td>
-                    <td class="text-end">{{ r.monto | currency:'MXN':'symbol':'1.0-0' }}</td>
+                    <td class="text-end">{{ r.monto | currency:'MXN':'symbol':'1.2-2' }}</td>
                     <td class="text-end">{{ (r.pasajeros ?? 0) | number:'1.0-0' }}</td>
-                    <td class="text-end">{{ r.ticket | currency:'MXN' }}</td>
+                    <td class="text-end">{{ r.ticketPromedio | currency:'MXN':'symbol':'1.2-2' }}</td>
                   </tr>
                 </tbody>
               </table>
