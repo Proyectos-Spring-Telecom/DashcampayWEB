@@ -15,9 +15,57 @@
           </nav>
         </div>
 
+        <div class="container-fluid py-3 border-b">
+          <form [formGroup]="filtroForm" class="row g-3">
+            <div class="col-12 col-md-4 d-flex flex-column">
+              <label class="form-label">
+                <i class="fa fa-calendar me-2"></i>
+                <span>Fecha Inicio</span>
+              </label>
+              <mat-form-field appearance="fill" class="w-100 filtro-date-field">
+                <mat-label>Fecha Inicio</mat-label>
+                <input matInput [matDatepicker]="pickerInicio" formControlName="fechaInicio"
+                  placeholder="Seleccione fecha inicio">
+                <mat-datepicker-toggle matSuffix [for]="pickerInicio"></mat-datepicker-toggle>
+                <mat-datepicker #pickerInicio></mat-datepicker>
+              </mat-form-field>
+            </div>
+            <div class="col-12 col-md-4 d-flex flex-column">
+              <label class="form-label">
+                <i class="fa fa-calendar me-2"></i>
+                <span>Fecha Fin</span>
+              </label>
+              <mat-form-field appearance="fill" class="w-100 filtro-date-field">
+                <mat-label>Fecha Fin</mat-label>
+                <input matInput [matDatepicker]="pickerFin" formControlName="fechaFin"
+                  placeholder="Seleccione fecha fin">
+                <mat-datepicker-toggle matSuffix [for]="pickerFin"></mat-datepicker-toggle>
+                <mat-datepicker #pickerFin></mat-datepicker>
+              </mat-form-field>
+            </div>
+            <div class="col-12 col-md-4 d-flex flex-column">
+              <label class="form-label" style="visibility: hidden;">
+                <span>Buscar</span>
+              </label>
+              <div class="filtro-button-wrapper d-flex gap-2">
+                <button type="button" mat-raised-button color="primary" class="btn-soft textGenerico" (click)="buscar()"
+                  matTooltip="Buscar">
+                  <mat-icon svgIcon="mat:search"></mat-icon>
+                  <span class="btn-text">Buscar</span>
+                </button>
+                <button type="button" mat-raised-button color="accent" class="btn-soft textGenerico" (click)="limpiarCampos()"
+                  matTooltip="Limpiar filtros">
+                  <mat-icon svgIcon="mat:restore"></mat-icon>
+                  <span class="btn-text">Limpiar</span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
         <section class="mt-5 table-shell">
           <dx-data-grid #gridContainer id="gridContainer" [columnHidingEnabled]="true" [showBorders]="true"
-            [showColumnLines]="true" [showRowLines]="true" [rowAlternationEnabled]="true" [dataSource]="listaModulos"
+            [showColumnLines]="true" [showRowLines]="true" [rowAlternationEnabled]="true" [dataSource]="datosFiltrados"
             [keyExpr]="'id'" [width]="'100%'" [remoteOperations]="{ paging: true }" [paging]="{ pageSize: pageSize }"
             [pager]="{ 
                                 showPageSizeSelector: true, 
@@ -34,15 +82,12 @@
             <dxo-filter-row [visible]="showFilterRow"></dxo-filter-row>
             <dxo-header-filter [visible]="showHeaderFilter"></dxo-header-filter>
             <dxo-grouping [autoExpandAll]="true"></dxo-grouping>
+            <dxi-column dataField="idViaje" caption="Id Viaje" alignment="center"></dxi-column>
             <dxi-column dataField="diferencia" caption="Diferencia" alignment="center"></dxi-column>
-            <dxi-column dataField="contadora" caption="Contadora" alignment="center"></dxi-column>
-            <dxi-column dataField="entradas" caption="Entradas" alignment="center"></dxi-column>
-            <dxi-column dataField="salidas" caption="Salidas" alignment="center"></dxi-column>
-            <dxi-column dataField="fhRegistro" caption="Fecha y Hora" alignment="center" cellTemplate="fechaTemplate">
-  <div *dxTemplate="let data of 'fechaTemplate'">
-    {{ data.value | date: 'dd/MM/yyyy HH:mm' }}
-  </div>
-</dxi-column>
+            <dxi-column dataField="contadora" caption="Viaje" alignment="center"></dxi-column>
+            <dxi-column dataField="entradas" caption="Subidas" alignment="center"></dxi-column>
+            <dxi-column dataField="salidas" caption="Bajadas" alignment="center"></dxi-column>
+            <dxi-column dataField="cantidadRegistros" caption="Cant. Registros" alignment="center"></dxi-column>
 
             <dxo-export [enabled]="false" [allowExportSelectedData]="true"
               [texts]="{ exportAll: 'Exportar todos los datos a Excel', exportSelectedRows: 'Exportar filas seleccionadas a Excel' }">
@@ -52,20 +97,19 @@
 
         <section class="mt-5 table-shell">
           <dx-chart
-  [dataSource]="listaModulos"
-  title="Flujo de Pasajeros por Validador"
+  [dataSource]="datosFiltrados"
+  title="Flujo de Pasajeros por Viaje"
 >
   <dxo-common-series-settings
-    argumentField="fhRegistro"
-    type="line"
+    argumentField="idViaje"
+    type="bar"
   ></dxo-common-series-settings>
 
-  <dxi-series valueField="entradas" name="Entradas"></dxi-series>
-  <dxi-series valueField="salidas"  name="Salidas"></dxi-series>
+  <dxi-series valueField="entradas" name="Subidas"></dxi-series>
+  <dxi-series valueField="salidas"  name="Bajadas"></dxi-series>
   <dxi-series valueField="diferencia" name="Diferencia"></dxi-series>
 
-  <dxo-argument-axis argumentType="datetime">
-    <dxo-label format="shortTime"></dxo-label>
+  <dxo-argument-axis argumentType="numeric">
   </dxo-argument-axis>
 
   <dxo-legend

@@ -131,6 +131,7 @@ export class PerfilUsuarioComponent {
   public showCreacion: any;
   ultimoLogin: string | null = null;
   show = { curr: false, neu: false, conf: false };
+  uploadingFoto = false;
   loading = false;
   dryRun = true;
   confirmMsg = '';
@@ -139,7 +140,7 @@ export class PerfilUsuarioComponent {
   passwordStrengthColor = '';
   hintVersion = 0;
   isAllValid = false;
-  defaultAvatar = 'assets/images/user_default.png';
+  defaultAvatar = 'assets/img/avatars/noavatar.png';
   showUltimoLogin: string | null = null;
 
   constructor(
@@ -179,7 +180,7 @@ export class PerfilUsuarioComponent {
     userName:          sanitize(pick('userName', 'email', 'correo'), ''),
     rolNombre:         sanitize(rolObj?.nombre ?? rolObj?.name ?? userRaw?.rol ?? userRaw?.role ?? ''),
     rolDescripcion:    sanitize(rolObj?.descripcion ?? rolObj?.description ?? ''),
-    fotoPerfil:        sanitize(pick('fotoPerfil', 'avatar', 'profileImage'), 'assets/images/user_default.png'),
+    fotoPerfil:        sanitize(pick('fotoPerfil', 'avatar', 'profileImage'), 'assets/img/avatars/noavatar.png'),
     id:                pick<number | string>('id', 'userId')
   };
 
@@ -219,10 +220,62 @@ export class PerfilUsuarioComponent {
   }
 
   onAvatarError(ev: Event) {
-    const img = ev.target as HTMLImageElement;
-    if (img && img.src !== this.defaultAvatar) {
-      img.src = this.defaultAvatar;
+    if (this.showImage && this.showImage !== this.defaultAvatar) {
+      this.showImage = this.defaultAvatar;
     }
+  }
+
+  onFileSelected(ev: Event): void {
+    const input = ev.target as HTMLInputElement;
+    const file = input?.files?.[0];
+    if (!file || !file.type.startsWith('image/')) {
+      if (file) {
+        this.alerts.open({
+          type: 'warning',
+          title: 'Archivo no válido',
+          message: 'Por favor selecciona una imagen (JPG, PNG, etc.).',
+          backdropClose: false
+        });
+      }
+      input.value = '';
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('foto', file, file.name);
+    if (this.showId != null) {
+      formData.append('idUsuario', String(this.showId));
+    }
+
+    this.uploadingFoto = true;
+    this.usuarioService.subirFotoPerfil(formData).pipe(
+      finalize(() => {
+        this.uploadingFoto = false;
+        input.value = '';
+      })
+    ).subscribe({
+      next: (resp: any) => {
+        const url = resp?.data?.url ?? resp?.url ?? resp?.fotoPerfil ?? resp?.foto;
+        if (url) {
+          this.showImage = url;
+        }
+        this.alerts.open({
+          type: 'success',
+          title: '¡Foto actualizada!',
+          message: 'Tu foto de perfil se ha actualizado correctamente.',
+          backdropClose: false
+        });
+      },
+      error: (err) => {
+        const msg = err?.error?.message ?? err?.message ?? 'Error al subir la foto.';
+        this.alerts.open({
+          type: 'error',
+          title: '¡Ops!',
+          message: msg,
+          backdropClose: false
+        });
+      }
+    });
   }
 
   private getDescripcionRol(rol: string): string {

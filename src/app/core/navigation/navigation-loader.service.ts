@@ -22,7 +22,8 @@ export class NavigationLoaderService {
     this._items.next([
       {
         type: 'subheading',
-        label: 'Trabajo',
+        label: 'Administración',
+        permissions: [5],
         children: [
           {
             type: 'link',
@@ -30,6 +31,74 @@ export class NavigationLoaderService {
             icon: 'mat:dashboard',
             route: '/administracion/dashboard',
             permissions: [95]
+          },
+          {
+            type: 'link',
+            label: 'Usuarios',
+            route: '/administracion/usuarios',
+            permissions: [5],
+            icon: 'mat:manage_accounts'
+          },
+          {
+            type: 'link',
+            label: 'Roles',
+            route: '/administracion/roles',
+            icon: 'mat:group',
+            permissions: [9],
+          },
+          {
+            type: 'link',
+            label: 'Bitácora',
+            route: '/administracion/bitacora',
+            icon: 'mat:event_note',
+            permissions: [85]
+          },
+          {
+            type: 'link',
+            label: 'Clientes',
+            route: '/administracion/clientes',
+            icon: 'mat:badge',
+            permissions: [1],
+          },
+          {
+            type: 'link',
+            label: 'Permisos',
+            route: '/administracion/permisos',
+            icon: 'mat:lock',
+            permissions: [13],
+          },
+          {
+            type: 'link',
+            label: 'Módulos',
+            route: '/administracion/modulos',
+            icon: 'mat:apps',
+            permissions: [17]
+          },
+          {
+            type: 'link',
+            label: 'Perfil de Usuario',
+            route: '/administracion/perfil-usuario',
+            icon: 'mat:person',
+          },
+        ]
+      },
+      {
+        type: 'subheading',
+        label: 'Gestión de flota',
+        children: [
+          {
+            type: 'link',
+            label: 'Tipo de pasajeros',
+            route: '/administracion/tipos-pasajero',
+            icon: 'mat:category',
+            permissions: [105]
+          },
+          {
+            type: 'link',
+            label: 'Operadores',
+            route: '/administracion/operadores',
+            icon: 'mat:group',
+            permissions: [33]
           },
           {
             type: 'link',
@@ -61,128 +130,39 @@ export class NavigationLoaderService {
           },
           {
             type: 'link',
-            label: 'Operadores',
-            route: '/administracion/operadores',
-            icon: 'mat:group',
-            permissions: [33]
-          },
-          {
-            type: 'link',
-            label: 'Pasajeros',
-            route: '/administracion/pasajeros',
-            icon: 'mat:directions_walk',
-            permissions: [81]
-          },
-          {
-            type: 'link',
-            label: 'Tipos de Pasajero',
-            route: '/administracion/tipos-pasajero',
-            icon: 'mat:category',
-            permissions: [105]
-          },
-          {
-            type: 'link',
-            label: 'Punto de Venta',
-            route: '/administracion/punto-venta',
-            icon: 'mat:storefront',
-            permissions: [92]
-          },
-          {
-            type: 'link',
-            label: 'Monederos',
-            route: '/administracion/monederos',
-            icon: 'mat:monetization_on',
-            permissions: [77]
-          },
-          {
-            type: 'link',
-            label: 'Transacciones',
-            route: '/administracion/transacciones',
-            icon: 'mat:assessment',
-            permissions: [90]
-          },
-          // {
-          //   type: 'link',
-          //   label: 'Monitoreo',
-          //   route: '/administracion/monitoreo',
-          //   icon: 'mat:monitor_heart',
-          // },
-          {
-            type: 'link',
             label: 'Zonas',
             route: '/administracion/zonas',
-            icon: 'mat:map', // o 'mat:layers' / 'mat:grid_view',
+            icon: 'mat:map',
             permissions: [61]
           },
           {
             type: 'link',
             label: 'Rutas',
             route: '/administracion/rutas',
-            icon: 'mat:alt_route', // o 'mat:route' / 'mat:signpost'
+            icon: 'mat:alt_route',
             permissions: [65]
           },
           {
             type: 'link',
             label: 'Variantes',
             route: '/administracion/variantes',
-            icon: 'mat:money', // o 'mat:tune' / 'mat:widgets'
+            icon: 'mat:tune',
             permissions: [69]
-          },
-          {
-            type: 'link',
-            label: 'Transbordos',
-            route: '/administracion/transbordos',
-            icon: 'mat:swap_horiz', // o 'mat:transfer_within_a_station' / 'mat:sync_alt'
-            permissions: [127]
           },
           {
             type: 'link',
             label: 'Tarifas',
             route: '/administracion/tarifas',
-            icon: 'mat:category', // o 'mat:tune' / 'mat:widgets',
+            icon: 'mat:attach_money',
             permissions: [73]
           },
           {
             type: 'link',
-            label: 'Turnos',
-            route: '/administracion/turnos',
-            icon: 'mat:schedule',
-            permissions: [53]
+            label: 'Transbordos',
+            route: '/administracion/transbordos',
+            icon: 'mat:swap_horiz',
+            permissions: [127]
           },
-          {
-            type: 'link',
-            label: 'Bitácora',
-            route: '/administracion/bitacora',
-            icon: 'mat:event_note',
-            permissions: [85]
-          },
-          {
-            type: 'link',
-            label: 'En Vivo',
-            route: '/administracion/monitoreo',
-            icon: 'mat:location_on',
-            permissions: [93]
-          },
-          {
-            type: 'link',
-            label: 'Conteo de Personas',
-            route: '/administracion/bitacora-viajes',
-            icon: 'mat:groups',
-            permissions: [86]
-          },
-          // {
-          //   type: 'link',
-          //   label: 'Perfil Pasajero',
-          //   route: '/administracion/perfil-pasajero',
-          //   icon: 'mat:description'
-          // }
-        ]
-      },
-      {
-        type: 'subheading',
-        label: 'Gestión Vehícular',
-        permissions: [109],
-        children: [
           {
             type: 'link',
             label: 'Mantenimiento',
@@ -210,55 +190,60 @@ export class NavigationLoaderService {
             route: '/administracion/talleres',
             icon: 'mat:garage',
             permissions: [122],
-          }
+          },
+          {
+            type: 'link',
+            label: 'Turnos',
+            route: '/administracion/turnos',
+            icon: 'mat:schedule',
+            permissions: [53]
+          },
+          {
+            type: 'link',
+            label: 'En Vivo',
+            route: '/administracion/monitoreo',
+            icon: 'mat:location_on',
+            permissions: [93]
+          },
         ]
       },
       {
         type: 'subheading',
-        label: 'Administración',
-        permissions: [5],
+        label: 'Conteo',
         children: [
           {
             type: 'link',
-            label: 'Usuarios',
-            route: '/administracion/usuarios',
-            permissions: [5],
-            icon: 'mat:manage_accounts'
+            label: 'Conteo de Personas',
+            route: '/administracion/bitacora-viajes',
+            icon: 'mat:groups',
+            permissions: [86]
+          },
+        ]
+      },
+      {
+        type: 'subheading',
+        label: 'Recaudo',
+        children: [
+          {
+            type: 'link',
+            label: 'Punto de venta',
+            route: '/administracion/punto-venta',
+            icon: 'mat:storefront',
+            permissions: [92]
           },
           {
             type: 'link',
-            label: 'Clientes',
-            route: '/administracion/clientes',
-            icon: 'mat:badge',
-            permissions: [1],
-          },
-
-          {
-            type: 'link',
-            label: 'Permisos',
-            route: '/administracion/permisos',
-            icon: 'mat:lock',
-            permissions: [13],
+            label: 'Monederos',
+            route: '/administracion/monederos',
+            icon: 'mat:monetization_on',
+            permissions: [77]
           },
           {
             type: 'link',
-            label: 'Módulos',
-            route: '/administracion/modulos',
-            icon: 'mat:apps',
-            permissions: [17] 
-          },
-          {
-            type: 'link',
-            label: 'Roles',
-            route: '/administracion/roles',
-            icon: 'mat:group',
-            permissions: [9],
-          },
-          {
-            type: 'link',
-            label: 'Perfil de Usuario',
-            route: '/administracion/perfil-usuario',
-            icon: 'mat:person',
+            label: 'Transacciones',
+            route: '/administracion/transacciones',
+            icon: 'mat:assessment',
+            permissions: [90]
           },
         ]
       },

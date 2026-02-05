@@ -19,6 +19,9 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
 import { DxChartModule, DxDataGridModule } from 'devextreme-angular';
 import { HasPermissionDirective } from '../../services/haspermission.directive';
 
@@ -45,6 +48,9 @@ import { HasPermissionDirective } from '../../services/haspermission.directive';
     FormsModule,
     MatDialogModule,
     MatInputModule,
+    MatFormFieldModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
     DxDataGridModule,
     HasPermissionDirective,
     DxChartModule

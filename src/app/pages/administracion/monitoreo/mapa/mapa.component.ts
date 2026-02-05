@@ -709,6 +709,17 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
       mapTypeControl: true,
       mapId: this.MAP_ID,
       clickableIcons: false,
+      styles: [
+        {
+          featureType: 'poi',
+          elementType: 'labels',
+          stylers: [{ visibility: 'off' }]
+        },
+        {
+          featureType: 'poi',
+          stylers: [{ visibility: 'off' }]
+        }
+      ]
     };
 
     this.map = new google.maps.Map(el, options);
