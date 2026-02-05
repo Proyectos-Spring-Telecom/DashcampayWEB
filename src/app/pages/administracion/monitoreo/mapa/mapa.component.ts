@@ -479,7 +479,13 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
     this.http.post(`${environment.API_SECURITY}/monitoreo/recorrido`, { NumeroSerieValidador: numeroSerieValidador }).subscribe({
       next: (res: any) => {
         console.log('[MapaComponent] Recorrido ejecutado:', res);
-        const puntos = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
+        const puntos = Array.isArray(res?.posicion)
+          ? res.posicion
+          : Array.isArray(res)
+            ? res
+            : Array.isArray(res?.data)
+              ? res.data
+              : [];
         if (puntos.length > 0 && this.mapaInicializado && this.map) {
           this.dibujarRecorrido(puntos);
         }
@@ -505,59 +511,106 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
     const inicio = path[0];
     const fin = path[path.length - 1];
 
-    this.recorridoPolyline = new google.maps.Polyline({
-      map: this.map!,
-      path,
-      strokeColor: '#0A2E57',
-      strokeOpacity: 0.9,
-      strokeWeight: 5,
-      zIndex: 1,
-    });
+    if (path.length >= 2) {
+      // Línea que une todas las posiciones del recorrido
+      this.recorridoPolyline = new google.maps.Polyline({
+        map: this.map!,
+        path,
+        strokeColor: '#0A2E57',
+        strokeOpacity: 0.9,
+        strokeWeight: 5,
+        zIndex: 1,
+        icons: [{
+          icon: {
+            path: 'M 0,-1 0,1',
+            strokeColor: '#0A2E57',
+            strokeOpacity: 0.9,
+            strokeWeight: 2,
+            scale: 4,
+          },
+          repeat: '14px',
+        }],
+      });
 
-    // Puntitos a lo largo del recorrido (como en variante): muestrear si hay muchos puntos
-    const step = path.length > 120 ? Math.max(1, Math.floor(path.length / 80)) : 1;
-    const pathParaPuntos = step === 1 ? path : path.filter((_, i) => i % step === 0 || i === path.length - 1);
-    for (const p of pathParaPuntos) {
+      const step = path.length > 120 ? Math.max(1, Math.floor(path.length / 80)) : 1;
+      const pathParaPuntos = step === 1 ? path : path.filter((_, i) => i % step === 0 || i === path.length - 1);
+      for (const p of pathParaPuntos) {
+        const circle = new google.maps.Circle({
+          map: this.map!,
+          center: p,
+          radius: 6,
+          fillColor: '#1F5AA8',
+          fillOpacity: 0.9,
+          strokeColor: '#0A2E57',
+          strokeWeight: 1,
+          zIndex: 2,
+        });
+        this.recorridoDots.push(circle);
+      }
+
+      this.recorridoStartMarker = new google.maps.Marker({
+        map: this.map!,
+        position: inicio,
+        title: 'Inicio recorrido',
+        icon: {
+          url: this.svgPinUrl('#16a34a'),
+          scaledSize: new google.maps.Size(40, 40),
+          anchor: new google.maps.Point(20, 38),
+        },
+        zIndex: 3,
+      });
+
+      this.recorridoEndMarker = new google.maps.Marker({
+        map: this.map!,
+        position: fin,
+        title: 'Fin recorrido',
+        icon: {
+          url: this.svgPinUrl('#ef4444'),
+          scaledSize: new google.maps.Size(40, 40),
+          anchor: new google.maps.Point(20, 38),
+        },
+        zIndex: 3,
+      });
+    } else {
+      // Un solo punto: marcador discreto
       const circle = new google.maps.Circle({
         map: this.map!,
-        center: p,
-        radius: 6,
+        center: inicio,
+        radius: 10,
         fillColor: '#1F5AA8',
-        fillOpacity: 0.9,
+        fillOpacity: 0.18,
         strokeColor: '#0A2E57',
         strokeWeight: 1,
         zIndex: 2,
       });
       this.recorridoDots.push(circle);
+      this.recorridoStartMarker = new google.maps.Marker({
+        map: this.map!,
+        position: inicio,
+        title: 'Posición actual',
+        icon: {
+          url: this.svgPinUrl('#1F5AA8'),
+          scaledSize: new google.maps.Size(26, 26),
+          anchor: new google.maps.Point(13, 26),
+        },
+        zIndex: 3,
+      });
     }
-
-    this.recorridoStartMarker = new google.maps.Marker({
-      map: this.map!,
-      position: inicio,
-      title: 'Inicio recorrido',
-      icon: {
-        url: this.svgPinUrl('#16a34a'),
-        scaledSize: new google.maps.Size(40, 40),
-        anchor: new google.maps.Point(20, 38),
-      },
-      zIndex: 3,
-    });
-
-    this.recorridoEndMarker = new google.maps.Marker({
-      map: this.map!,
-      position: fin,
-      title: 'Fin recorrido',
-      icon: {
-        url: this.svgPinUrl('#ef4444'),
-        scaledSize: new google.maps.Size(40, 40),
-        anchor: new google.maps.Point(20, 38),
-      },
-      zIndex: 3,
-    });
 
     const bounds = new google.maps.LatLngBounds();
     path.forEach((p) => bounds.extend(p));
-    this.map!.fitBounds(bounds, { top: 60, bottom: 60, left: 60, right: 60 });
+    const ne = bounds.getNorthEast();
+    const sw = bounds.getSouthWest();
+    if (ne.lat() - sw.lat() < 1e-5 || ne.lng() - sw.lng() < 1e-5) {
+      bounds.extend({ lat: sw.lat() - 0.002, lng: sw.lng() - 0.002 });
+      bounds.extend({ lat: ne.lat() + 0.002, lng: ne.lng() + 0.002 });
+    }
+    this.map!.fitBounds(bounds, { top: 80, bottom: 80, left: 80, right: 80 });
+    setTimeout(() => {
+      if (this.map && bounds.getNorthEast() && bounds.getSouthWest()) {
+        this.map.fitBounds(bounds, { top: 80, bottom: 80, left: 80, right: 80 });
+      }
+    }, 100);
   }
 
   /**
