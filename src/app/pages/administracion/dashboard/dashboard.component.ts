@@ -86,7 +86,7 @@ export class DashboardComponent implements OnInit {
         this.metricas = data;
         // Actualizar ingresos del día con datos de la API
         if (data && data.ingresosTotales !== undefined) {
-          this.kpis.ingresosHoy = data.ingresosTotales || 0;
+          this.kpis.ingresosHoy = data.ingresoTotalAyer || 0;
           // Calcular porcentaje de diferencia solo cuando el filtro es "Hoy"
           if (this.filtroSeleccionado.valor === 1 && data.ingresoTotalAyer !== undefined && data.ingresoTotalAyer !== null) {
             const ingresoAyer = data.ingresoTotalAyer || 0;
@@ -130,13 +130,12 @@ export class DashboardComponent implements OnInit {
         }
         // Actualizar Top 5 rutas
         if (data && data.top5Rutas && Array.isArray(data.top5Rutas)) {
+          console.log(data.top5Rutas);
           this.topRutas = data.top5Rutas.map((ruta: any) => ({
             ruta: ruta.nombreRuta || ruta.idRuta,
             monto: Number(ruta.ingresosTotales) || 0,
             pasajeros: Number(ruta.totalViajes) || 0,
-            ticket: ruta.ingresosTotales && ruta.totalViajes 
-              ? Number(ruta.ingresosTotales) / Number(ruta.totalViajes) 
-              : 0
+            ticketPromedio:  Number(ruta.ticketPromedio)
           })).slice(0, 5);
         }
         // Actualizar curva de ascensos vs boletos
@@ -266,7 +265,7 @@ export class DashboardComponent implements OnInit {
 
     this.ingresosHora = horas.map(h => ({
       hora: `${h.toString().padStart(2,'0')}:00`,
-      ingresos: Math.round(ingresos[h]),
+      ingresos: Math.round(ingresos[h] * 100) / 100,
       ticket: ingresos[h] / Math.max(1, validaciones[h])
     }));
 
@@ -309,8 +308,8 @@ export class DashboardComponent implements OnInit {
 
     this.topRutas = rutas.map(r=>{
   const p = [fMan[r],fMed[r],fTar[r],fNoc[r]].reduce((a,b)=>a+b,0);
-  const pInt = Math.round(p); // 👈 entero
-  const m = Math.round(pInt * (ticket));
+  const pInt = Math.round(p);
+  const m = Math.round((pInt * ticket) * 100) / 100;
   return { ruta:r, monto:m, pasajeros:pInt, ticket: m/Math.max(1,pInt) };
 }).sort((a,b)=>b.monto-a.monto).slice(0,5);
 

@@ -52,7 +52,13 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
   private routePolyline: google.maps.Polyline | null = null;
   private routeStartMarker: google.maps.Marker | null = null;
   private routeEndMarker: google.maps.Marker | null = null;
-  
+
+  // Recorrido (track del vehículo desde API /monitoreo/recorrido)
+  private recorridoPolyline: google.maps.Polyline | null = null;
+  private recorridoStartMarker: google.maps.Marker | null = null;
+  private recorridoEndMarker: google.maps.Marker | null = null;
+  private recorridoDots: google.maps.Circle[] = [];
+
   // Polígono para zonas
   private zonaPolygon: google.maps.Polygon | null = null;
 
@@ -461,6 +467,172 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  /**
+   * Ejecuta el API de recorrido para la unidad seleccionada (POST /monitoreo/recorrido).
+   */
+  ejecutarRecorrido(unidad: UnidadMapa): void {
+    const numeroSerieValidador = unidad?.numeroSerieValidador?.trim?.() || unidad?.numeroSerieValidador;
+    if (!numeroSerieValidador) {
+      console.warn('[MapaComponent] No hay numeroSerieValidador para esta unidad.');
+      return;
+    }
+    this.http.post(`${environment.API_SECURITY}/monitoreo/recorrido`, { NumeroSerieValidador: numeroSerieValidador }).subscribe({
+      next: (res: any) => {
+        console.log('[MapaComponent] Recorrido ejecutado:', res);
+        const puntos = Array.isArray(res?.posicion)
+          ? res.posicion
+          : Array.isArray(res)
+            ? res
+            : Array.isArray(res?.data)
+              ? res.data
+              : [];
+        if (puntos.length > 0 && this.mapaInicializado && this.map) {
+          this.dibujarRecorrido(puntos);
+        }
+      },
+      error: (err: any) => {
+        console.error('[MapaComponent] Error al ejecutar recorrido:', err);
+      }
+    });
+  }
+
+  /**
+   * Dibuja en el mapa el recorrido (array de puntos con latitud, longitud).
+   */
+  private dibujarRecorrido(puntos: Array<{ latitud: number; longitud: number; [key: string]: any }>): void {
+    this.limpiarRecorrido();
+    const path = puntos
+      .map((p) => ({
+        lat: Number(p.latitud ?? p['lat']),
+        lng: Number(p.longitud ?? p['lng']),
+      }))
+      .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng));
+    if (path.length === 0) return;
+    const inicio = path[0];
+    const fin = path[path.length - 1];
+
+    if (path.length >= 2) {
+      // Línea que une todas las posiciones del recorrido
+      this.recorridoPolyline = new google.maps.Polyline({
+        map: this.map!,
+        path,
+        strokeColor: '#0A2E57',
+        strokeOpacity: 0.9,
+        strokeWeight: 5,
+        zIndex: 1,
+        icons: [{
+          icon: {
+            path: 'M 0,-1 0,1',
+            strokeColor: '#0A2E57',
+            strokeOpacity: 0.9,
+            strokeWeight: 2,
+            scale: 4,
+          },
+          repeat: '14px',
+        }],
+      });
+
+      const step = path.length > 120 ? Math.max(1, Math.floor(path.length / 80)) : 1;
+      const pathParaPuntos = step === 1 ? path : path.filter((_, i) => i % step === 0 || i === path.length - 1);
+      for (const p of pathParaPuntos) {
+        const circle = new google.maps.Circle({
+          map: this.map!,
+          center: p,
+          radius: 6,
+          fillColor: '#1F5AA8',
+          fillOpacity: 0.9,
+          strokeColor: '#0A2E57',
+          strokeWeight: 1,
+          zIndex: 2,
+        });
+        this.recorridoDots.push(circle);
+      }
+
+      this.recorridoStartMarker = new google.maps.Marker({
+        map: this.map!,
+        position: inicio,
+        title: 'Inicio recorrido',
+        icon: {
+          url: this.svgPinUrl('#16a34a'),
+          scaledSize: new google.maps.Size(40, 40),
+          anchor: new google.maps.Point(20, 38),
+        },
+        zIndex: 3,
+      });
+
+      this.recorridoEndMarker = new google.maps.Marker({
+        map: this.map!,
+        position: fin,
+        title: 'Fin recorrido',
+        icon: {
+          url: this.svgPinUrl('#ef4444'),
+          scaledSize: new google.maps.Size(40, 40),
+          anchor: new google.maps.Point(20, 38),
+        },
+        zIndex: 3,
+      });
+    } else {
+      // Un solo punto: marcador discreto
+      const circle = new google.maps.Circle({
+        map: this.map!,
+        center: inicio,
+        radius: 10,
+        fillColor: '#1F5AA8',
+        fillOpacity: 0.18,
+        strokeColor: '#0A2E57',
+        strokeWeight: 1,
+        zIndex: 2,
+      });
+      this.recorridoDots.push(circle);
+      this.recorridoStartMarker = new google.maps.Marker({
+        map: this.map!,
+        position: inicio,
+        title: 'Posición actual',
+        icon: {
+          url: this.svgPinUrl('#1F5AA8'),
+          scaledSize: new google.maps.Size(26, 26),
+          anchor: new google.maps.Point(13, 26),
+        },
+        zIndex: 3,
+      });
+    }
+
+    const bounds = new google.maps.LatLngBounds();
+    path.forEach((p) => bounds.extend(p));
+    const ne = bounds.getNorthEast();
+    const sw = bounds.getSouthWest();
+    if (ne.lat() - sw.lat() < 1e-5 || ne.lng() - sw.lng() < 1e-5) {
+      bounds.extend({ lat: sw.lat() - 0.002, lng: sw.lng() - 0.002 });
+      bounds.extend({ lat: ne.lat() + 0.002, lng: ne.lng() + 0.002 });
+    }
+    this.map!.fitBounds(bounds, { top: 80, bottom: 80, left: 80, right: 80 });
+    setTimeout(() => {
+      if (this.map && bounds.getNorthEast() && bounds.getSouthWest()) {
+        this.map.fitBounds(bounds, { top: 80, bottom: 80, left: 80, right: 80 });
+      }
+    }, 100);
+  }
+
+  /**
+   * Limpia el recorrido dibujado en el mapa.
+   */
+  private limpiarRecorrido(): void {
+    if (this.recorridoPolyline) {
+      this.recorridoPolyline.setMap(null);
+      this.recorridoPolyline = null;
+    }
+    this.recorridoDots.forEach((c) => c.setMap(null));
+    this.recorridoDots = [];
+    if (this.recorridoStartMarker) {
+      this.recorridoStartMarker.setMap(null);
+      this.recorridoStartMarker = null;
+    }
+    if (this.recorridoEndMarker) {
+      this.recorridoEndMarker.setMap(null);
+      this.recorridoEndMarker = null;
+    }
+  }
+
   private actualizarMarcadores(): void {
     // Limpiar marcadores existentes
     this.markers.forEach((marker) => marker.setMap(null));
@@ -498,6 +670,9 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Limpiar zona dibujada
     this.limpiarZona();
+
+    // Limpiar recorrido
+    this.limpiarRecorrido();
 
     // Desconectar WebSocket y limpiar suscripciones
     this.monitoreoWebSocket.disconnect();

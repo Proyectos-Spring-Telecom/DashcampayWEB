@@ -179,22 +179,22 @@ export class RecaudacionDispositivoInstalacionComponent implements OnInit {
               this.informacion = response.data.map((item: any, index: number) => ({
                 id: index + 1,
                 serieDispositivo: item.serieDispositivo || item.numeroSerie || item.numeroSerieValidador || '',
-                serieBlueVox: item.serieBlueVox || item.numeroSerieContador || item.numeroSerieBlueVox || '',
+                serieBlueVox: item.serieBlueVox || item.serieContador || item.numeroSerieContador || item.numeroSerieBlueVox || '',
                 vehiculo: item.vehiculo || (item.placa || '') + ' ' + (item.numeroEconomico || '') || '',
                 validaciones: Number(item.validaciones || item.totalValidaciones || 0),
-                ingresos: Number(item.ingresos || item.ingresosTotales || 0),
-                ultimaPosicion: item.ultimaPosicion || item.ubicacion || '',
+                ingresos: Number(item.ingresos ?? item.ingresosTotales ?? 0),
+                ultimaPosicion: this.formatUltimaPosicion(item.ultimaPosicion || item.ubicacion),
                 estado: item.estado || item.estatus || 'Operativo'
               }));
             } else if (Array.isArray(response)) {
               this.informacion = response.map((item: any, index: number) => ({
                 id: index + 1,
                 serieDispositivo: item.serieDispositivo || item.numeroSerie || item.numeroSerieValidador || '',
-                serieBlueVox: item.serieBlueVox || item.numeroSerieContador || item.numeroSerieBlueVox || '',
+                serieBlueVox: item.serieBlueVox || item.serieContador || item.numeroSerieContador || item.numeroSerieBlueVox || '',
                 vehiculo: item.vehiculo || (item.placa || '') + ' ' + (item.numeroEconomico || '') || '',
                 validaciones: Number(item.validaciones || item.totalValidaciones || 0),
-                ingresos: Number(item.ingresos || item.ingresosTotales || 0),
-                ultimaPosicion: item.ultimaPosicion || item.ubicacion || '',
+                ingresos: Number(item.ingresos ?? item.ingresosTotales ?? 0),
+                ultimaPosicion: this.formatUltimaPosicion(item.ultimaPosicion || item.ubicacion),
                 estado: item.estado || item.estatus || 'Operativo'
               }));
             }
@@ -233,6 +233,43 @@ export class RecaudacionDispositivoInstalacionComponent implements OnInit {
         const month = String(fecha.getMonth() + 1).padStart(2, '0');
         const day = String(fecha.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
+      }
+
+      /**
+       * Convierte el objeto ultimaPosicion del API en texto legible para la columna.
+       * API: { latitud, longitud, fecha }
+       */
+      formatUltimaPosicion(obj: any): string {
+        if (obj == null) return '—';
+        if (typeof obj === 'string') return obj;
+        const lat = Number(obj.latitud ?? obj.lat ?? NaN);
+        const lng = Number(obj.longitud ?? obj.lng ?? NaN);
+        const fechaRaw = obj.fecha ?? obj.fechaHora;
+        let coord = '';
+        if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
+          coord = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+        }
+        let fechaStr = '';
+        if (fechaRaw) {
+          try {
+            const d = new Date(fechaRaw);
+            if (!Number.isNaN(d.getTime())) {
+              fechaStr = d.toLocaleString('es-MX', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              });
+            }
+          } catch {
+            fechaStr = String(fechaRaw);
+          }
+        }
+        if (coord && fechaStr) return `${coord} · ${fechaStr}`;
+        if (coord) return coord;
+        if (fechaStr) return fechaStr;
+        return '—';
       }
     
       limpiarCampos() {
