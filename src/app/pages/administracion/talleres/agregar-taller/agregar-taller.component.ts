@@ -35,9 +35,9 @@ export class AgregarTallerComponent implements OnInit, AfterViewInit, OnDestroy 
   private infoWindow: any = null;
   public mapType: 'roadmap' | 'satellite' = 'roadmap';
   public hasCoords: boolean = false;
-  public lat: number = 19.432608; // CDMX por defecto
-  public lng: number = -99.133209;
-  private readonly MAP_CENTER = { lat: 19.432608, lng: -99.133209 };
+  public lat: number = 21.110778; // Misma coordenada que zona/ruta (Polanco/Cancún)
+  public lng: number = -86.762590;
+  private readonly MAP_CENTER = { lat: 21.110778, lng: -86.762590 };
 
   constructor(
     private route: Router,
@@ -108,8 +108,12 @@ export class AgregarTallerComponent implements OnInit, AfterViewInit, OnDestroy 
     this.loading = true;
     this.talleresService.obtenerTallerPorId(this.idTaller).subscribe({
       next: (response: any) => {
-        const data = response.data || response;
+        const data = response?.data ?? response ?? {};
         this.loading = false;
+        
+        // Coordenadas: API puede devolver lat/lng o latitud/longitud
+        const latVal = data.lat ?? data.Lat ?? data.latitud ?? data.Latitud;
+        const lngVal = data.lng ?? data.Lng ?? data.longitud ?? data.Longitud;
         
         // Convertir idCliente de string a número
         const idClienteNum = Number(data.idCliente ?? data.IdCliente ?? 0);
@@ -121,19 +125,20 @@ export class AgregarTallerComponent implements OnInit, AfterViewInit, OnDestroy 
           descripcion: data.descripcion ?? data.Descripcion ?? '',
           icono: data.icono ?? data.Icono ?? '',
           direccion: data.direccion ?? data.Direccion ?? '',
-          lat: data.lat ?? data.Lat ?? null,
-          lng: data.lng ?? data.Lng ?? null,
+          lat: latVal != null ? Number(latVal) : null,
+          lng: lngVal != null ? Number(lngVal) : null,
           estatus: data.estatus ?? data.Estatus ?? 1
         });
 
         // Si hay coordenadas, centrar el mapa y colocar el marcador
-        if (data.lat && data.lng) {
-          this.lat = Number(data.lat);
-          this.lng = Number(data.lng);
+        if (latVal != null && lngVal != null) {
+          this.lat = Number(latVal);
+          this.lng = Number(lngVal);
           this.hasCoords = true;
+          // Esperar a que el mapa esté listo y luego inicializar/actualizar con el marcador
           setTimeout(() => {
             this.initMap();
-          }, 500);
+          }, 600);
         }
       },
       error: (error) => {
@@ -230,6 +235,7 @@ export class AgregarTallerComponent implements OnInit, AfterViewInit, OnDestroy 
 
   private placeMarker(position: { lat: number; lng: number }) {
     if (this.marker) {
+      this.marker.setMap(this.map); // Reasignar al mapa actual (puede haberse recreado en edición)
       this.marker.setPosition(position);
     } else {
       this.marker = new google.maps.Marker({

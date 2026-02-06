@@ -45,16 +45,15 @@
                                 <label class="form-label">
                                     <i class="fa fa-user"></i><span>Usuario</span>
                                 </label>
-                                <mat-form-field appearance="fill" class="w-100">
-                                    <mat-select placeholder="Usuario" formControlName="idUsuario">
+                                <!-- Modo agregar: select para elegir usuario -->
+                                <mat-form-field *ngIf="!idOperador" appearance="fill" class="w-100">
+                                    <mat-select placeholder="Usuario" formControlName="idUsuario"
+                                        [compareWith]="compareUsuarioById">
 
-                                        <!-- Si hay usuarios -->
                                         <mat-option *ngFor="let u of listaUsuarios" [value]="u.id">
-                                            {{ u.userName || (u.nombre + ' ' + (u.apellidoPaterno || '') + ' ' +
-                                            (u.apellidoMaterno || '')) }}
+                                            {{ getNombreCompletoUsuario(u) }}
                                         </mat-option>
 
-                                        <!-- Si NO hay usuarios -->
                                         <mat-option *ngIf="!listaUsuarios || listaUsuarios.length === 0" [value]="0">
                                             Sin registros
                                         </mat-option>
@@ -64,6 +63,11 @@
                                     <mat-error *ngIf="operadorForm.get('idUsuario')?.hasError('required')">
                                         Selecciona un usuario.
                                     </mat-error>
+                                </mat-form-field>
+
+                                <!-- Modo editar: input solo lectura con el nombre del usuario -->
+                                <mat-form-field *ngIf="idOperador" appearance="fill" class="w-100">
+                                    <input matInput [value]="nombreUsuarioDisplay" readonly placeholder="Usuario" />
                                 </mat-form-field>
 
                             </div>
@@ -96,10 +100,11 @@
                                     <i class="fa fa-certificate"></i><span>Tipo de Licencia</span>
                                 </label>
                                 <mat-form-field appearance="fill" class="w-100">
-                                    <mat-select placeholder="Tipo de Licencia" formControlName="idTipoLicencia">
+                                    <mat-select placeholder="Tipo de Licencia" formControlName="idTipoLicencia"
+                                        [compareWith]="compareTipoLicenciaById">
                                         <mat-option [value]="null">— Seleccione —</mat-option>
                                         <mat-option *ngFor="let tipo of listaTiposLicencia" [value]="tipo.id">
-                                            {{ tipo.nombre || tipo.nombreTipoLicencia || tipo.nombreTipo }}
+                                            {{ tipo.nombreCatTipoLicencia || tipo.NombreCatTipoLicencia || tipo.nombreTipoLicencia || tipo.NombreTipoLicencia || tipo.nombre || tipo.Nombre || tipo.descripcion || tipo.Descripcion }}
                                         </mat-option>
                                     </mat-select>
                                 </mat-form-field>

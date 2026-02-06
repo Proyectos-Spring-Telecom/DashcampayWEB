@@ -82,6 +82,15 @@
                 </mat-form-field>
               </div>
               <div class="col-12 col-md-6 col-lg-3">
+                <label class="form-label"><i class="fa fa-toggle-on"></i><span>Estatus</span></label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-select formControlName="estatus" placeholder="Estatus">
+                    <mat-option [value]="1">Activo</mat-option>
+                    <mat-option [value]="0">Inactivo</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+              <div class="col-12 col-md-6 col-lg-3">
                 <label class="form-label"><i class="fa fa-phone"></i><span>Teléfono</span></label>
                 <mat-form-field appearance="fill" class="w-100">
                   <input matInput placeholder="Teléfono" formControlName="telefono" maxlength="10"

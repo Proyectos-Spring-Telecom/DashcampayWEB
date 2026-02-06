@@ -33,6 +33,8 @@ export class AgregarOperadorComponent implements OnInit {
   previewUrl: string | ArrayBuffer | null = null;
   listaCategoriasLicencia: any[] = [];
   listaTiposLicencia: any[] = [];
+  /** Nombre del usuario en modo edición (solo lectura) */
+  nombreUsuarioDisplay = '';
 
   constructor(
     private fb: FormBuilder,
@@ -132,85 +134,141 @@ export class AgregarOperadorComponent implements OnInit {
   }
 
   obtenerOperadorID() {
-    this.operService.obtenerOperador(this.idOperador).subscribe((response: any) => {
+    const id = Number(this.idOperador);
+    if (!id) return;
+
+    this.operService.obtenerOperador(id).subscribe((response: any) => {
       const raw = Array.isArray(response?.data)
         ? response.data[0]
         : response?.operador ?? response?.data ?? response ?? {};
 
       const get = (o: any, keys: string[]) => {
-        for (const k of keys) if (o?.[k] !== undefined && o?.[k] !== null) return o[k];
+        if (!o) return null;
+        for (const k of keys) if (o[k] !== undefined && o[k] !== null) return o[k];
         return null;
       };
 
-      const lic = this.operadorForm.get('licencia')?.value;
-      if (typeof lic === 'string' && /\.(png|jpe?g|webp|gif|bmp)(\?.*)?$/i.test(lic)) {
-        this.licPreviewUrl = lic;
-        this.licFileName = lic.split('/').pop() || '';
+      // Datos de licencia: pueden estar en el objeto raíz o dentro de licencias[0]
+      const licencias = raw?.licencias;
+      const primeraLicencia = Array.isArray(licencias) && licencias.length > 0 ? licencias[0] : null;
+
+      const numeroLicencia = get(primeraLicencia, ['numeroLicencia', 'NumeroLicencia'])
+        ?? get(raw, ['numeroLicencia', 'NumeroLicencia']);
+      const fechaNacimientoRaw = get(raw, ['fechaNacimiento', 'FechaNacimiento']);
+      const fechaExpedicionRaw = get(primeraLicencia, ['fechaExpedicion', 'FechaExpedicion'])
+        ?? get(raw, ['fechaExpedicion', 'FechaExpedicion']);
+      const fechaVencimientoRaw = get(primeraLicencia, ['fechaVencimiento', 'FechaVencimiento', 'fechaExpiracion', 'FechaExpiracion'])
+        ?? get(raw, ['fechaVencimiento', 'FechaVencimiento', 'fechaExpiracion', 'FechaExpiracion']);
+      const idUsuario = get(raw, ['idUsuario', 'IdUsuario']);
+      const estatus = get(raw, ['estatusOperador', 'estatus', 'Estatus']);
+      const idCategoriaLicencia = get(primeraLicencia, ['idCategoriaLicencia', 'IdCategoriaLicencia'])
+        ?? get(raw, ['idCategoriaLicencia', 'IdCategoriaLicencia']);
+      const idTipoLicencia = get(primeraLicencia, ['idTipoLicencia', 'IdTipoLicencia'])
+        ?? get(raw, ['idTipoLicencia', 'IdTipoLicencia']);
+      const identificacion = get(raw, ['identificacion', 'Identificacion']);
+      const comprobanteDomicilio = get(raw, ['comprobanteDomicilio', 'ComprobanteDomicilio']);
+      const foto = get(raw, ['fotoPerfil', 'foto', 'Foto']);
+      const certificadoMedico = get(raw, ['certificadoMedico', 'CertificadoMedico']);
+      const antecedentesNoPenales = get(raw, ['antecedentesNoPenales', 'AntecedentesNoPenales']);
+      // Licencia de conducir: siempre desde licencias[0]
+      const licencia = primeraLicencia
+        ? get(primeraLicencia, ['licencia', 'Licencia'])
+        : get(raw, ['licencia', 'Licencia']);
+
+      // Cargar preview y nombre de licencia de conducir
+      if (typeof licencia === 'string' && /\.(png|jpe?g|webp|gif|bmp)(\?.*)?$/i.test(licencia)) {
+        this.licPreviewUrl = licencia;
+        this.licFileName = licencia.split('/').pop()?.split('?')[0] || 'licencia.jpg';
       } else {
         this.licPreviewUrl = null;
         this.licFileName = null;
       }
 
-      const numeroLicencia = get(raw, ['numeroLicencia', 'NumeroLicencia']);
-      const fechaNacimientoRaw = get(raw, ['fechaNacimiento', 'FechaNacimiento']);
-      const fechaExpedicionRaw = get(raw, ['fechaExpedicion', 'FechaExpedicion']);
-      const fechaVencimientoRaw = get(raw, ['fechaVencimiento', 'FechaVencimiento', 'fechaExpiracion', 'FechaExpiracion']);
-      const idUsuario = get(raw, ['idUsuario', 'IdUsuario']);
-      const estatus = get(raw, ['estatus', 'Estatus']);
-      const idCategoriaLicencia = get(raw, ['idCategoriaLicencia', 'IdCategoriaLicencia']);
-      const idTipoLicencia = get(raw, ['idTipoLicencia', 'IdTipoLicencia']);
-      const identificacion = get(raw, ['identificacion', 'Identificacion']);
-      const comprobanteDomicilio = get(raw, ['comprobanteDomicilio', 'ComprobanteDomicilio']);
-      const foto = get(raw, ['foto', 'Foto']);
-      const certificadoMedico = get(raw, ['certificadoMedico', 'CertificadoMedico']);
-      const antecedentesNoPenales = get(raw, ['antecedentesNoPenales', 'AntecedentesNoPenales']);
-      const licencia = get(raw, ['licencia', 'Licencia']);
-
       // Cargar preview de foto si existe
       if (typeof foto === 'string' && /\.(png|jpe?g|webp|gif|bmp)(\?.*)?$/i.test(foto)) {
         this.fotoPreviewUrl = foto;
-        this.fotoFileName = foto.split('/').pop() || '';
+        this.fotoFileName = foto.split('/').pop()?.split('?')[0] || 'foto.jpg';
       } else {
         this.fotoPreviewUrl = null;
         this.fotoFileName = null;
       }
 
+      // Nombres de archivo para PDFs cuando vienen como URL
+      const setPdfFileName = (url: string | null, prop: 'identFileName' | 'domFileName' | 'antFileName' | 'certificadoFileName') => {
+        if (typeof url === 'string' && url.trim()) {
+          (this as any)[prop] = url.split('/').pop()?.split('?')[0] || 'documento.pdf';
+        } else {
+          (this as any)[prop] = null;
+        }
+      };
+      setPdfFileName(identificacion, 'identFileName');
+      setPdfFileName(comprobanteDomicilio, 'domFileName');
+      setPdfFileName(antecedentesNoPenales, 'antFileName');
+      setPdfFileName(certificadoMedico, 'certificadoFileName');
+
       const fechaNacimiento = fechaNacimientoRaw
-        ? new Date(fechaNacimientoRaw.split('T')[0])
+        ? new Date(String(fechaNacimientoRaw).split('T')[0])
         : null;
       const fechaExpedicion = fechaExpedicionRaw
-        ? fechaExpedicionRaw.split('T')[0]
+        ? String(fechaExpedicionRaw).split('T')[0]
         : null;
       const fechaVencimiento = fechaVencimientoRaw
-        ? fechaVencimientoRaw.split('T')[0]
+        ? String(fechaVencimientoRaw).split('T')[0]
         : null;
 
-      this.operadorForm.patchValue({
-        numeroLicencia: numeroLicencia ?? '',
-        fechaNacimiento,
-        vigencia: {
-          start: fechaExpedicion ? new Date(fechaExpedicion) : null,
-          end: fechaVencimiento ? new Date(fechaVencimiento) : null
-        },
-        idUsuario: idUsuario != null ? Number(idUsuario) : null,
-        estatus: estatus != null ? Number(estatus) : 1,
-        idCategoriaLicencia: idCategoriaLicencia != null ? Number(idCategoriaLicencia) : null,
-        idTipoLicencia: idTipoLicencia != null ? Number(idTipoLicencia) : null,
-        identificacion: identificacion ?? null,
-        comprobanteDomicilio: comprobanteDomicilio ?? null,
-        foto: foto ?? null,
-        certificadoMedico: certificadoMedico ?? null,
-        antecedentesNoPenales: antecedentesNoPenales ?? null,
-        licencia: licencia ?? null,
-      });
+      const patchForm = () => {
+        // Nombre del usuario para mostrar en input solo lectura (modo edición)
+        const nom = get(raw, ['nombreUsuario', 'NombreUsuario']);
+        const apP = get(raw, ['apellidoPaternoUsuario', 'ApellidoPaternoUsuario']);
+        const apM = get(raw, ['apellidoMaternoUsuario', 'ApellidoMaternoUsuario']);
+        this.nombreUsuarioDisplay = [nom, apP, apM].filter(Boolean).join(' ').trim()
+          || get(raw, ['userNameUsuario', 'userName', 'email']) || '';
+
+        this.operadorForm.patchValue({
+          numeroLicencia: numeroLicencia ?? '',
+          fechaNacimiento,
+          vigencia: {
+            start: fechaExpedicion ? new Date(fechaExpedicion) : null,
+            end: fechaVencimiento ? new Date(fechaVencimiento) : null
+          },
+          idUsuario: idUsuario != null ? Number(idUsuario) : null,
+          estatus: estatus != null ? Number(estatus) : 1,
+          idCategoriaLicencia: idCategoriaLicencia != null ? Number(idCategoriaLicencia) : null,
+          idTipoLicencia: idTipoLicencia != null ? Number(idTipoLicencia) : null,
+          identificacion: identificacion ?? null,
+          comprobanteDomicilio: comprobanteDomicilio ?? null,
+          foto: foto ?? null,
+          certificadoMedico: certificadoMedico ?? null,
+          antecedentesNoPenales: antecedentesNoPenales ?? null,
+          licencia: licencia ?? null,
+        });
+      };
+
+      // Si es SA y el operador tiene idCliente, cargar usuarios de ese cliente para el select
+      const idCliente = get(raw, ['idCliente', 'IdCliente']);
+      if (this.showCliente && idCliente != null) {
+        this.selectedClienteId = Number(idCliente);
+        this.usuaService.obtenerUsuariosRolOperador(Number(idCliente)).subscribe({
+          next: (resUsuarios: any) => {
+            this.listaUsuarios = (resUsuarios?.data || resUsuarios || []).map((c: any) => ({
+              ...c,
+              id: Number(c?.id ?? c?.Id ?? c?.ID ?? c?.idUsuario ?? c?.IdUsuario),
+            }));
+            patchForm();
+          },
+          error: () => patchForm()
+        });
+      } else {
+        patchForm();
+      }
     });
   }
 
   obtenerUsuarios(clienteId: number) {
     this.usuaService.obtenerUsuariosRolOperador(clienteId).subscribe((response) => {
-      this.listaUsuarios = (response.data || []).map((c: any) => ({
+      this.listaUsuarios = (response?.data || response || []).map((c: any) => ({
         ...c,
-        id: Number(c?.id ?? c?.Id ?? c?.ID),
+        id: Number(c?.id ?? c?.Id ?? c?.ID ?? c?.idUsuario ?? c?.IdUsuario),
       }));
 
       if (!this.listaUsuarios.length) {
@@ -239,13 +297,27 @@ export class AgregarOperadorComponent implements OnInit {
       next: (response: any) => {
         this.listaTiposLicencia = (response.data || response || []).map((t: any) => ({
           ...t,
-          id: Number(t?.id ?? t?.Id ?? t?.ID ?? t?.idTipoLicencia ?? t?.IdTipoLicencia)
+          id: Number(t?.idCatTipoLicencia ?? t?.IdCatTipoLicencia ?? t?.id ?? t?.Id ?? t?.ID ?? t?.idTipoLicencia ?? t?.IdTipoLicencia)
         }));
       },
       error: (error: unknown) => {
         console.error('Error al obtener tipos de licencia:', error);
+        this.listaTiposLicencia = [];
       }
     });
+  }
+
+  compareTipoLicenciaById = (a: number | null, b: number | null) => (a == null && b == null) || (a != null && b != null && Number(a) === Number(b));
+
+  compareUsuarioById = (a: number | null, b: number | null) => (a == null && b == null) || (a != null && b != null && Number(a) === Number(b));
+
+  getNombreCompletoUsuario(u: any): string {
+    if (!u) return '';
+    const nombre = String(u?.nombreUsuario ?? u?.nombre ?? u?.Nombre ?? '').trim();
+    const apellidoP = String(u?.apellidoPaternoUsuario ?? u?.apellidoPaterno ?? u?.ApellidoPaterno ?? '').trim();
+    const apellidoM = String(u?.apellidoMaternoUsuario ?? u?.apellidoMaterno ?? u?.ApellidoMaterno ?? '').trim();
+    const completo = [nombre, apellidoP, apellidoM].filter(Boolean).join(' ');
+    return completo || String(u?.userName ?? u?.userNameUsuario ?? u?.email ?? u?.correo ?? '').trim();
   }
 
   onClienteChange(id: number) {
@@ -461,8 +533,8 @@ export class AgregarOperadorComponent implements OnInit {
       return;
     }
 
-    // clona y elimina idUsuario e idCliente antes de enviar
-    const formValue = this.operadorForm.value;
+    // getRawValue incluye controles deshabilitados (idUsuario en modo edición)
+    const formValue = this.operadorForm.getRawValue();
     const vigencia = formValue.vigencia || {};
     const fechaNacimiento = formValue.fechaNacimiento instanceof Date 
       ? formValue.fechaNacimiento.toISOString().split('T')[0] 

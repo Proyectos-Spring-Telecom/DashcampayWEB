@@ -33,7 +33,7 @@
                         <mat-select [formControl]="varianteControl">
                           <mat-option [value]="null">Todas las variantes</mat-option>
                           <mat-option *ngFor="let variante of listaVariantes" [value]="variante.id">
-                            {{ variante.nombre || variante.nombreVariantes || variante.descripcion || 'Variante ' + variante.id }}
+                            {{ variante.nombreVariante || variante.nombre || variante.nombreVariantes || variante.descripcion || 'Variante ' + variante.id }}
                           </mat-option>
                         </mat-select>
                       </mat-form-field>
@@ -54,6 +54,16 @@
                           <mat-option [value]="null">Todas las zonas</mat-option>
                           <mat-option *ngFor="let zona of listaZonas" [value]="zona.id">
                             {{ zona.nombre || zona.descripcion || 'Zona ' + zona.id }}
+                          </mat-option>
+                        </mat-select>
+                      </mat-form-field>
+
+                      <mat-form-field appearance="outline" style="min-width: 250px;">
+                        <mat-label>Taller</mat-label>
+                        <mat-select [formControl]="tallerControl">
+                          <mat-option [value]="null">— Seleccione taller —</mat-option>
+                          <mat-option *ngFor="let taller of listaTalleres" [value]="taller.id">
+                            {{ taller.nombre || taller.Nombre || 'Taller ' + taller.id }}
                           </mat-option>
                         </mat-select>
                       </mat-form-field>

@@ -77,7 +77,7 @@ export class AltaClienteComponent {
         idPadre: Number(d.idPadre ?? 0),
         rfc: d.rfc ?? '',
         tipoPersona: d.tipoPersona ?? null,
-        estatus: d.estatus ?? 1,
+        estatus: Number(d?.estatus ?? d?.estatusCliente ?? 1),
         logotipo: d.logotipo ?? null,
         nombre: d.nombre ?? '',
         apellidoPaterno: d.apellidoPaterno ?? null,
