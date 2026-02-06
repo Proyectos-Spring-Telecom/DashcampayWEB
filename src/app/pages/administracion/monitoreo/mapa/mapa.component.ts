@@ -9,6 +9,7 @@ import { Subscription } from 'rxjs';
 import { VariantesService } from 'src/app/pages/services/variantes.service';
 import { RutasService } from 'src/app/pages/services/ruta.service';
 import { ZonasService } from 'src/app/pages/services/zonas.service';
+import { TalleresService } from 'src/app/pages/services/talleres.service';
 
 declare const google: any;
 
@@ -62,6 +63,9 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
   // Polígono para zonas
   private zonaPolygon: google.maps.Polygon | null = null;
 
+  // Marcador de taller seleccionado
+  private tallerMarker: google.maps.Marker | null = null;
+
   private readonly MAP_ID = 'DEMO_MAP_ID';
 
   constructor(
@@ -69,7 +73,8 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
     private monitoreoWebSocket: MonitoreoWebSocketService,
     private variantesService: VariantesService,
     private rutasService: RutasService,
-    private zonasService: ZonasService
+    private zonasService: ZonasService,
+    private talleresService: TalleresService
   ) {}
 
   unidades: UnidadMapa[] = [];
@@ -80,9 +85,11 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
   listaVariantes: any[] = [];
   listaRutas: any[] = [];
   listaZonas: any[] = [];
+  listaTalleres: any[] = [];
   varianteControl = new UntypedFormControl(null);
   rutaControl = new UntypedFormControl(null);
   zonaControl = new UntypedFormControl(null);
+  tallerControl = new UntypedFormControl(null);
 
   ngOnInit(): void {
     this.obtenerMonitoreo();
@@ -90,7 +97,8 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cargarVariantes();
     this.cargarRutas();
     this.cargarZonas();
-    
+    this.cargarTalleres();
+
     // Suscribirse a cambios en los selects
     this.varianteControl.valueChanges.subscribe((idVariante) => {
       if (idVariante) {
@@ -116,6 +124,14 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
         this.dibujarZona(idZona);
       } else {
         this.limpiarZona();
+      }
+    });
+
+    this.tallerControl.valueChanges.subscribe((idTaller) => {
+      if (idTaller) {
+        this.dibujarTaller(idTaller);
+      } else {
+        this.limpiarTallerMarker();
       }
     });
   }
@@ -161,6 +177,25 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
       error: (error) => {
         console.error('Error al cargar zonas:', error);
         this.listaZonas = [];
+      }
+    });
+  }
+
+  /**
+   * Carga la lista de talleres desde /talleres/list
+   */
+  cargarTalleres(): void {
+    this.talleresService.obtenerTalleres().subscribe({
+      next: (response: any) => {
+        const raw = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
+        this.listaTalleres = raw.map((t: any) => ({
+          ...t,
+          id: Number(t?.id ?? t?.Id ?? t?.ID)
+        }));
+      },
+      error: (error) => {
+        console.error('Error al cargar talleres:', error);
+        this.listaTalleres = [];
       }
     });
   }
@@ -671,6 +706,9 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
     // Limpiar zona dibujada
     this.limpiarZona();
 
+    // Limpiar marcador de taller
+    this.limpiarTallerMarker();
+
     // Limpiar recorrido
     this.limpiarRecorrido();
 
@@ -1148,6 +1186,59 @@ private addMarker(u: UnidadMapa): void {
       this.zonaPolygon.setMap(null);
       this.zonaPolygon = null;
     }
+  }
+
+  /**
+   * Limpia el marcador de taller del mapa
+   */
+  private limpiarTallerMarker(): void {
+    if (this.tallerMarker) {
+      this.tallerMarker.setMap(null);
+      this.tallerMarker = null;
+    }
+  }
+
+  /**
+   * Dibuja el punto del taller seleccionado en el mapa usando lat/lng
+   */
+  private dibujarTaller(idTaller: number): void {
+    if (!this.mapaInicializado || !this.map) {
+      setTimeout(() => this.dibujarTaller(idTaller), 500);
+      return;
+    }
+
+    const taller = this.listaTalleres.find((t: any) => Number(t?.id ?? t?.Id) === idTaller);
+    if (!taller) {
+      console.warn('[MapaComponent] Taller no encontrado:', idTaller);
+      return;
+    }
+
+    const latVal = taller.lat ?? taller.Lat ?? taller.latitud ?? taller.Latitud;
+    const lngVal = taller.lng ?? taller.Lng ?? taller.longitud ?? taller.Longitud;
+
+    if (latVal == null || lngVal == null || !Number.isFinite(Number(latVal)) || !Number.isFinite(Number(lngVal))) {
+      console.warn('[MapaComponent] Taller sin coordenadas válidas:', taller);
+      return;
+    }
+
+    const position = { lat: Number(latVal), lng: Number(lngVal) };
+
+    this.limpiarTallerMarker();
+
+    this.tallerMarker = new google.maps.Marker({
+      position,
+      map: this.map,
+      title: taller.nombre ?? taller.Nombre ?? 'Taller',
+      icon: {
+        url: this.svgPinUrl('#1F5AA8'),
+        scaledSize: new google.maps.Size(40, 40),
+        anchor: new google.maps.Point(20, 38)
+      },
+      zIndex: 2
+    });
+
+    this.map.panTo(position);
+    this.map.setZoom(Math.max(this.map.getZoom() ?? 10, 14));
   }
 
   /**

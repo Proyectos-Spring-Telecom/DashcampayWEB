@@ -105,9 +105,13 @@ export class ListaClientesComponent implements OnInit {
               item?.entreCalles ? `(Entre calles: ${item.entreCalles})` : ''
             ].filter(Boolean).join(', ');
 
+            // estatus 1 = Activo, 0 = Inactivo (API puede devolver estatus o estatusCliente)
+            const estatusCliente = Number(item?.estatusCliente ?? item?.estatus ?? 1);
+
             return {
               ...item,
               id: Number(item?.id),
+              estatusCliente,
               tipoPersona: item?.tipoPersona == 1 ? 'Físico' : item?.tipoPersona == 2 ? 'Moral' : 'Desconocido',
               idRol: item?.idRol != null ? Number(item.idRol) : null,
               idCliente: item?.idCliente != null ? Number(item.idCliente) : null,
@@ -173,7 +177,7 @@ export class ListaClientesComponent implements OnInit {
     const dataFiltrada = (this.paginaActualData || []).filter((row: any) => {
       const hitCols = dataFields.some((df) => norm(getByPath(row, df)).includes(q));
 
-      const estNum = Number(row?.estatus);
+      const estNum = Number(row?.estatusCliente ?? row?.estatus);
       const estHit =
         Number.isFinite(estNum) &&
         (qStatusNum !== null ? estNum === qStatusNum : String(estNum).toLowerCase().includes(q));
