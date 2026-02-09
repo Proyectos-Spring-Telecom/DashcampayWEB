@@ -61,5 +61,20 @@ export class ReportesService {
       filtros
     );
   }
+
+  /** Transacciones débit (validaciones detalladas) */
+  obtenerTransaccionesDebit(filtros: {
+    fechaInicio: string;
+    fechaFin: string;
+    idCliente?: number | null;
+    idZona?: number | null;
+    idRuta?: number | null;
+    idVariante?: number | null;
+  }): Observable<any> {
+    return this.http.post(
+      `${environment.API_SECURITY}/reportes/transacciones-debito`,
+      filtros
+    );
+  }
 }
 

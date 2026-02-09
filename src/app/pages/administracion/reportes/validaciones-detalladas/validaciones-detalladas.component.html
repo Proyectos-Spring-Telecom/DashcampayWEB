@@ -19,10 +19,10 @@
                                 </div>
 
                                 <div class="dc-actions d-flex gap-2 ms-auto">
-                                    <button type="button" class="dc-btn dc-btn-primary">
+                                    <button type="button" class="dc-btn dc-btn-primary" (click)="aplicarFiltros()" [disabled]="loadingVisible">
                                         <mat-icon>filter_alt</mat-icon><span>Aplicar</span>
                                     </button>
-                                    <button type="button" class="dc-btn dc-btn-ghost">
+                                    <button type="button" class="dc-btn dc-btn-ghost" (click)="limpiarCampos()" [disabled]="loadingVisible">
                                         <mat-icon>restart_alt</mat-icon><span>Limpiar</span>
                                     </button>
                                 </div>
@@ -102,13 +102,7 @@
                                     [showBorders]="true" [showColumnLines]="true" [showRowLines]="true"
                                     [rowAlternationEnabled]="true" [dataSource]="informacion" [keyExpr]="'id'"
                                     [width]="'100%'" [remoteOperations]="{ paging: true }"
-                                    [paging]="{ pageSize: pageSize }" [pager]="{ 
-                                showPageSizeSelector: true, 
-                                allowedPageSizes: [50], 
-                                showInfo: true,
-                                infoText: 'Página {0} de {1}', 
-                                visible: true 
-                            }">
+                                    [paging]="{ pageSize: pageSize }" [pager]="pagerConfig">
                                     <dxo-search-panel [visible]="true" [width]="200"
                                         placeholder="Buscar..."></dxo-search-panel>
                                     <dxo-toolbar>

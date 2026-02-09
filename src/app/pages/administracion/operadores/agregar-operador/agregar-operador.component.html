@@ -25,7 +25,8 @@
                                 </div>
                                 <div class="section-bar"></div>
                             </div>
-                            <div class="col-12 col-md-6 col-lg-4">
+                            <!-- Número de licencia solo al agregar; oculto al editar -->
+                            <div class="col-12 col-md-6 col-lg-4" *ngIf="!idOperador">
                                 <label class="form-label"><i class="fa fa-id-card"></i><span>Número de
                                         Licencia</span></label>
                                 <mat-form-field appearance="fill" class="w-100">
@@ -71,44 +72,47 @@
                                 </mat-form-field>
 
                             </div>
-                            <div class="col-12 col-md-6 col-lg-4">
-                                <label class="form-label"><i class="fa fa-calendar-alt"></i><span>Vigencia (Expedición - Expiración)</span></label>
-                                <mat-form-field appearance="fill" class="w-100">
-                                    <mat-date-range-input [rangePicker]="vigenciaPicker" [separator]="'—'" formGroupName="vigencia">
-                                        <input matStartDate placeholder="dd/mm/aaaa" formControlName="start" />
-                                        <input matEndDate placeholder="dd/mm/aaaa" formControlName="end" />
-                                    </mat-date-range-input>
-                                    <mat-datepicker-toggle matIconSuffix [for]="vigenciaPicker"></mat-datepicker-toggle>
-                                    <mat-date-range-picker #vigenciaPicker></mat-date-range-picker>
-                                </mat-form-field>
-                            </div>
-                            <div class="col-12 col-md-6 col-lg-4">
-                                <label class="form-label">
-                                    <i class="fa fa-id-badge"></i><span>Categoría de Licencia</span>
-                                </label>
-                                <mat-form-field appearance="fill" class="w-100">
-                                    <mat-select placeholder="Categoría de Licencia" formControlName="idCategoriaLicencia">
-                                        <mat-option [value]="null">— Seleccione —</mat-option>
-                                        <mat-option *ngFor="let categoria of listaCategoriasLicencia" [value]="categoria.id">
-                                            {{ categoria.nombre || categoria.nombreCategoriaLicencia || categoria.nombreCategoria }}
-                                        </mat-option>
-                                    </mat-select>
-                                </mat-form-field>
-                            </div>
-                            <div class="col-12 col-md-6 col-lg-4">
-                                <label class="form-label">
-                                    <i class="fa fa-certificate"></i><span>Tipo de Licencia</span>
-                                </label>
-                                <mat-form-field appearance="fill" class="w-100">
-                                    <mat-select placeholder="Tipo de Licencia" formControlName="idTipoLicencia"
-                                        [compareWith]="compareTipoLicenciaById">
-                                        <mat-option [value]="null">— Seleccione —</mat-option>
-                                        <mat-option *ngFor="let tipo of listaTiposLicencia" [value]="tipo.id">
-                                            {{ tipo.nombreCatTipoLicencia || tipo.NombreCatTipoLicencia || tipo.nombreTipoLicencia || tipo.NombreTipoLicencia || tipo.nombre || tipo.Nombre || tipo.descripcion || tipo.Descripcion }}
-                                        </mat-option>
-                                    </mat-select>
-                                </mat-form-field>
-                            </div>
+                            <!-- Vigencia, Categoría y Tipo de licencia solo al agregar; ocultos al editar -->
+                            <ng-container *ngIf="!idOperador">
+                                <div class="col-12 col-md-6 col-lg-4">
+                                    <label class="form-label"><i class="fa fa-calendar-alt"></i><span>Vigencia (Expedición - Expiración)</span></label>
+                                    <mat-form-field appearance="fill" class="w-100">
+                                        <mat-date-range-input [rangePicker]="vigenciaPicker" [separator]="'—'" formGroupName="vigencia">
+                                            <input matStartDate placeholder="dd/mm/aaaa" formControlName="start" />
+                                            <input matEndDate placeholder="dd/mm/aaaa" formControlName="end" />
+                                        </mat-date-range-input>
+                                        <mat-datepicker-toggle matIconSuffix [for]="vigenciaPicker"></mat-datepicker-toggle>
+                                        <mat-date-range-picker #vigenciaPicker></mat-date-range-picker>
+                                    </mat-form-field>
+                                </div>
+                                <div class="col-12 col-md-6 col-lg-4">
+                                    <label class="form-label">
+                                        <i class="fa fa-id-badge"></i><span>Categoría de Licencia</span>
+                                    </label>
+                                    <mat-form-field appearance="fill" class="w-100">
+                                        <mat-select placeholder="Categoría de Licencia" formControlName="idCategoriaLicencia">
+                                            <mat-option [value]="null">— Seleccione —</mat-option>
+                                            <mat-option *ngFor="let categoria of listaCategoriasLicencia" [value]="categoria.id">
+                                                {{ categoria.nombre || categoria.nombreCategoriaLicencia || categoria.nombreCategoria }}
+                                            </mat-option>
+                                        </mat-select>
+                                    </mat-form-field>
+                                </div>
+                                <div class="col-12 col-md-6 col-lg-4">
+                                    <label class="form-label">
+                                        <i class="fa fa-certificate"></i><span>Tipo de Licencia</span>
+                                    </label>
+                                    <mat-form-field appearance="fill" class="w-100">
+                                        <mat-select placeholder="Tipo de Licencia" formControlName="idTipoLicencia"
+                                            [compareWith]="compareTipoLicenciaById">
+                                            <mat-option [value]="null">— Seleccione —</mat-option>
+                                            <mat-option *ngFor="let tipo of listaTiposLicencia" [value]="tipo.id">
+                                                {{ tipo.nombreCatTipoLicencia || tipo.NombreCatTipoLicencia || tipo.nombreTipoLicencia || tipo.NombreTipoLicencia || tipo.nombre || tipo.Nombre || tipo.descripcion || tipo.Descripcion }}
+                                            </mat-option>
+                                        </mat-select>
+                                    </mat-form-field>
+                                </div>
+                            </ng-container>
                             <div class="row g-3 uploads-skin mt-2 form-skin-lite">
                                 <div class="col-12">
                                     <div class="section-head">

@@ -84,11 +84,12 @@ export class DashboardComponent implements OnInit {
     this.dashboardService.obtenerMetricas(this.filtroSeleccionado.valor).subscribe({
       next: (data) => {
         this.metricas = data;
-        // Actualizar ingresos del día con datos de la API
+        // Actualizar ingresos con datos de la API: 7 días, mes actual y año actual (y Hoy) usan ingresosTotales
         if (data && data.ingresosTotales !== undefined) {
-          this.kpis.ingresosHoy = data.ingresoTotalAyer || 0;
+          this.kpis.ingresosHoy = data.ingresosTotales ?? 0;
+          const filtro = this.filtroSeleccionado?.valor ?? 1;
           // Calcular porcentaje de diferencia solo cuando el filtro es "Hoy"
-          if (this.filtroSeleccionado.valor === 1 && data.ingresoTotalAyer !== undefined && data.ingresoTotalAyer !== null) {
+          if (filtro === 1 && data.ingresoTotalAyer !== undefined && data.ingresoTotalAyer !== null) {
             const ingresoAyer = data.ingresoTotalAyer || 0;
             if (ingresoAyer > 0) {
               this.kpis.deltaIngresos = ((data.ingresosTotales - ingresoAyer) / ingresoAyer) * 100;

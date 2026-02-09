@@ -63,8 +63,9 @@ export class AgregarVehiculoComponent implements OnInit {
   }
 
   obtenerClientes() {
-    this.clieService.obtenerClientes().subscribe((response) => {
-      this.listaClientes = (response.data || []).map((c: any) => ({
+    this.clieService.obtenerClientesList().subscribe((response: any) => {
+      const raw = response?.data ?? response;
+      this.listaClientes = (Array.isArray(raw) ? raw : []).map((c: any) => ({
         ...c,
         id: Number(c?.id ?? c?.Id ?? c?.ID)
       }));
@@ -235,7 +236,7 @@ export class AgregarVehiculoComponent implements OnInit {
       marca: ['', Validators.required],
       modelo: ['', Validators.required],
       ano: [null, Validators.required],
-      placa: ['', Validators.required],
+      placa: ['', [Validators.required, Validators.maxLength(10)]],
       numeroEconomico: ['', Validators.required],
       tarjetaCirculacion: ['', Validators.required],
       polizaSeguro: ['', Validators.required],
@@ -297,6 +298,9 @@ export class AgregarVehiculoComponent implements OnInit {
     const control = this.vehiculosForm.get(key);
     if (control?.invalid && control.errors?.['required']) {
       camposFaltantes.push(etiquetas[key] || key);
+    }
+    if (key === 'placa' && control?.invalid && control.errors?.['maxlength']) {
+      camposFaltantes.push('Placa (máximo 10 caracteres)');
     }
   });
 
@@ -392,6 +396,9 @@ export class AgregarVehiculoComponent implements OnInit {
     const control = this.vehiculosForm.get(key);
     if (control?.invalid && control.errors?.['required']) {
       camposFaltantes.push(etiquetas[key] || key);
+    }
+    if (key === 'placa' && control?.invalid && control.errors?.['maxlength']) {
+      camposFaltantes.push('Placa (máximo 10 caracteres)');
     }
   });
 

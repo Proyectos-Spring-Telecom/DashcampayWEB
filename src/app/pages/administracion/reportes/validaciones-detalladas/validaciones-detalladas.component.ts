@@ -7,6 +7,7 @@ import { ClientesService } from 'src/app/pages/services/clientes.service';
 import { ZonasService } from 'src/app/pages/services/zonas.service';
 import { RutasService } from 'src/app/pages/services/ruta.service';
 import { VariantesService } from 'src/app/pages/services/variantes.service';
+import { ReportesService } from 'src/app/pages/services/reportes.service';
 
 @Component({
   selector: 'vex-validaciones-detalladas',
@@ -20,208 +21,19 @@ export class ValidacionesDetalladasComponent implements OnInit {
   public showHeaderFilter: boolean;
   public loadingVisible: boolean = false;
   public mensajeAgrupar: string = 'Arrastre un encabezado de columna aquí para agrupar por esa columna';
-  informacion = [
-  {
-    id: 1,
-    idTx: 'TX-20250102-0001',
-    fechaHora: new Date(2025, 0, 2, 6, 15),
-    monto: 9.5,
-    monederoSerie: 'MON-1001',
-    dispositivoSerie: 'VAL-5487',
-    latitud: 19.4326,
-    longitud: -99.1332,
-    rutaDerrotero: 'Polanco - Reforma',
-    viaje: 1,
-    turno: 'M1'
-  },
-  {
-    id: 2,
-    idTx: 'TX-20250102-0002',
-    fechaHora: new Date(2025, 0, 2, 6, 28),
-    monto: 10,
-    monederoSerie: 'MON-1002',
-    dispositivoSerie: 'VAL-5487',
-    latitud: 19.4352,
-    longitud: -99.1401,
-    rutaDerrotero: 'Polanco - Centro',
-    viaje: 1,
-    turno: 'M1'
-  },
-  {
-    id: 3,
-    idTx: 'TX-20250102-0003',
-    fechaHora: new Date(2025, 0, 2, 6, 41),
-    monto: 9.5,
-    monederoSerie: 'MON-1003',
-    dispositivoSerie: 'VAL-5487',
-    latitud: 19.4391,
-    longitud: -99.1453,
-    rutaDerrotero: 'Polanco - Reforma',
-    viaje: 2,
-    turno: 'M1'
-  },
-  {
-    id: 4,
-    idTx: 'TX-20250102-0004',
-    fechaHora: new Date(2025, 0, 2, 7, 5),
-    monto: 11,
-    monederoSerie: 'MON-1004',
-    dispositivoSerie: 'VAL-6487',
-    latitud: 19.4281,
-    longitud: -99.132,
-    rutaDerrotero: 'Centro - Zócalo',
-    viaje: 1,
-    turno: 'M2'
-  },
-  {
-    id: 5,
-    idTx: 'TX-20250102-0005',
-    fechaHora: new Date(2025, 0, 2, 7, 19),
-    monto: 10.5,
-    monederoSerie: 'MON-1005',
-    dispositivoSerie: 'VAL-6487',
-    latitud: 19.4263,
-    longitud: -99.1365,
-    rutaDerrotero: 'Centro - Buenavista',
-    viaje: 2,
-    turno: 'M2'
-  },
-  {
-    id: 6,
-    idTx: 'TX-20250102-0006',
-    fechaHora: new Date(2025, 0, 2, 7, 33),
-    monto: 9,
-    monederoSerie: 'MON-1006',
-    dispositivoSerie: 'VAL-6487',
-    latitud: 19.4238,
-    longitud: -99.1422,
-    rutaDerrotero: 'Centro - Chapultepec',
-    viaje: 2,
-    turno: 'M2'
-  },
-  {
-    id: 7,
-    idTx: 'TX-20250103-0001',
-    fechaHora: new Date(2025, 0, 3, 6, 10),
-    monto: 9.5,
-    monederoSerie: 'MON-1101',
-    dispositivoSerie: 'VAL-7541',
-    latitud: 19.402,
-    longitud: -99.151,
-    rutaDerrotero: 'Coyoacán - Centro',
-    viaje: 1,
-    turno: 'M1'
-  },
-  {
-    id: 8,
-    idTx: 'TX-20250103-0002',
-    fechaHora: new Date(2025, 0, 3, 6, 24),
-    monto: 9.5,
-    monederoSerie: 'MON-1102',
-    dispositivoSerie: 'VAL-7541',
-    latitud: 19.4065,
-    longitud: -99.1473,
-    rutaDerrotero: 'Coyoacán - Centro',
-    viaje: 1,
-    turno: 'M1'
-  },
-  {
-    id: 9,
-    idTx: 'TX-20250103-0003',
-    fechaHora: new Date(2025, 0, 3, 6, 39),
-    monto: 10,
-    monederoSerie: 'MON-1103',
-    dispositivoSerie: 'VAL-7541',
-    latitud: 19.4102,
-    longitud: -99.1431,
-    rutaDerrotero: 'Coyoacán - Zócalo',
-    viaje: 2,
-    turno: 'M1'
-  },
-  {
-    id: 10,
-    idTx: 'TX-20250103-0004',
-    fechaHora: new Date(2025, 0, 3, 7, 2),
-    monto: 11,
-    monederoSerie: 'MON-1104',
-    dispositivoSerie: 'VAL-6010',
-    latitud: 19.4511,
-    longitud: -99.148,
-    rutaDerrotero: 'Lindavista - Reforma',
-    viaje: 1,
-    turno: 'M2'
-  },
-  {
-    id: 11,
-    idTx: 'TX-20250103-0005',
-    fechaHora: new Date(2025, 0, 3, 7, 18),
-    monto: 10.5,
-    monederoSerie: 'MON-1105',
-    dispositivoSerie: 'VAL-6010',
-    latitud: 19.455,
-    longitud: -99.1426,
-    rutaDerrotero: 'Lindavista - Centro',
-    viaje: 2,
-    turno: 'M2'
-  },
-  {
-    id: 12,
-    idTx: 'TX-20250103-0006',
-    fechaHora: new Date(2025, 0, 3, 7, 32),
-    monto: 9,
-    monederoSerie: 'MON-1106',
-    dispositivoSerie: 'VAL-6010',
-    latitud: 19.459,
-    longitud: -99.1379,
-    rutaDerrotero: 'Lindavista - Buenavista',
-    viaje: 2,
-    turno: 'M2'
-  },
-  {
-    id: 13,
-    idTx: 'TX-20250104-0001',
-    fechaHora: new Date(2025, 0, 4, 6, 8),
-    monto: 9.5,
-    monederoSerie: 'MON-1201',
-    dispositivoSerie: 'VAL-7201',
-    latitud: 19.36,
-    longitud: -99.165,
-    rutaDerrotero: 'Perisur - Centro',
-    viaje: 1,
-    turno: 'M1'
-  },
-  {
-    id: 14,
-    idTx: 'TX-20250104-0002',
-    fechaHora: new Date(2025, 0, 4, 6, 22),
-    monto: 10,
-    monederoSerie: 'MON-1202',
-    dispositivoSerie: 'VAL-7201',
-    latitud: 19.365,
-    longitud: -99.159,
-    rutaDerrotero: 'Perisur - Centro',
-    viaje: 1,
-    turno: 'M1'
-  },
-  {
-    id: 15,
-    idTx: 'TX-20250104-0003',
-    fechaHora: new Date(2025, 0, 4, 6, 37),
-    monto: 9,
-    monederoSerie: 'MON-1203',
-    dispositivoSerie: 'VAL-7201',
-    latitud: 19.369,
-    longitud: -99.154,
-    rutaDerrotero: 'Perisur - Zócalo',
-    viaje: 2,
-    turno: 'M1'
-  }
-];
+  informacion: any[] = [];
 
   public paginaActual: number = 1;
   public totalRegistros: number = 0;
   public pageSize: number = 20;
   public totalPaginas: number = 0;
+  pagerConfig = {
+    showPageSizeSelector: true,
+    allowedPageSizes: [50],
+    showInfo: true,
+    infoText: 'Página {0} de {1}',
+    visible: true
+  };
   public data!: string;
   public paginaActualData: any[] = [];
   public filtroActivo: string = '';
@@ -241,7 +53,8 @@ export class ValidacionesDetalladasComponent implements OnInit {
     private clientesService: ClientesService,
     private zonasService: ZonasService,
     private rutasService: RutasService,
-    private variantesService: VariantesService
+    private variantesService: VariantesService,
+    private reportesService: ReportesService
   ) {
     this.showFilterRow = true;
     this.showHeaderFilter = true;
@@ -389,12 +202,104 @@ export class ValidacionesDetalladasComponent implements OnInit {
     });
   }
 
-  limpiarCampos() {
+  formatearFecha(d: Date | string): string {
+    if (!d) return '';
+    const date = typeof d === 'string' ? new Date(d) : d;
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  aplicarFiltros(): void {
+    this.loadingVisible = true;
+    const formValue = this.filtrosForm.getRawValue();
+
+    const fechaInicio = formValue.fechaInicio
+      ? this.formatearFecha(formValue.fechaInicio)
+      : this.formatearFecha(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+    const fechaFin = formValue.fechaFin
+      ? this.formatearFecha(formValue.fechaFin)
+      : this.formatearFecha(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0));
+
+    const payload = {
+      fechaInicio,
+      fechaFin,
+      idCliente: formValue.idCliente || null,
+      idZona: formValue.idRegion || null,
+      idRuta: formValue.idRuta || null,
+      idVariante: formValue.idVariante || null
+    };
+
+    this.reportesService.obtenerTransaccionesDebit(payload).subscribe({
+      next: (response: any) => {
+        this.loadingVisible = false;
+        const raw = response?.data ?? response;
+        const list = Array.isArray(raw) ? raw : [];
+        this.informacion = list.map((item: any, index: number) => this.mapearItemTransaccion(item, index));
+        if (this.dataGrid?.instance) {
+          this.dataGrid.instance.clearGrouping();
+          this.dataGrid.instance.refresh();
+        }
+      },
+      error: (err) => {
+        this.loadingVisible = false;
+        console.error('Error al obtener transacciones débit:', err);
+        this.alerts.open({
+          type: 'error',
+          title: 'Error',
+          message: err?.error?.message || err?.message || 'No se pudieron cargar las transacciones.',
+          backdropClose: false
+        });
+      }
+    });
+  }
+
+  private mapearItemTransaccion(item: any, index: number): any {
+    const get = (obj: any, ...keys: string[]) => {
+      if (!obj) return null;
+      for (const k of keys) if (obj[k] !== undefined && obj[k] !== null) return obj[k];
+      return null;
+    };
+    const id = get(item, 'id') ?? index + 1;
+    const fechaRaw = get(item, 'fechaHora', 'fecha', 'fechaTransaccion', 'fechaValidacion');
+    const fechaHora = fechaRaw ? (fechaRaw instanceof Date ? fechaRaw : new Date(fechaRaw)) : null;
+    return {
+      id,
+      idTx: get(item, 'idTx', 'idTransaccion', 'numeroTransaccion') ?? `TX-${id}`,
+      fechaHora,
+      monto: Number(get(item, 'monto', 'importe', 'cantidad') ?? 0),
+      monederoSerie: get(item, 'numeroSerieMonedero', 'monederoSerie', 'serieMonedero', 'idMonedero', 'monedero') ?? '',
+      dispositivoSerie: get(item, 'numeroSerieValidador', 'dispositivoSerie', 'serieValidador', 'idValidador', 'validador') ?? '',
+      latitud: Number(get(item, 'latitud', 'lat') ?? 0),
+      longitud: Number(get(item, 'longitud', 'lng', 'lon') ?? 0),
+      rutaDerrotero: get(item, 'nombreRuta', 'rutaDerrotero', 'ruta', 'derrotero') ?? '',
+      viaje: Number(get(item, 'numeroViaje', 'viaje', 'idViaje') ?? 0),
+      turno: get(item, 'numeroTurno', 'turno', 'idTurno', 'nombreTurno') ?? ''
+    };
+  }
+
+  limpiarCampos(): void {
     const today = new Date();
-    this.dataGrid.instance.clearGrouping();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    this.filtrosForm.patchValue({
+      fechaInicio: firstDay,
+      fechaFin: lastDay,
+      idCliente: null,
+      idRegion: null,
+      idRuta: null,
+      idVariante: null
+    });
+    this.filtrosForm.get('idRegion')?.setValue(null, { emitEvent: false });
+    this.filtrosForm.get('idRuta')?.setValue(null, { emitEvent: false });
+    this.filtrosForm.get('idVariante')?.setValue(null, { emitEvent: false });
+    this.informacion = [];
+    if (this.dataGrid?.instance) {
+      this.dataGrid.instance.clearGrouping();
+      this.dataGrid.instance.refresh();
+    }
     this.isGrouped = false;
-    // this.setupDataSource();
-    this.dataGrid.instance.refresh();
   }
 
   toggleExpandGroups() {
