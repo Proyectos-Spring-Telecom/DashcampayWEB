@@ -69,8 +69,21 @@ export class AgregarOperadorComponent implements OnInit {
       if (this.idOperador) {
         this.title = 'Actualizar Operador';
         this.submitButton = 'Actualizar';
-        this.obtenerOperadorID();
         this.operadorForm.controls['idUsuario'].disable();
+        // Al editar no se exigen vigencia, categoría ni tipo de licencia
+        this.operadorForm.get('vigencia')?.clearValidators();
+        this.operadorForm.get('vigencia')?.updateValueAndValidity();
+        this.operadorForm.get('vigencia.start')?.clearValidators();
+        this.operadorForm.get('vigencia.start')?.updateValueAndValidity();
+        this.operadorForm.get('vigencia.end')?.clearValidators();
+        this.operadorForm.get('vigencia.end')?.updateValueAndValidity();
+        this.operadorForm.get('idCategoriaLicencia')?.clearValidators();
+        this.operadorForm.get('idCategoriaLicencia')?.updateValueAndValidity();
+        this.operadorForm.get('idTipoLicencia')?.clearValidators();
+        this.operadorForm.get('idTipoLicencia')?.updateValueAndValidity();
+        this.operadorForm.get('numeroLicencia')?.clearValidators();
+        this.operadorForm.get('numeroLicencia')?.updateValueAndValidity();
+        this.obtenerOperadorID();
       }
     });
   }
@@ -535,18 +548,22 @@ export class AgregarOperadorComponent implements OnInit {
 
     // getRawValue incluye controles deshabilitados (idUsuario en modo edición)
     const formValue = this.operadorForm.getRawValue();
-    const vigencia = formValue.vigencia || {};
     const fechaNacimiento = formValue.fechaNacimiento instanceof Date 
       ? formValue.fechaNacimiento.toISOString().split('T')[0] 
       : formValue.fechaNacimiento;
-    const payload = {
+    // Al editar no se envían vigencia, categoría ni tipo de licencia (no se actualizan)
+    const payload: any = {
       ...formValue,
-      fechaNacimiento,
-      fechaExpedicion: vigencia.start ? vigencia.start.toISOString().split('T')[0] : null,
-      fechaVencimiento: vigencia.end ? vigencia.end.toISOString().split('T')[0] : null
+      fechaNacimiento
     };
     delete payload.idCliente;
     delete payload.vigencia;
+    delete payload.fechaExpedicion;
+    delete payload.fechaVencimiento;
+    delete payload.idCategoriaLicencia;
+    delete payload.idTipoLicencia;
+    delete payload.numeroLicencia;
+    delete payload.licencia;
     this.operService.actualizarOperador(this.idOperador, payload).subscribe(
       () => {
         this.submitButton = 'Actualizar';

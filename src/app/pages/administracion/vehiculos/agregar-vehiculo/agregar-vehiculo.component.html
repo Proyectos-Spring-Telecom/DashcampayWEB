@@ -52,7 +52,8 @@
               <div class="col-12 col-md-6 col-lg-4">
                 <label class="form-label"><i class="fa fa-id-card"></i><span>Placa</span></label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput placeholder="Placa" formControlName="placa" />
+                  <input matInput placeholder="Placa" formControlName="placa" maxlength="10" />
+                  <mat-error *ngIf="vehiculosForm.get('placa')?.hasError('maxlength')">Máximo 10 caracteres.</mat-error>
                 </mat-form-field>
               </div>
 
