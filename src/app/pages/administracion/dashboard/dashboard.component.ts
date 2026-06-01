@@ -199,6 +199,46 @@ export class DashboardComponent implements OnInit {
           });
           this.pasajerosPorRuta = Array.from(rutasMap.values());
         }
+
+        // Actualizar "Validadores con alertas" desde el API (/metrics)
+        if (data && Array.isArray(data.alertas)) {
+          const pick = (o: any, keys: string[]) => {
+            for (const k of keys) {
+              const v = o?.[k];
+              if (v !== undefined && v !== null) return v;
+            }
+            return null;
+          };
+
+          const toSeveridad = (s: any): string => {
+            const v = String(s ?? '').toLowerCase();
+            if (v.includes('high') || v.includes('alta') || v.includes('crit')) return 'sev-high';
+            if (v.includes('low') || v.includes('baja')) return 'sev-low';
+            if (v.includes('med') || v.includes('media') || v.includes('warn')) return 'sev-med';
+            return 'sev-med';
+          };
+
+          this.alertasValidadores = data.alertas.map((a: any) => {
+            const numeroEconomico = pick(a, ['vehiculoNumeroEconomico']) ??
+              pick(a?.vehiculo, ['numeroEconomico', 'NumeroEconomico', 'numEconomico']) ??
+              pick(a, ['numeroEconomico', 'NumeroEconomico']);
+            const serieValidador = pick(a, ['numeroSerieValidador', 'NumeroSerieValidador', 'serieValidador', 'SerieValidador']);
+            const descripcion = pick(a, ['descripcion', 'Descripcion', 'detalle', 'Detalle', 'mensaje', 'Mensaje']) ?? '';
+            const tag = pick(a, ['tag', 'Tag', 'tipo', 'Tipo', 'categoria', 'Categoria']) ?? 'Alerta';
+            const severidad = toSeveridad(pick(a, ['severidad', 'Severidad', 'nivel', 'Nivel', 'prioridad', 'Prioridad']));
+
+            return {
+              nombre: `${numeroEconomico ?? 'N/A'} Validador: ${serieValidador ?? 'N/A'}`,
+              detalle: String(descripcion ?? ''),
+              tag: String(tag ?? 'Alerta'),
+              severidad
+            };
+          });
+        } else if (data && data.alertas !== undefined) {
+          // Si el API envía alertas pero no es array, vaciar para evitar basura
+          this.alertasValidadores = [];
+        }
+
         this.cargando = false;
         this.cdr.detectChanges();
       },

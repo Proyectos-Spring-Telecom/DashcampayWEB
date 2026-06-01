@@ -339,7 +339,7 @@ export interface NetpayDialogResult {
               Ingrese un código postal válido
             </mat-option>
             <mat-option *ngFor="let colonia of coloniasDisponibles" [value]="colonia">
-              {{ colonia }}
+              {{ colonia.nombre }}
             </mat-option>
           </mat-select>
           <mat-icon matPrefix>location_city</mat-icon>
@@ -450,7 +450,7 @@ export class NetpayDialogComponent implements OnInit, OnDestroy {
   validationMessage: string = '';
   direccionesDisponibles: any[] = [];
   idDireccionSeleccionada: number | null = null;
-  coloniasDisponibles: any[] = [];
+  coloniasDisponibles: Array<{ idAsentamiento: number; nombre: string }> = [];
   cargandoColonias: boolean = false;
 
   constructor(
@@ -615,7 +615,7 @@ export class NetpayDialogComponent implements OnInit, OnDestroy {
     this.ngZone.runOutsideAngular(() => {
       try {
         // Configurar Netpay
-        NetPay.setApiKey('pk_netpay_JGFtQNUFIENMlhkoBXdgiozmQ');
+        NetPay.setApiKey('pk_netpay_YbahDkYgsFmUhIFYNzijoIqDJ');
         NetPay.setSandboxMode(true);
 
         // Generar device fingerprint
@@ -724,48 +724,61 @@ export class NetpayDialogComponent implements OnInit, OnDestroy {
       (response: any) => {
         this.cargandoColonias = false;
         console.log('Respuesta del API de colonias:', response);
-        
-        // Extraer el array de colonias de la respuesta
-        // La respuesta tiene la estructura: { error, message, codigo_postal: { estado, estado_abreviatura, municipio, codigo_postal, colonias: [...] } }
-        const codigoPostalData = response?.codigo_postal;
-        
-        if (codigoPostalData?.colonias && Array.isArray(codigoPostalData.colonias)) {
-          this.coloniasDisponibles = codigoPostalData.colonias;
-          
-          // Llenar automáticamente los campos de estado y ciudad
-          if (codigoPostalData.estado) {
-            this.cardForm.patchValue({ estado: codigoPostalData.estado }, { emitEvent: false });
-            // Bloquear el campo de estado
-            this.cardForm.get('estado')?.disable();
-            console.log('Estado llenado automáticamente y bloqueado:', codigoPostalData.estado);
+
+        // Normalizar respuesta del endpoint:
+        // Caso nuevo:
+        //   { estado: { nombre }, municipio: { nombre }, Colonias: [{ idAsentamiento, nombre }, ...] }
+        // Casos anteriores/fallback:
+        //   { codigo_postal: { estado: string, municipio: string, colonias: string[] } } u otros.
+        const estadoNombre: string | null =
+          response?.estado?.nombre ??
+          response?.codigo_postal?.estado ??
+          response?.estado ??
+          null;
+
+        const municipioNombre: string | null =
+          response?.municipio?.nombre ??
+          response?.codigo_postal?.municipio ??
+          response?.municipio ??
+          null;
+
+        const coloniasRaw: any =
+          response?.Colonias ??
+          response?.codigo_postal?.Colonias ??
+          response?.codigo_postal?.colonias ??
+          response?.colonias ??
+          response?.data ??
+          (Array.isArray(response) ? response : null);
+
+        if (Array.isArray(coloniasRaw)) {
+          // Puede venir como array de strings (antiguo) o array de objetos (nuevo)
+          if (coloniasRaw.length && typeof coloniasRaw[0] === 'string') {
+            this.coloniasDisponibles = coloniasRaw
+              .filter((x: any) => typeof x === 'string' && x.trim().length)
+              .map((nombre: string, idx: number) => ({ idAsentamiento: idx + 1, nombre }));
+          } else {
+            this.coloniasDisponibles = coloniasRaw
+              .map((c: any) => ({
+                idAsentamiento: Number(c?.idAsentamiento ?? c?.id ?? c?.value),
+                nombre: String(c?.nombre ?? c?.name ?? c?.label ?? '').trim(),
+              }))
+              .filter((c: any) => Number.isFinite(c.idAsentamiento) && !!c.nombre);
           }
-          
-          if (codigoPostalData.municipio) {
-            this.cardForm.patchValue({ ciudad: codigoPostalData.municipio }, { emitEvent: false });
-            // Bloquear el campo de ciudad
-            this.cardForm.get('ciudad')?.disable();
-            console.log('Ciudad llenada automáticamente y bloqueada:', codigoPostalData.municipio);
-          }
-        } else if (response?.colonias && Array.isArray(response.colonias)) {
-          // Fallback: si los datos están directamente en response
-          this.coloniasDisponibles = response.colonias;
-          
-          if (response.estado) {
-            this.cardForm.patchValue({ estado: response.estado }, { emitEvent: false });
-            this.cardForm.get('estado')?.disable();
-          }
-          
-          if (response.municipio) {
-            this.cardForm.patchValue({ ciudad: response.municipio }, { emitEvent: false });
-            this.cardForm.get('ciudad')?.disable();
-          }
-        } else if (Array.isArray(response)) {
-          // Si la respuesta es directamente un array
-          this.coloniasDisponibles = response;
-        } else if (response?.data && Array.isArray(response.data)) {
-          this.coloniasDisponibles = response.data;
         } else {
           this.coloniasDisponibles = [];
+        }
+
+        // Llenar automáticamente los campos de estado y ciudad/municipio
+        if (estadoNombre) {
+          this.cardForm.patchValue({ estado: estadoNombre }, { emitEvent: false });
+          this.cardForm.get('estado')?.disable();
+          console.log('Estado llenado automáticamente y bloqueado:', estadoNombre);
+        }
+
+        if (municipioNombre) {
+          this.cardForm.patchValue({ ciudad: municipioNombre }, { emitEvent: false });
+          this.cardForm.get('ciudad')?.disable();
+          console.log('Ciudad/Municipio llenado automáticamente y bloqueado:', municipioNombre);
         }
 
         console.log('Colonias procesadas:', this.coloniasDisponibles);
@@ -782,7 +795,6 @@ export class NetpayDialogComponent implements OnInit, OnDestroy {
 
         // Si solo hay una colonia, seleccionarla automáticamente
         if (this.coloniasDisponibles.length === 1) {
-          // Las colonias son strings simples, no objetos
           const coloniaValue = this.coloniasDisponibles[0];
           this.cardForm.patchValue({ colonia: coloniaValue }, { emitEvent: false });
           console.log('Colonia seleccionada automáticamente:', coloniaValue);
@@ -956,6 +968,11 @@ export class NetpayDialogComponent implements OnInit, OnDestroy {
           } else {
             // Si es nueva dirección, enviar los datos completos
             clienteInfo.idDireccion = null;
+            const coloniaSel = this.cardForm.get('colonia')?.value as any;
+            const coloniaNombre =
+              typeof coloniaSel === 'string'
+                ? coloniaSel
+                : (coloniaSel?.nombre ?? null);
             clienteInfo.direccion = {
               ciudad: this.cardForm.get('ciudad')?.value,
               pais: this.cardForm.get('pais')?.value,
@@ -963,7 +980,7 @@ export class NetpayDialogComponent implements OnInit, OnDestroy {
               estado: this.cardForm.get('estado')?.value,
               calle: this.cardForm.get('calle')?.value,
               calleEsquina: this.cardForm.get('calleEsquina')?.value,
-              colonia: this.cardForm.get('colonia')?.value
+              colonia: coloniaNombre
             };
           }
 

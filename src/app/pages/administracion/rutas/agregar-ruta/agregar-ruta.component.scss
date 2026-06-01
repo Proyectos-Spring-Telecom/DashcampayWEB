@@ -796,3 +796,8 @@
   filter: brightness(1.05);
   box-shadow: 0 6px 16px color-mix(in srgb, var(--c-azul-oscuro,#0A2E57) 28%, transparent);
 }
+
+/* Mapa agregar-ruta: cursor de precisión al marcar inicio/fin (menos “mano” de Google Maps) */
+:host ::ng-deep #map.map-wrapper .gm-style {
+  cursor: crosshair !important;
+}
