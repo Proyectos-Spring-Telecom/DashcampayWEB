@@ -8,6 +8,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { NetpayService } from '../../../services/netpay.service';
+import { environment } from '../../../../../environments/environment';
 
 declare const NetPay: any;
 
@@ -615,14 +616,12 @@ export class NetpayDialogComponent implements OnInit, OnDestroy {
     this.ngZone.runOutsideAngular(() => {
       try {
         // Configurar Netpay
-        NetPay.setApiKey('pk_netpay_YbahDkYgsFmUhIFYNzijoIqDJ');
+        NetPay.setApiKey(environment.NETPAY_PUBLIC_KEY);
         NetPay.setSandboxMode(true);
 
         // Generar device fingerprint
         this.deviceFingerPrint = NetPay.form.generateDeviceFingerPrint();
-        console.log('Device FingerPrint generado:', this.deviceFingerPrint);
       } catch (error) {
-        console.error('Error al inicializar Netpay:', error);
         this.ngZone.run(() => {
           alert('Error al cargar el sistema de pago. Por favor, recargue la página.');
         });
@@ -881,15 +880,10 @@ export class NetpayDialogComponent implements OnInit, OnDestroy {
       deviceFingerPrint: this.deviceFingerPrint
     };
 
-    console.log('Intentando tokenizar tarjeta...');
-    console.log('Device FingerPrint:', this.deviceFingerPrint);
-
     // Callback de éxito
     const successCallback = (e: any) => {
       this.ngZone.run(() => {
         try {
-          console.log('Respuesta completa de tokenización:', JSON.stringify(e, null, 2));
-          
           // Extraer el token de la respuesta
           let token = null;
           let referenceId = null;
@@ -904,8 +898,8 @@ export class NetpayDialogComponent implements OnInit, OnDestroy {
                 token = e.message.data.token;
                 referenceId = e.message.data.referenceId || e.message.data.reference_id;
               }
-            } catch (parseError) {
-              console.error('Error al parsear e.message.data:', parseError);
+            } catch {
+              /* respuesta del SDK en formato inesperado */
             }
           }
           
@@ -927,24 +921,19 @@ export class NetpayDialogComponent implements OnInit, OnDestroy {
           if (!deviceInformation) {
             try {
               deviceInformation = NetPay.form.deviceInformation();
-            } catch (err) {
-              console.warn('No se pudo obtener deviceInformation:', err);
+            } catch {
+              /* deviceInformation no disponible */
             }
           }
 
-          console.log('Token extraído:', token);
-          console.log('Device Information:', deviceInformation);
-
           if (!token) {
             this.loading = false;
-            console.error('No se pudo extraer el token de la respuesta');
             alert('Error: No se pudo procesar la tarjeta. Por favor, intente nuevamente.');
             return;
           }
 
           if (!deviceInformation) {
             this.loading = false;
-            console.error('No se pudo obtener device information');
             alert('Error: No se pudo obtener la información del dispositivo. Por favor, intente nuevamente.');
             return;
           }
@@ -984,13 +973,6 @@ export class NetpayDialogComponent implements OnInit, OnDestroy {
             };
           }
 
-          console.log('=== ÉXITO: TOKENIZACIÓN COMPLETADA ===');
-          console.log('CVV capturado:', cvv ? '***' : 'No disponible');
-          console.log('ReferenceId:', referenceId);
-          console.log('Cliente Info:', clienteInfo);
-          console.log('ID Dirección seleccionada:', this.idDireccionSeleccionada);
-          console.log('Envía dirección completa?', !this.idDireccionSeleccionada);
-          
           this.dialogRef.close({
             token: token,
             deviceFingerPrint: this.deviceFingerPrint,
@@ -999,9 +981,8 @@ export class NetpayDialogComponent implements OnInit, OnDestroy {
             cvv: cvv,
             clienteInfo: clienteInfo
           });
-        } catch (error) {
+        } catch {
           this.loading = false;
-          console.error('Error en callback de éxito:', error);
           alert('Error al procesar la respuesta. Por favor, intente nuevamente.');
         }
       });
@@ -1011,7 +992,6 @@ export class NetpayDialogComponent implements OnInit, OnDestroy {
     const errorCallback = (e: any) => {
       this.ngZone.run(() => {
         this.loading = false;
-        console.error('Error en tokenización:', e);
         const errorMessage = e?.message || 'Ocurrió un error al procesar la tarjeta. Por favor, verifique los datos.';
         alert(errorMessage);
       });
@@ -1020,10 +1000,9 @@ export class NetpayDialogComponent implements OnInit, OnDestroy {
     // Crear el token usando NetPay.token.create()
     try {
       NetPay.token.create(cardInfo, successCallback, errorCallback);
-    } catch (error) {
+    } catch {
       this.ngZone.run(() => {
         this.loading = false;
-        console.error('Error al crear token:', error);
         alert('Error al procesar la tarjeta. Por favor, intente nuevamente.');
       });
     }
