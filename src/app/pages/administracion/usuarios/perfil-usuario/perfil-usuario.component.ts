@@ -387,8 +387,6 @@ export class PerfilUsuarioComponent {
       passwordNuevaConfirmacion: this.passwordForm.get('passwordNuevaConfirmacion')?.value,
     };
 
-    console.log('[REQUEST] actualizarContrasena', { idUsuario: this.showId, body });
-
     this.loading = true;
 
     this.usuarioService

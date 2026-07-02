@@ -211,7 +211,6 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
     const connectionSub = this.monitoreoWebSocket.isConnected$.subscribe(
       (connected: boolean) => {
         this.isWebSocketConnected = connected;
-        console.log('[MapaComponent] Estado WebSocket:', connected ? 'Conectado' : 'Desconectado');
       }
     );
     this.websocketSubscriptions.push(connectionSub);
@@ -231,14 +230,6 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     );
     this.websocketSubscriptions.push(unidadSub);
-
-    // Suscribirse a confirmación de conexión
-    const connectedSub = this.monitoreoWebSocket.connected$.subscribe(
-      (data) => {
-        console.log('[MapaComponent] Conexión WebSocket confirmada:', data);
-      }
-    );
-    this.websocketSubscriptions.push(connectedSub);
   }
 
   /**
@@ -289,17 +280,9 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
         u.numeroSerieValidador && 
         u.numeroSerieValidador.toString().toLowerCase() === numeroSerieValidador.toString().toLowerCase()
       );
-      
-      if (unidad) {
-        console.log(`[MapaComponent] Unidad encontrada por número de serie del validador: ${numeroSerieValidador} -> Unidad ID: ${unidad.id}`);
-      }
     }
 
     if (unidad) {
-      // Guardar posición anterior para comparar
-      const posicionAnterior = { ...unidad.posicion };
-      
-      // Actualizar posición existente
       unidad.posicion = {
         lat: lat,
         lng: lng
@@ -318,20 +301,12 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       }
 
-      // Log para depuración
-      console.log(`[MapaComponent] Actualizando posición de unidad ${unidad.id} (${unidad.codigo}):`, {
-        anterior: posicionAnterior,
-        nueva: unidad.posicion,
-        velocidad: unidad.velocidad
-      });
-
       // Actualizar marcador en el mapa
       this.updateMarker(unidad);
     } else {
       // Si no existe la unidad, podría ser una nueva unidad
       // En este caso, recargar todas las unidades o agregar la nueva
       console.warn('[MapaComponent] Unidad no encontrada en el mapa. ID:', unidadId, 'Número serie validador:', numeroSerieValidador);
-      console.log('[MapaComponent] Recargando datos del monitoreo...');
       this.obtenerMonitoreo();
     }
   }
@@ -404,7 +379,6 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
           currentPosition.lat() !== lat || 
           currentPosition.lng() !== lng) {
         marker.setPosition(nuevaPosicion);
-        console.log(`[MapaComponent] Marcador ${unidad.id} actualizado a posición:`, { lat, lng });
       }
       
       // Actualizar título
@@ -417,7 +391,6 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     } else {
       // Si no existe el marcador, crearlo
-      console.log(`[MapaComponent] Marcador no existe para unidad ${unidad.id}, creando nuevo marcador`);
       this.addMarker(unidad);
     }
   }
@@ -426,7 +399,6 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
     this.loadingUnidades = true;
     this.http.get(`${environment.API_SECURITY}/monitoreo`).subscribe({
       next: (result: any) => {
-        console.log('Resultado de /monitoreo:', result);
         
         // Mapear la respuesta del API a la estructura UnidadMapa
         const datos = Array.isArray(result?.data) ? result.data : (Array.isArray(result) ? result : []);
@@ -513,7 +485,6 @@ export class MapaComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     this.http.post(`${environment.API_SECURITY}/monitoreo/recorrido`, { NumeroSerieValidador: numeroSerieValidador }).subscribe({
       next: (res: any) => {
-        console.log('[MapaComponent] Recorrido ejecutado:', res);
         const puntos = Array.isArray(res?.posicion)
           ? res.posicion
           : Array.isArray(res)
@@ -970,8 +941,6 @@ private addMarker(u: UnidadMapa): void {
           return;
         }
 
-        console.log('[MapaComponent] Variante obtenida:', variante);
-
         // Obtener coordenadas de inicio y fin - probar diferentes formatos
         let inicio = this.readLatLng(variante?.puntoInicio?.coordenadas);
         if (!inicio) {
@@ -1013,7 +982,6 @@ private addMarker(u: UnidadMapa): void {
               .filter((p: any): p is { lat: number; lng: number; nombre?: string } => !!p)
           : [];
 
-        console.log('[MapaComponent] Dibujando variante:', { inicio, fin, puntosRecorrido: recorrido.length });
         this.dibujarRutaEnMapa(inicio, fin, recorrido);
       },
       error: (error) => {
@@ -1053,8 +1021,6 @@ private addMarker(u: UnidadMapa): void {
           return;
         }
 
-        console.log('[MapaComponent] Ruta obtenida:', ruta);
-
         // Obtener coordenadas de inicio y fin - probar diferentes formatos
         let inicio = this.readLatLng(ruta?.inicio);
         if (!inicio) {
@@ -1087,7 +1053,6 @@ private addMarker(u: UnidadMapa): void {
         }
 
         // Las rutas no tienen recorrido detallado, solo inicio y fin
-        console.log('[MapaComponent] Dibujando ruta:', { inicio, fin });
         this.dibujarRutaEnMapa(inicio, fin, []);
       },
       error: (error) => {
@@ -1320,8 +1285,6 @@ private addMarker(u: UnidadMapa): void {
           return;
         }
 
-        console.log('[MapaComponent] Zona obtenida:', zona);
-
         // Extraer geocerca/polígono de diferentes campos posibles
         const geocerca: any =
           zona?.geocerca ??
@@ -1342,7 +1305,6 @@ private addMarker(u: UnidadMapa): void {
           return;
         }
 
-        console.log('[MapaComponent] Dibujando zona con', path.length, 'puntos');
         this.dibujarZonaEnMapa(path);
       },
       error: (error) => {

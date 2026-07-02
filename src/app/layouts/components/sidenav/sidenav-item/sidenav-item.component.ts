@@ -55,7 +55,6 @@ export class SidenavItemComponent implements OnInit, OnChanges {
   @Input({ required: true }) level!: number;
   isOpen: boolean = false;
   isActive: boolean = false;
-  public showRol: any;
 
   isLink = this.navigationService.isLink;
   isDropdown = this.navigationService.isDropdown;
@@ -68,7 +67,6 @@ export class SidenavItemComponent implements OnInit, OnChanges {
     private cd: ChangeDetectorRef,
     private navigationService: NavigationService,
     private auth: AuthenticationService,
-    private user: AuthenticationService,
   ) {
     
   }
@@ -78,11 +76,29 @@ export class SidenavItemComponent implements OnInit, OnChanges {
     return `item-level-${this.level}`;
   }
 
-  private canSee(item: NavigationItem): boolean {
+  canSee(item: NavigationItem): boolean {
+    const roles = (item as NavigationLink)?.roles;
+    if (roles?.length) {
+      const roleName = String(this.auth.getUser()?.rol?.nombre ?? '').trim().toLowerCase();
+      if (!roles.some((r) => String(r).trim().toLowerCase() === roleName)) {
+        return false;
+      }
+    }
+
     const req = item?.permissions || [];
     if (!req.length) return true;
-    const have = (this.auth.getPermissions() || []).map(p => String(p).trim());
-    return req.map(String).some(p => have.includes(p));
+    const have = (this.auth.getPermissions() || []).map((p) => String(p).trim());
+    return req.map(String).some((p) => have.includes(p));
+  }
+
+  /** Muestra el título de sección solo si hay al menos un hijo visible. */
+  shouldShowSubheading(item: NavigationItem): boolean {
+    if (!this.isSubheading(item)) return false;
+    if (this.visibleChildren(item).length === 0) return false;
+
+    const req = item?.permissions || [];
+    if (!req.length) return true;
+    return this.canSee(item);
   }
 
   visibleChildren(item: NavigationItem) {
@@ -91,13 +107,8 @@ export class SidenavItemComponent implements OnInit, OnChanges {
   }
 
   ngOnInit() {
-    const user: any = this.user.getUser();
+    this.auth.isAuthenticationChanged()?.subscribe(() => this.cd.markForCheck());
 
-    if(user.rol.nombre == 'Pasajero'){
-      this.showRol = true
-    } else{
-      this.showRol = false;
-    }
     this.router.events
       .pipe(
         filter((event) => event instanceof NavigationEnd),

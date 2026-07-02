@@ -23,6 +23,11 @@ import { PasajerosService } from 'src/app/pages/services/pasajeros.service';
 import { ClientesService } from 'src/app/pages/services/clientes.service';
 import { AlertsService } from '../../modal/alerts.service';
 import { fadeInRight400ms } from '@vex/animations/fade-in-right.animation';
+import {
+  getPasswordGuideText,
+  getPasswordRuleKey,
+  PASSWORD_PATTERN,
+} from 'src/app/core/validators/password-policy';
 
 @Component({
   selector: 'vex-register',
@@ -77,21 +82,17 @@ export class RegisterComponent implements OnInit, OnDestroy {
   hide = true;
   type = 'password';
   pwFocused = false;
-  hasMayus = false;
-  hasMinus = false;
-  hasNumber = false;
-  espCaracter = false;
-  minCaracteres = false;
-  maxCaracteres = false;
   pwAllOk = false;
-  pwGuideText = 'La contraseña debe tener al menos una mayúscula.';
+  pwGuideText = getPasswordGuideText('needUpper');
   pwGuideKey = 'needUpper';
+  readonly OTP_LENGTH = 6;
   verifyForm!: UntypedFormGroup;
 
   private subs: Subscription[] = [];
 
   @ViewChildren('otpInput') otpInputs!: QueryList<ElementRef<HTMLInputElement>>;
-  otp: string[] = ['', '', '', ''];
+  otp: string[] = Array(6).fill('');
+  readonly otpIndexes = [0, 1, 2, 3, 4, 5];
 
   resendDisabled = false;
   resendSeconds = 60;
@@ -134,10 +135,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
       correo: ['', [Validators.required, Validators.email]],
       passwordHash: [
         '',
-        [
-          Validators.required,
-          Validators.pattern(/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[^A-Za-z0-9])\S{7,15}$/)
-        ]
+        [Validators.required, Validators.pattern(PASSWORD_PATTERN)]
       ],
       numeroSerieMonedero: ['', [Validators.maxLength(50)]],
       idCliente: [null]
@@ -175,7 +173,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.verifyForm = this.fb.group({
-      codigo: ['', [Validators.required]],
+      codigo: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]],
     });
     this.initForm();
     this.cargarClientes();
@@ -184,40 +182,10 @@ export class RegisterComponent implements OnInit, OnDestroy {
         const v = (raw || '').trim();
         if (raw !== v) this.afiliacionPasajero.get('passwordHash')!.setValue(v, { emitEvent: false });
 
-        this.hasMayus = /[A-Z]/.test(v);
-        this.hasMinus = /[a-z]/.test(v);
-        this.hasNumber = /\d/.test(v);
-        this.espCaracter = /[^A-Za-z0-9]/.test(v) && !/\s/.test(v);
-        this.minCaracteres = v.length >= 7;
-        this.maxCaracteres = v.length <= 15;
-
-        if (!this.hasMayus) {
-          this.pwGuideText = 'La contraseña debe tener al menos una mayúscula.';
-          this.pwGuideKey = 'needUpper';
-        } else if (!this.hasMinus) {
-          this.pwGuideText = 'La contraseña debe tener al menos una minúscula.';
-          this.pwGuideKey = 'needLower';
-        } else if (!this.hasNumber) {
-          this.pwGuideText = 'La contraseña debe tener al menos un número.';
-          this.pwGuideKey = 'needNumber';
-        } else if (!this.espCaracter) {
-          this.pwGuideText = 'La contraseña debe incluir al menos un símbolo y no contener espacios.';
-          this.pwGuideKey = 'needSpecial';
-        } else if (!(this.minCaracteres && this.maxCaracteres)) {
-          this.pwGuideText = 'La contraseña debe tener entre 7 y 15 caracteres.';
-          this.pwGuideKey = 'needLength';
-        } else {
-          this.pwGuideText = 'Contraseña válida.';
-          this.pwGuideKey = 'ok';
-        }
-
-        this.pwAllOk =
-          this.hasMayus &&
-          this.hasMinus &&
-          this.hasNumber &&
-          this.espCaracter &&
-          this.minCaracteres &&
-          this.maxCaracteres;
+        const ruleKey = getPasswordRuleKey(v);
+        this.pwGuideKey = ruleKey;
+        this.pwGuideText = getPasswordGuideText(ruleKey);
+        this.pwAllOk = ruleKey === 'ok';
       })
     );
   }
@@ -291,7 +259,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
         this.alerts.open({
           type: 'success',
           title: '¡Operación Exitosa!',
-          message: 'Te enviamos un código de <strong>4 dígitos</strong> a tu correo. Ingrésalo para activar tu cuenta.',
+          message: 'Te enviamos un código de <strong>6 dígitos</strong> a tu correo. Ingrésalo para activar tu cuenta.',
           confirmText: 'Ingresar código',
           backdropClose: false
         }).then((res: any) => {
@@ -326,7 +294,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
     input.value = v;
     this.otp[i] = v;
 
-    if (v && i < 3) {
+    if (v && i < this.OTP_LENGTH - 1) {
       const sib = input.nextElementSibling as HTMLInputElement | null;
       if (sib && sib.classList.contains('otp-box')) {
         sib.focus();
@@ -338,7 +306,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
       }
     }
 
-    if (this.otp.join('').length === 4) {
+    if (this.otp.join('').length === this.OTP_LENGTH) {
       this.verifyForm.patchValue({ codigo: this.otp.join('') }, { emitEvent: false });
     }
   }
@@ -413,7 +381,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
     const payload = this.afiliacionPasajero.value;
     this.startResendCountdown();
     this.pasajService.agregarPasajeroAfiliacion(payload).subscribe({
-      next: () => console.log('Reenviado OK'),
+      next: () => {},
       error: (err) => console.error('Error al reenviar', err)
     });
   }
@@ -526,7 +494,6 @@ export class RegisterComponent implements OnInit, OnDestroy {
     this.loadingClientes = true;
     this.clientesService.obtenerClientes().subscribe({
       next: (response: any) => {
-        console.log('Respuesta del API clientes/public:', response);
         // Manejar diferentes estructuras de respuesta
         let clientes: any[] = [];
         if (Array.isArray(response)) {
@@ -550,7 +517,6 @@ export class RegisterComponent implements OnInit, OnDestroy {
             : `${cliente.nombre || ''} ${cliente.apellidoPaterno || ''} ${cliente.apellidoMaterno || ''}`.trim()
         }));
         
-        console.log('Lista de clientes procesada:', this.listaClientes);
         this.loadingClientes = false;
       },
       error: (err) => {

@@ -221,6 +221,13 @@ export class NavigationLoaderService {
         ]
       },
       {
+        type: 'link',
+        label: 'Perfil Pasajero',
+        route: '/administracion/perfil-pasajero',
+        icon: 'mat:description',
+        roles: ['Pasajero'],
+      },
+      {
         type: 'subheading',
         label: 'Recaudo',
         children: [

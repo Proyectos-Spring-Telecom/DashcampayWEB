@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, OnDestroy, OnInit, QueryList, ViewChildren } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators, FormGroup } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { NgIf } from '@angular/common';
+import { NgFor, NgIf } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -13,6 +13,7 @@ import { AlertsService } from '../../modal/alerts.service';
 import { User } from 'src/app/entities/User';
 import { Location } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
+import { switchMap, tap } from 'rxjs/operators';
 
 @Component({
   selector: 'vex-login',
@@ -29,7 +30,8 @@ import { HttpErrorResponse } from '@angular/common/http';
     MatIconModule,
     MatTooltipModule,
     RouterLink,
-    NgIf
+    NgIf,
+    NgFor
   ]
 })
 export class LoginComponent implements OnInit, OnDestroy {
@@ -45,12 +47,14 @@ export class LoginComponent implements OnInit, OnDestroy {
   emailForm: FormGroup = this.fb.group({
     userName: ['', [Validators.required, Validators.email]]
   });
+  readonly OTP_LENGTH = 6;
   verifyForm: FormGroup = this.fb.group({
-    codigo: ['', [Validators.required]]
+    codigo: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]]
   });
   modalStep: 'email' | 'otp' = 'email';
   @ViewChildren('otpInput') otpInputs!: QueryList<ElementRef<HTMLInputElement>>;
-  otp: string[] = ['', '', '', ''];
+  otp: string[] = Array(6).fill('');
+  readonly otpIndexes = [0, 1, 2, 3, 4, 5];
   resendDisabled = false;
   resendSeconds = 60;
   private resendTimer?: number;
@@ -93,7 +97,10 @@ onSubmit() {
 
   const credentials = this.loginForm.value as { userName: string; password: string };
 
-  this.auth.authenticate(credentials).subscribe({
+  this.auth.authenticate(credentials).pipe(
+    tap((auth) => this.auth.setTokens(auth.token, auth.refreshToken)),
+    switchMap(() => this.auth.getMe())
+  ).subscribe({
     next: (user: User) => {
       this.loading = false;
       this.textLogin = 'Iniciar Sesión';
@@ -107,9 +114,8 @@ onSubmit() {
         backdropClose: false
       }).then((res) => {
         if (res === 'confirm') {
-          this.auth.setData(user);        // <-- ahora sí guardas el usuario real
-          
-          // Verificar el rol del usuario para redirigir
+          this.auth.setData(user);
+
           const rolNombre = user?.rol?.nombre?.toLowerCase() || '';
           if (rolNombre === 'pasajero') {
             this.router.navigate(['/administracion/perfil-pasajero']);
@@ -120,6 +126,7 @@ onSubmit() {
       });
     },
     error: async (err: HttpErrorResponse) => {
+      this.auth.cleanSession();
       // mostrar EXACTO lo que manda el back (text/plain, Blob o JSON)
       let backendMsg = '';
       if (typeof err?.error === 'string') {
@@ -127,9 +134,15 @@ onSubmit() {
       } else if (err?.error instanceof Blob) {
         try { backendMsg = await err.error.text(); } catch {}
       } else if (err?.error?.message) {
-        backendMsg = String(err.error.message);
+        backendMsg = Array.isArray(err.error.message)
+          ? err.error.message.join(' ')
+          : String(err.error.message);
       }
       if (!backendMsg) backendMsg = err?.statusText || `HTTP ${err?.status || ''}`.trim();
+
+      const message = this.isLoginThrottled(err, backendMsg)
+        ? 'Intentos excedidos, por favor espera unos minutos y vuelve a intentarlo.'
+        : backendMsg;
 
       this.loading = false;
       this.textLogin = 'Iniciar Sesión';
@@ -138,7 +151,7 @@ onSubmit() {
       this.alerts.open({
         type: 'error',
         title: '¡Ops!',
-        message: backendMsg,   // p.ej. "Credenciales invalidas"
+        message,
         confirmText: 'Entendido',
         backdropClose: false
       });
@@ -189,12 +202,12 @@ onSubmit() {
     const v = (input.value || '').replace(/\D/g, '').slice(0, 1);
     input.value = v;
     this.otp[i] = v;
-    if (v && i < 3) {
+    if (v && i < this.OTP_LENGTH - 1) {
       const next = this.otpInputs?.get(i + 1)?.nativeElement;
       next?.focus();
       next?.select();
     }
-    if (this.otp.join('').length === 4) {
+    if (this.otp.join('').length === this.OTP_LENGTH) {
       this.verifyForm.patchValue({ codigo: this.otp.join('') }, { emitEvent: false });
     }
   }
@@ -243,7 +256,7 @@ onSubmit() {
     this.auth.reenviarCodigo({ codigo }).subscribe({
       next: (msg: string) => {
         this.loading = false;
-        this.otp = ['', '', '', ''];
+        this.otp = Array(6).fill('');
         this.verifyForm.reset({ codigo: '' }, { emitEvent: false });
         this.closeOtpModal();
         this.cdr.markForCheck();
@@ -274,7 +287,7 @@ onSubmit() {
   private goToOtpStep(): void {
     this.resendMsg = null;
     this.modalStep = 'otp';
-    this.otp = ['', '', '', ''];
+    this.otp = Array(6).fill('');
     this.verifyForm.reset({ codigo: '' }, { emitEvent: false });
     this.cdr.detectChanges();
     setTimeout(() => {
@@ -419,4 +432,22 @@ closeOtpModal(ev?: Event) {
     this.cdr.markForCheck();
   }
   resendMsg: string | null = null;
+
+  private isLoginThrottled(err: HttpErrorResponse, backendMsg: string): boolean {
+    if (err?.status === 429) {
+      return true;
+    }
+    const fragments = [backendMsg];
+    const nested = err?.error?.message;
+    if (Array.isArray(nested)) {
+      fragments.push(...nested.map(String));
+    } else if (nested) {
+      fragments.push(String(nested));
+    }
+    if (typeof err?.error === 'string') {
+      fragments.push(err.error);
+    }
+    const text = fragments.join(' ').toLowerCase();
+    return text.includes('throttlerexception') || text.includes('too many requests');
+  }
 }

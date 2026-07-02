@@ -146,7 +146,6 @@ export class GenerarTransaccionComponent implements OnInit {
         );
         if (direccionEncontrada && direccionEncontrada.idDireccion) {
           idDireccion = direccionEncontrada.idDireccion;
-          console.log('Dirección encontrada para la tarjeta:', direccionEncontrada);
         }
       }
       
@@ -157,8 +156,6 @@ export class GenerarTransaccionComponent implements OnInit {
         deviceInformation: this.generarDeviceInformation(),
         idDireccion: idDireccion
       };
-      
-      console.log('Información de tarjeta guardada:', this.tarjetaInfo);
     }
   }
   
@@ -353,9 +350,6 @@ export class GenerarTransaccionComponent implements OnInit {
       }
     }
 
-    // Log del body para debug
-    console.log('Body de la transacción:', JSON.stringify(payload, null, 2));
-    
     // Enviar la petición
     this.agregar(payload);
   }
@@ -833,12 +827,6 @@ export class GenerarTransaccionComponent implements OnInit {
     const customerId = this.monederoSeleccionado?.customerId;
     // Usar el atributo 'source' que es el token de la tarjeta
     const tokenCard = tarjeta.source || tarjeta.card?.token;
-    
-    console.log('Eliminando tarjeta:', {
-      customerId,
-      tokenCard,
-      tarjetaCompleta: tarjeta
-    });
     
     if (!customerId || !tokenCard) {
       this.alerts.open({

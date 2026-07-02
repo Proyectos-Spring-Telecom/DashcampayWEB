@@ -191,7 +191,6 @@ export class ListaPermisosComponent implements OnInit {
   }
 
   showInfo(id: any): void {
-    console.log('Mostrar información del permiso con ID:', id);
   }
 
   agregarPermiso() {

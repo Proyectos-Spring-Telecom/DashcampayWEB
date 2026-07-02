@@ -186,7 +186,6 @@ export class ListaContadoraComponent implements OnInit {
   }
 
   showInfo(id: any): void {
-    console.log('Mostrar información del dispositivo con ID:', id);
   }
 
   actualizarContadora(idContadora: number) {

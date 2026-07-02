@@ -70,8 +70,8 @@
             </mat-form-field>
           </div>
 
-          <div class="col-12 col-md-6">
-            <mat-form-field class="w-100">
+          <div class="col-12 col-md-6 password-field-wrap">
+            <mat-form-field class="w-100" subscriptSizing="dynamic">
               <mat-label>Contraseña</mat-label>
               <input matInput [type]="type" formControlName="passwordHash" required autocomplete="new-password"
                 (focus)="pwFocused = true" (blur)="pwFocused = false" />
@@ -79,17 +79,17 @@
                 <mat-icon>{{ type === 'password' ? 'visibility_off' : 'visibility' }}</mat-icon>
               </button>
 
-              <div *ngIf="showPwHint" class="pw-hint" [class.ok]="pwAllOk" [class.bad]="!pwAllOk"
-                [@fadeOnChange]="pwGuideKey" [@fadeInOut] aria-live="polite">
-                <i class="fa" [ngClass]="pwAllOk ? 'fa-check-circle' : 'fa-exclamation-circle'"></i>
-                {{ pwGuideText }}
-              </div>
-
               <mat-error *ngIf="afiliacionPasajero.get('passwordHash')?.hasError('required')">Campo
                 requerido</mat-error>
               <mat-error *ngIf="afiliacionPasajero.get('passwordHash')?.hasError('pattern')">No cumple la
                 política</mat-error>
             </mat-form-field>
+
+            <div *ngIf="showPwHint" class="pw-hint pw-hint-below" [class.ok]="pwAllOk" [class.bad]="!pwAllOk"
+              [@fadeOnChange]="pwGuideKey" [@fadeInOut] aria-live="polite">
+              <i class="fa" [ngClass]="pwAllOk ? 'fa-check-circle' : 'fa-exclamation-circle'"></i>
+              {{ pwGuideText }}
+            </div>
           </div>
 
           <div class="col-12 col-md-6">
@@ -145,19 +145,13 @@
 
     <div class="modal-body otp-body">
       <p class="otp-subtitle">
-        Nos alegra que estés aquí. Para terminar el registro, ingresa el código de <strong>4 dígitos</strong> que te enviamos a tu correo.
+        Nos alegra que estés aquí. Para terminar el registro, ingresa el código de <strong>6 dígitos</strong> que te enviamos a tu correo.
       </p>
 
       <form [formGroup]="verifyForm" (ngSubmit)="onVerify()" class="otp-form">
         <div class="otp-inputs">
-          <input #otpInput class="otp-box otp-elev" maxlength="1" inputmode="numeric" pattern="[0-9]*"
-                 aria-label="Dígito 1" (input)="onOtpInput($event,0)" (keydown)="onOtpKeydown($event,0)" />
-          <input #otpInput class="otp-box otp-elev" maxlength="1" inputmode="numeric" pattern="[0-9]*"
-                 aria-label="Dígito 2" (input)="onOtpInput($event,1)" (keydown)="onOtpKeydown($event,1)" />
-          <input #otpInput class="otp-box otp-elev" maxlength="1" inputmode="numeric" pattern="[0-9]*"
-                 aria-label="Dígito 3" (input)="onOtpInput($event,2)" (keydown)="onOtpKeydown($event,2)" />
-          <input #otpInput class="otp-box otp-elev" maxlength="1" inputmode="numeric" pattern="[0-9]*"
-                 aria-label="Dígito 4" (input)="onOtpInput($event,3)" (keydown)="onOtpKeydown($event,3)" />
+          <input *ngFor="let i of otpIndexes" #otpInput class="otp-box otp-elev" maxlength="1" inputmode="numeric" pattern="[0-9]*"
+                 [attr.aria-label]="'Dígito ' + (i + 1)" (input)="onOtpInput($event, i)" (keydown)="onOtpKeydown($event, i)" />
         </div>
 
         <div class="otp-actions">

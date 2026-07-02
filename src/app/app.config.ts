@@ -1,4 +1,4 @@
-import { ApplicationConfig, importProvidersFrom } from '@angular/core';
+import { ApplicationConfig, APP_INITIALIZER, importProvidersFrom } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { appRoutes } from './app.routes';
 import { BrowserAnimationsModule, provideAnimations } from '@angular/platform-browser/animations';
@@ -19,6 +19,8 @@ import { provideNavigation } from './core/navigation/navigation.provider';
 import { vexConfigs } from '@vex/config/vex-configs';
 import { provideQuillConfig } from 'ngx-quill';
 import { interceptServiceInterceptor } from './pages/pages/auth/login/intercept.service';
+import { authRefreshInterceptor } from './core/interceptors/auth-refresh.interceptor';
+import { initializeAuthSession } from './core/services/auth-session.initializer';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -39,8 +41,13 @@ export const appConfig: ApplicationConfig = {
     ),
     provideAnimations(),
     provideHttpClient(
-      withInterceptors([interceptServiceInterceptor]) // ✅ CORRECTO
+      withInterceptors([interceptServiceInterceptor, authRefreshInterceptor])
     ),
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initializeAuthSession,
+      multi: true,
+    },
 
     provideVex({
       config: vexConfigs.poseidon,

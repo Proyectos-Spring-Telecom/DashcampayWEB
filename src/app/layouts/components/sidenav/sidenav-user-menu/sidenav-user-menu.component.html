@@ -1,10 +1,12 @@
 <div class="vex-user-menu">
   <a
-    (click)="close()"
-    [routerLink]="['/login']"
+    (click)="cerrarSesion()"
     class="vex-user-menu-item"
     matRipple
     matRippleColor="rgba(25, 118, 210, 0.1)"
+    role="button"
+    tabindex="0"
+    (keydown.enter)="cerrarSesion()"
 >
     <mat-icon
       class="vex-user-menu-item__icon icon-sm"

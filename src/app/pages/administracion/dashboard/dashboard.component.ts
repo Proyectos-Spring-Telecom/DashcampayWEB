@@ -131,7 +131,6 @@ export class DashboardComponent implements OnInit {
         }
         // Actualizar Top 5 rutas
         if (data && data.top5Rutas && Array.isArray(data.top5Rutas)) {
-          console.log(data.top5Rutas);
           this.topRutas = data.top5Rutas.map((ruta: any) => ({
             ruta: ruta.nombreRuta || ruta.idRuta,
             monto: Number(ruta.ingresosTotales) || 0,

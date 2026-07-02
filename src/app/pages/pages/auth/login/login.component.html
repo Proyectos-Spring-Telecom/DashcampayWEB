@@ -83,19 +83,13 @@
       </div>
       <div *ngIf="modalStep === 'otp'">
         <p class="otp-subtitle">
-          Nos alegra que estés aquí. Para terminar el registro, ingresa el código de <strong>4 dígitos</strong> que te
+          Nos alegra que estés aquí. Para terminar el registro, ingresa el código de <strong>6 dígitos</strong> que te
           enviamos a tu correo.
         </p>
         <form [formGroup]="verifyForm" (ngSubmit)="onVerify()" class="otp-form">
           <div class="otp-inputs">
-            <input #otpInput class="otp-box otp-elev" maxlength="1" inputmode="numeric" pattern="[0-9]*"
-              aria-label="Dígito 1" (input)="onOtpInput($event,0)" (keydown)="onOtpKeydown($event,0)" />
-            <input #otpInput class="otp-box otp-elev" maxlength="1" inputmode="numeric" pattern="[0-9]*"
-              aria-label="Dígito 2" (input)="onOtpInput($event,1)" (keydown)="onOtpKeydown($event,1)" />
-            <input #otpInput class="otp-box otp-elev" maxlength="1" inputmode="numeric" pattern="[0-9]*"
-              aria-label="Dígito 3" (input)="onOtpInput($event,2)" (keydown)="onOtpKeydown($event,2)" />
-            <input #otpInput class="otp-box otp-elev" maxlength="1" inputmode="numeric" pattern="[0-9]*"
-              aria-label="Dígito 4" (input)="onOtpInput($event,3)" (keydown)="onOtpKeydown($event,3)" />
+            <input *ngFor="let i of otpIndexes" #otpInput class="otp-box otp-elev" maxlength="1" inputmode="numeric" pattern="[0-9]*"
+              [attr.aria-label]="'Dígito ' + (i + 1)" (input)="onOtpInput($event, i)" (keydown)="onOtpKeydown($event, i)" />
           </div>
           <div class="otp-actions">
             <button class="btn-verify" type="submit" [disabled]="verifyForm.invalid || loading">
