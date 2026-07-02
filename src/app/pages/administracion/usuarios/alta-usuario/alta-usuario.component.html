@@ -93,16 +93,15 @@
                 <div class="mt-0" *ngIf="showPwdHints">
                   <ng-container [ngSwitch]="currentRuleKey">
                     <p *ngSwitchCase="'case'" class="pwd-hint text-danger" [@fadeIn]><i
-                        class="fa fa-exclamation-circle"></i><span class="ms-2">Al menos una mayúscula y
-                        minúsculas.</span></p>
+                        class="fa fa-exclamation-circle"></i><span class="ms-2">Al menos una mayúscula.</span></p>
                     <p *ngSwitchCase="'special'" class="pwd-hint text-danger" [@fadeIn]><i
                         class="fa fa-exclamation-circle"></i><span class="ms-2">Un caracter no alfanumérico (ejemplo:
                         #?!&).</span></p>
                     <p *ngSwitchCase="'number'" class="pwd-hint text-danger" [@fadeIn]><i
                         class="fa fa-exclamation-circle"></i><span class="ms-2">Un número.</span></p>
                     <p *ngSwitchCase="'length'" class="pwd-hint text-danger" [@fadeIn]><i
-                        class="fa fa-exclamation-circle"></i><span class="ms-2">La contraseña debe tener más de 6
-                        caracteres y menos de 16.</span></p>
+                        class="fa fa-exclamation-circle"></i><span class="ms-2">La contraseña debe tener al menos 12
+                        caracteres.</span></p>
                     <p *ngSwitchCase="'ok'" class="pwd-hint text-success" [@fadeIn]><i
                         class="fa fa-check-circle"></i><span class="ms-2">Contraseña válida y segura.</span></p>
                   </ng-container>

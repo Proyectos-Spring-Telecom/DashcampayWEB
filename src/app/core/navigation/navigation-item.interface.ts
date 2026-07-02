@@ -10,6 +10,8 @@ export interface NavigationLink {
   label: string;
   icon?: string;
   permissions?: Array<string | number>;
+  /** Si se define, solo estos roles ven el ítem (ej. Pasajero). */
+  roles?: string[];
   routerLinkActiveOptions?: { exact: boolean };
   badge?: {
     value: string;

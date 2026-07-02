@@ -74,7 +74,6 @@ export class MonitoreoWebSocketService implements OnDestroy {
    */
   connect(): void {
     if (this.socket?.connected) {
-      console.log('[WebSocket] Ya está conectado');
       return;
     }
 
@@ -107,8 +106,6 @@ export class MonitoreoWebSocketService implements OnDestroy {
 
     const wsUrl = `${origin}${namespace}`;
 
-    console.log('[WebSocket] Conectando a:', wsUrl);
-
     // Crear conexión Socket.IO con autenticación
     this.socket = io(wsUrl, {
       path: socketPath,
@@ -137,7 +134,6 @@ export class MonitoreoWebSocketService implements OnDestroy {
 
     // Evento de conexión exitosa
     this.socket.on('connect', () => {
-      console.log('[WebSocket] Conectado exitosamente. Socket ID:', this.socket?.id);
       this.isConnectedSubject.next(true);
       this.reconnectAttempts = 0;
       
@@ -147,25 +143,21 @@ export class MonitoreoWebSocketService implements OnDestroy {
 
     // Evento de confirmación de conexión con datos de sesión
     this.socket.on('connected', (data: ConnectedData) => {
-      console.log('[WebSocket] Confirmación de conexión:', data);
       this.connectedSubject.next(data);
     });
 
     // Evento de actualización de posición
     this.socket.on('position:update', (data: PositionUpdate) => {
-      console.log('[WebSocket] Actualización de posición recibida:', data);
       this.positionUpdateSubject.next(data);
     });
 
     // Evento de actualización de unidad completa
     this.socket.on('unidad:update', (data: UnidadUpdate) => {
-      console.log('[WebSocket] Actualización de unidad recibida:', data);
       this.unidadUpdateSubject.next(data);
     });
 
     // Evento de desconexión
     this.socket.on('disconnect', (reason: string) => {
-      console.log('[WebSocket] Desconectado. Razón:', reason);
       this.isConnectedSubject.next(false);
       
       // Intentar reconectar solo si no fue una desconexión manual
@@ -192,8 +184,7 @@ export class MonitoreoWebSocketService implements OnDestroy {
     });
 
     // Evento de reconexión
-    this.socket.on('reconnect', (attemptNumber: number) => {
-      console.log('[WebSocket] Reconectado después de', attemptNumber, 'intentos');
+    this.socket.on('reconnect', () => {
       this.reconnectAttempts = 0;
     });
 
@@ -203,10 +194,6 @@ export class MonitoreoWebSocketService implements OnDestroy {
       this.reconnectAttempts++;
     });
 
-    // Evento de intento de reconexión
-    this.socket.on('reconnect_attempt', (attemptNumber: number) => {
-      console.log('[WebSocket] Intento de reconexión #', attemptNumber);
-    });
   }
 
   /**
@@ -225,8 +212,6 @@ export class MonitoreoWebSocketService implements OnDestroy {
     this.reconnectAttempts++;
     const delay = this.reconnectDelay * this.reconnectAttempts;
 
-    console.log(`[WebSocket] Intentando reconectar en ${delay}ms (intento ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
-
     this.reconnectTimer = setTimeout(() => {
       if (!this.isManualDisconnect && !this.socket?.connected) {
         this.connect();
@@ -243,7 +228,6 @@ export class MonitoreoWebSocketService implements OnDestroy {
       return;
     }
 
-    console.log('[WebSocket] Suscribiéndose a actualizaciones de unidades');
     this.socket.emit('subscribe:unidades');
   }
 
@@ -259,7 +243,6 @@ export class MonitoreoWebSocketService implements OnDestroy {
     }
 
     if (this.socket) {
-      console.log('[WebSocket] Desconectando...');
       this.socket.disconnect();
       this.socket = null;
     }

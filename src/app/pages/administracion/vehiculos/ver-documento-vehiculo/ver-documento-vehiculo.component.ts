@@ -27,10 +27,6 @@ layoutCtrl = new UntypedFormControl('fullwidth');
     this.url = state.url || this.route.snapshot.queryParamMap.get('url') || '';
     this.titulo = state.titulo || this.route.snapshot.queryParamMap.get('titulo') || 'Documento';
 
-    // LOG para verificar que sí llega
-    console.log('[VerDocumento] url:', this.url);
-    console.log('[VerDocumento] titulo:', this.titulo);
-
     if (this.url) {
       this.urlSanitizada = this.sanitizer.bypassSecurityTrustResourceUrl(this.url);
     }

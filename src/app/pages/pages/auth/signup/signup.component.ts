@@ -188,7 +188,6 @@ export class SignupComponent implements OnInit, OnDestroy {
     }
 
     if (!this.resetToken) {
-      console.log('No hay token para la verificación')
       return;
     }
 

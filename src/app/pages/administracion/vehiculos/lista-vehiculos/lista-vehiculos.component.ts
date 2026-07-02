@@ -181,7 +181,6 @@ export class ListaVehiculosComponent implements OnInit {
   }
 
   showInfo(id: any): void {
-    console.log('Mostrar información del vehículo con ID:', id);
   }
 
   actualizarVehiculo(idVehiculo: number) {

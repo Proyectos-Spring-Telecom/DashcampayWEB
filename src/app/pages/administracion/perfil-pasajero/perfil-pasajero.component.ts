@@ -210,7 +210,6 @@ export class PerfilPasajeroComponent implements OnInit {
   }
 
   verMovimiento(mov: any): void {
-    console.log('Movimiento:', mov);
     // aquí puedes abrir modal, navegar, etc.
   }
 

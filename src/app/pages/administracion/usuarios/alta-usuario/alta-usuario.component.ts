@@ -10,6 +10,10 @@ import { ModulosService } from 'src/app/pages/services/modulos.service';
 import { PermisosService } from 'src/app/pages/services/permisos.service';
 import { RolesService } from 'src/app/pages/services/roles.service';
 import { UsuariosService } from 'src/app/pages/services/usuarios.service';
+import {
+  getPasswordRuleKey,
+  PASSWORD_PATTERN,
+} from 'src/app/core/validators/password-policy';
 
 @Component({
   selector: 'vex-alta-usuario',
@@ -50,18 +54,12 @@ export class AltaUsuarioComponent {
   confirmMatch = false;
   private confirmTimer: any;
 
-  private get hasMayus(): boolean { return /[A-Z]/.test(this.pwdValue); }
-  private get hasMinus(): boolean { return /[a-z]/.test(this.pwdValue); }
-  private get espCaracter(): boolean { return /[^A-Za-z0-9]/.test(this.pwdValue); }
-  private get hasNumber(): boolean { return /\d/.test(this.pwdValue); }
-  private get minCaracteres(): boolean { return this.pwdValue.length > 6; }
-  private get maxCaracteres(): boolean { return this.pwdValue.length < 16; }
-
   get currentRuleKey(): 'case' | 'special' | 'number' | 'length' | 'ok' {
-    if (!(this.hasMayus && this.hasMinus)) return 'case';
-    if (!this.espCaracter) return 'special';
-    if (!this.hasNumber) return 'number';
-    if (!(this.minCaracteres && this.maxCaracteres)) return 'length';
+    const key = getPasswordRuleKey(this.pwdValue);
+    if (key === 'needUpper') return 'case';
+    if (key === 'needSpecial') return 'special';
+    if (key === 'needNumber') return 'number';
+    if (key === 'needLength') return 'length';
     return 'ok';
   }
 
@@ -123,7 +121,7 @@ export class AltaUsuarioComponent {
     this.usuarioForm = this.fb.group(
       {
         userName: ['', [Validators.required, Validators.email]],
-        passwordHash: ['', [Validators.required]],
+        passwordHash: ['', [Validators.required, Validators.pattern(PASSWORD_PATTERN)]],
         confirmPassword: [''],
         telefono: ['', [Validators.required]],
         nombre: ['', [Validators.required]],
@@ -275,8 +273,6 @@ export class AltaUsuarioComponent {
 
   obtenerUsuarioID() {
     this.usuaService.obtenerUsuario(this.idUsuario).subscribe((response: any) => {
-      console.log('[USUARIO][RAW]', response);
-
       const data = response?.data ?? {};
 
       const usuarios = Array.isArray(data?.usuario)
@@ -405,6 +401,9 @@ export class AltaUsuarioComponent {
         const control = this.usuarioForm.get(key);
         if (control?.errors?.['required']) {
           camposFaltantes.push(etiquetas[key] || key);
+        }
+        if (key === 'passwordHash' && control?.errors?.['pattern']) {
+          camposFaltantes.push('Contraseña (no cumple la política de seguridad)');
         }
       });
 

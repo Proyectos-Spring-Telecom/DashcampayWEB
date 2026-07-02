@@ -1,5 +1,5 @@
 export class User {
-    id?: string
+    id?: string | number;
     token?: string;
     refreshToken?: string;
     nombre?: string;
@@ -11,6 +11,7 @@ export class User {
     idCliente?:any;
     imagenPerfil?: string;
     fotoPerfil?:any;
+    logotipo?: string;
     rol: any;
     fechaCreacion: any;
     ultimoLogin: any;

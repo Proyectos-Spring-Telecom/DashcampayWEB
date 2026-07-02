@@ -495,7 +495,6 @@ export class NetpayDialogComponent implements OnInit, OnDestroy {
     // Usar las direcciones ya obtenidas en el componente padre
     if (this.data.direccionesDisponibles && Array.isArray(this.data.direccionesDisponibles)) {
       this.direccionesDisponibles = this.data.direccionesDisponibles;
-      console.log('Direcciones recibidas del componente padre:', this.direccionesDisponibles);
     } else {
       this.direccionesDisponibles = [];
     }
@@ -503,7 +502,6 @@ export class NetpayDialogComponent implements OnInit, OnDestroy {
     // Suscribirse a cambios en el código postal
     this.cardForm.get('codigoPostal')?.valueChanges.subscribe((value: string) => {
       if (value && value.length === 5 && !this.idDireccionSeleccionada) {
-        console.log('Código postal detectado por valueChanges:', value);
         this.obtenerColonias(value);
       } else if (value && value.length < 5) {
         // Limpiar colonias si el código postal no está completo
@@ -602,10 +600,6 @@ export class NetpayDialogComponent implements OnInit, OnDestroy {
     this.cardForm.get('codigoPostal')?.updateValueAndValidity();
     this.cardForm.get('pais')?.updateValueAndValidity();
     this.cardForm.get('colonia')?.updateValueAndValidity();
-
-    console.log('Dirección seleccionada:', direccion);
-    console.log('ID de dirección:', this.idDireccionSeleccionada);
-    console.log('Campos de dirección ahora están deshabilitados y no se enviarán');
   }
 
   ngOnDestroy(): void {
@@ -689,32 +683,25 @@ export class NetpayDialogComponent implements OnInit, OnDestroy {
     input.value = value;
     // Usar emitEvent: true para que se dispare valueChanges
     this.cardForm.patchValue({ codigoPostal: value }, { emitEvent: true });
-    console.log('formatCodigoPostal ejecutado, valor:', value, 'longitud:', value.length);
   }
 
   onCodigoPostalBlur(): void {
     const codigoPostal = this.cardForm.get('codigoPostal')?.value;
-    console.log('onCodigoPostalBlur ejecutado, código postal:', codigoPostal);
     if (codigoPostal && codigoPostal.length === 5 && !this.idDireccionSeleccionada) {
       this.obtenerColonias(codigoPostal);
     }
   }
 
   obtenerColonias(codigoPostal: string): void {
-    console.log('obtenerColonias llamado con:', codigoPostal);
-    
     if (!codigoPostal || codigoPostal.length !== 5) {
-      console.log('Código postal inválido o incompleto');
       return;
     }
 
     // Solo obtener colonias si no hay una dirección seleccionada
     if (this.idDireccionSeleccionada) {
-      console.log('No se obtienen colonias porque hay una dirección seleccionada');
       return;
     }
 
-    console.log('Ejecutando API para obtener colonias del CP:', codigoPostal);
     this.cargandoColonias = true;
     this.coloniasDisponibles = [];
     this.cardForm.patchValue({ colonia: '' }, { emitEvent: false }); // Limpiar selección anterior
@@ -722,7 +709,6 @@ export class NetpayDialogComponent implements OnInit, OnDestroy {
     this.netpayService.obtenerColoniasPorCP(codigoPostal).subscribe(
       (response: any) => {
         this.cargandoColonias = false;
-        console.log('Respuesta del API de colonias:', response);
 
         // Normalizar respuesta del endpoint:
         // Caso nuevo:
@@ -771,16 +757,12 @@ export class NetpayDialogComponent implements OnInit, OnDestroy {
         if (estadoNombre) {
           this.cardForm.patchValue({ estado: estadoNombre }, { emitEvent: false });
           this.cardForm.get('estado')?.disable();
-          console.log('Estado llenado automáticamente y bloqueado:', estadoNombre);
         }
 
         if (municipioNombre) {
           this.cardForm.patchValue({ ciudad: municipioNombre }, { emitEvent: false });
           this.cardForm.get('ciudad')?.disable();
-          console.log('Ciudad/Municipio llenado automáticamente y bloqueado:', municipioNombre);
         }
-
-        console.log('Colonias procesadas:', this.coloniasDisponibles);
 
         // Actualizar validación del campo colonia
         if (this.coloniasDisponibles.length > 0) {
@@ -796,7 +778,6 @@ export class NetpayDialogComponent implements OnInit, OnDestroy {
         if (this.coloniasDisponibles.length === 1) {
           const coloniaValue = this.coloniasDisponibles[0];
           this.cardForm.patchValue({ colonia: coloniaValue }, { emitEvent: false });
-          console.log('Colonia seleccionada automáticamente:', coloniaValue);
         }
       },
       (error: any) => {
