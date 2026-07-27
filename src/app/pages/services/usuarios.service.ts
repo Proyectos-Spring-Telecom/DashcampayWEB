@@ -42,8 +42,8 @@ export class UsuariosService {
     return this.http.post<any>(`${environment.API_SECURITY}/s3/upload`, data);
   }
 
-  actualizarContrasena(idUsuario: number, data: any): Observable<any> {
-    return this.http.put(`${environment.API_SECURITY}/usuarios/actualizar/contrasena/` + idUsuario, data);
+  actualizarContrasena(data: any): Observable<any> {
+    return this.http.put(`${environment.API_SECURITY}/usuarios/actualizar/contrasena`, data);
   }
 
   subirFotoPerfil(formData: FormData): Observable<any> {

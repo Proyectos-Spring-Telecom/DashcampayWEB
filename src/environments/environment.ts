@@ -8,7 +8,7 @@ export const environment = {
   paypal_token: 'PAYPAL_TOKEN',
   // API_SECURITY: '',
   //API_SECURITY: 'https://dashcampay.com/apidev',
-  API_SECURITY:'https://dashcampay.com/apipay/',
+  API_SECURITY:'https://dashcampay.com/apidev/',
   NETPAY_PUBLIC_KEY: 'pk_netpay_JGFtQNUFIENMlhkoBXdgiozmQ',
 };
 

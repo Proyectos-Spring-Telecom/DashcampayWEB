@@ -299,7 +299,7 @@ export class PerfilUsuarioComponent {
     {
       // ✅ NUEVOS NOMBRES
       passwordActual: ['', Validators.required],
-      passwordNueva: ['', [Validators.required, Validators.minLength(8)]],
+      passwordNueva: ['', [Validators.required, Validators.minLength(12)]],
       passwordNuevaConfirmacion: ['', Validators.required],
     },
     { validators: this.passwordsMatchValidator }
@@ -312,7 +312,7 @@ export class PerfilUsuarioComponent {
       lower: /\p{Ll}/u.test(value),
       number: /[0-9]/.test(value),
       special: /[^\p{L}\p{N}]/u.test(value),
-      length: value.length >= 8 && value.length <= 16,
+      length: value.length >= 12 && value.length <= 16,
     };
     const missing: string[] = [];
     if (!checks.upper) missing.push('una mayúscula');
@@ -320,7 +320,7 @@ export class PerfilUsuarioComponent {
     if (!checks.number) missing.push('un número');
     if (!checks.special) missing.push('un carácter especial');
     const allOtherValid = checks.upper && checks.lower && checks.number && checks.special;
-    if (allOtherValid && !checks.length) missing.push('entre 8 y 16 caracteres');
+    if (allOtherValid && !checks.length) missing.push('entre 12 y 16 caracteres');
 
     this.isAllValid = missing.length === 0;
     const prevMsg = this.passwordStrengthMsg;
@@ -390,7 +390,7 @@ export class PerfilUsuarioComponent {
     this.loading = true;
 
     this.usuarioService
-      .actualizarContrasena(this.showId, body)
+      .actualizarContrasena(body)
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: () => {
