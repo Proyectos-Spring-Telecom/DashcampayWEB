@@ -390,7 +390,7 @@ export class PerfilUsuarioComponent {
     this.loading = true;
 
     this.usuarioService
-      .actualizarContrasena(this.showId, body)
+      .actualizarContrasena(body)
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: () => {
