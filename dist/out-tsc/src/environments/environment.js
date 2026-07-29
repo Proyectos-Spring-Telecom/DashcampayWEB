@@ -8,7 +8,7 @@ export const environment = {
     // API_SECURITY: '',
     //API_SECURITY: 'https://dashcampay.com/apidev',
     API_SECURITY: 'https://dashcampay.com/apipay/',
-    NETPAY_PUBLIC_KEY: 'pk_netpay_JGFtQNUFIENMlhkoBXdgiozmQ',
+    NETPAY_PUBLIC_KEY: 'pk_netpay_YbahDkYgsFmUhIFYNzijoIqDJ',
 };
 /*
  * For easier debugging in development mode, you can import the following file
