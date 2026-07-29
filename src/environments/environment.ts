@@ -7,8 +7,8 @@ export const environment = {
   stripe_token: 'STRIPE_TOKEN',
   paypal_token: 'PAYPAL_TOKEN',
   // API_SECURITY: '',
-  //API_SECURITY: 'https://dashcampay.com/apidev',
-  API_SECURITY:'https://dashcampay.com/api',
+  API_SECURITY: 'https://dashcampay.com/apidev',
+  //API_SECURITY:'https://dashcampay.com/api',
   //API_SECURITY:'http://localhost:3000',
   NETPAY_PUBLIC_KEY: 'pk_netpay_YbahDkYgsFmUhIFYNzijoIqDJ',
 };
