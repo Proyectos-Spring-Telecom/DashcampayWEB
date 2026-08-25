@@ -34,6 +34,8 @@ export class AgregarVehiculoComponent implements OnInit {
   listaDispositivos: any;
   public listaClientes: any;
   public listaTiposCombustible: any;
+  readonly MIN_ANO = 2006;
+  readonly MAX_ANO = new Date().getFullYear() + 1;
 
   constructor(
     private route: Router,
@@ -233,11 +235,11 @@ export class AgregarVehiculoComponent implements OnInit {
 
   initForm() {
     this.vehiculosForm = this.fb.group({
-      marca: ['', Validators.required],
-      modelo: ['', Validators.required],
-      ano: [null, Validators.required],
+      marca: ['', [Validators.required, Validators.maxLength(100)]],
+      modelo: ['', [Validators.required, Validators.maxLength(100)]],
+      ano: [null, [Validators.required, Validators.min(this.MIN_ANO), Validators.max(this.MAX_ANO)]],
       placa: ['', [Validators.required, Validators.maxLength(10)]],
-      numeroEconomico: ['', Validators.required],
+      numeroEconomico: ['', [Validators.required, Validators.maxLength(50)]],
       tarjetaCirculacion: ['', Validators.required],
       polizaSeguro: ['', Validators.required],
       permisoConcesion: ['', Validators.required],
@@ -245,15 +247,103 @@ export class AgregarVehiculoComponent implements OnInit {
       foto: ['', Validators.required],
       estatus: [1, Validators.required],
       idCliente: [null, Validators.required],
-      km: [null, Validators.required],
+      km: [null, [Validators.required, Validators.min(0)]],
       idCombustible: [null, Validators.required],
-      capacidadLitros: [null, Validators.required],
-      pasajerosSentados: [null, Validators.required],
-      pasajerosParados: [null, Validators.required],
-      cantidadPuertas: [null, Validators.required]
+      capacidadLitros: [null, [Validators.required, Validators.min(0)]],
+      pasajerosSentados: [null, [Validators.required, Validators.min(0)]],
+      pasajerosParados: [null, [Validators.required, Validators.min(0)]],
+      cantidadPuertas: [null, [Validators.required, Validators.min(0)]]
       // idOperador: ['', Validators.required],
       // idDispositivo: ['', Validators.required],
     });
+  }
+
+  private getErrorMessage(err: any, fallback: string): string {
+    const body = err?.error ?? err;
+
+    const flatten = (value: any): string => {
+      if (value == null || value === '') return '';
+      if (typeof value === 'string') return value.trim();
+      if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+      if (Array.isArray(value)) {
+        return value.map(flatten).filter(Boolean).join('\n');
+      }
+      if (typeof value === 'object') {
+        if (typeof value.message === 'string' && value.message.trim()) return value.message.trim();
+        if (typeof value.mensaje === 'string' && value.mensaje.trim()) return value.mensaje.trim();
+        if (Array.isArray(value.message)) return flatten(value.message);
+        if (Array.isArray(value.mensaje)) return flatten(value.mensaje);
+        if (value.errors) return flatten(value.errors);
+        const lines: string[] = [];
+        for (const key of Object.keys(value)) {
+          if (key === 'statusCode' || key === 'error' || key === 'status') continue;
+          const part = flatten(value[key]);
+          if (part) lines.push(part);
+        }
+        return lines.join('\n');
+      }
+      return '';
+    };
+
+    const fromBody = flatten(body);
+    if (fromBody) return fromBody;
+
+    if (typeof err?.message === 'string' && err.message.trim() && !err.message.startsWith('Http failure')) {
+      return err.message.trim();
+    }
+
+    return fallback;
+  }
+
+  private collectValidationMessages(): string[] {
+    const etiquetas: Record<string, string> = {
+      marca: 'Marca',
+      modelo: 'Modelo',
+      ano: 'Año',
+      placa: 'Placa',
+      numeroEconomico: 'Número Económico',
+      idCliente: 'Cliente',
+      tarjetaCirculacion: 'Tarjeta de Circulación',
+      polizaSeguro: 'Póliza de Seguro',
+      permisoConcesion: 'Permiso de Concesión',
+      inspeccionMecanica: 'Inspección Mecánica',
+      foto: 'Foto',
+      km: 'Rendimiento x Litros',
+      idCombustible: 'Tipo de Combustible',
+      capacidadLitros: 'Capacidad de Combustible',
+      pasajerosSentados: 'Pasajeros Sentados',
+      pasajerosParados: 'Pasajeros Parados',
+      cantidadPuertas: 'Cantidad de Puertas',
+    };
+
+    const maxLengths: Record<string, number> = {
+      marca: 100,
+      modelo: 100,
+      placa: 10,
+      numeroEconomico: 50,
+    };
+
+    const camposNumericos = ['ano', 'km', 'capacidadLitros', 'pasajerosSentados', 'pasajerosParados', 'cantidadPuertas'];
+    const camposFaltantes: string[] = [];
+
+    Object.keys(this.vehiculosForm.controls).forEach((key) => {
+      const control = this.vehiculosForm.get(key);
+      if (control?.errors?.['required']) {
+        camposFaltantes.push(etiquetas[key] || key);
+      }
+      if (control?.errors?.['maxlength'] && maxLengths[key] != null) {
+        camposFaltantes.push(`${etiquetas[key] || key} (máximo ${maxLengths[key]} caracteres)`);
+      }
+      if (key === 'ano' && control?.errors?.['min']) {
+        camposFaltantes.push(`Año: no puede ser menor a ${this.MIN_ANO}`);
+      } else if (key === 'ano' && control?.errors?.['max']) {
+        camposFaltantes.push(`Año: no puede ser mayor a ${this.MAX_ANO}`);
+      } else if (camposNumericos.includes(key) && key !== 'ano' && control?.errors?.['min']) {
+        camposFaltantes.push(`${etiquetas[key] || key} no puede ser negativo`);
+      }
+    });
+
+    return camposFaltantes;
   }
 
   submit() {
@@ -271,64 +361,36 @@ export class AgregarVehiculoComponent implements OnInit {
     this.loading = true;
 
     if (this.vehiculosForm.invalid) {
-  this.submitButton = 'Guardar';
-  this.loading = false;
+      this.submitButton = 'Guardar';
+      this.loading = false;
+      this.vehiculosForm.markAllAsTouched();
 
-  const etiquetas: Record<string, string> = {
-    marca: 'Marca',
-    modelo: 'Modelo',
-    ano: 'Año',
-    placa: 'Placa',
-    numeroEconomico: 'Número Económico',
-    idCliente: 'Cliente',
-    tarjetaCirculacion: 'Tarjeta de Circulación',
-    polizaSeguro: 'Póliza de Seguro',
-    permisoConcesion: 'Permiso de Concesión',
-    inspeccionMecanica: 'Inspección Mecánica',
-    foto: 'Foto',
-    km: 'Rendimiento x Litros',
-    idCombustible: 'Tipo de Combustible',
-    capacidadLitros: 'Capacidad de Combustible',
-    pasajerosSentados: 'Pasajeros Sentados',
-    pasajerosParados: 'Pasajeros Parados',
-  };
-
-  const camposFaltantes: string[] = [];
-  Object.keys(this.vehiculosForm.controls).forEach((key) => {
-    const control = this.vehiculosForm.get(key);
-    if (control?.invalid && control.errors?.['required']) {
-      camposFaltantes.push(etiquetas[key] || key);
-    }
-    if (key === 'placa' && control?.invalid && control.errors?.['maxlength']) {
-      camposFaltantes.push('Placa (máximo 10 caracteres)');
-    }
-  });
-
-  const lista = camposFaltantes.map((campo, i) => `
+      const camposFaltantes = this.collectValidationMessages();
+      const lista = camposFaltantes.map((campo, i) => `
     <div style="padding:8px 12px; border-left:4px solid #d9534f; background:#caa8a8; text-align:center; margin-bottom:8px; border-radius:4px;">
       <strong style="color:#b02a37;">${i + 1}. ${campo}</strong>
     </div>
   `).join('');
 
-  await this.alerts.open({
-    type: 'warning',
-    title: '¡Ops!',
-    message: `
+      await this.alerts.open({
+        type: 'warning',
+        title: '¡Ops!',
+        message: `
       <p style="text-align:center; font-size:15px; margin-bottom:16px;">
-        Hay campos obligatorios sin completar.
+        Hay campos que requieren atención.
       </p>
       <div style="max-height:350px; overflow-y:auto;">${lista}</div>
     `,
-    confirmText: 'Entendido',
-    backdropClose: false,
-  });
-  return;
-}
+        confirmText: 'Entendido',
+        backdropClose: false,
+      });
+      return;
+    }
 
     this.vehiculosForm.removeControl('id');
     const raw = this.vehiculosForm.getRawValue();
-    const payload = { 
-      ...raw, 
+    const payload = {
+      ...raw,
       ano: Number(raw.ano),
       km: raw.km != null ? Number(raw.km) : null,
       idCombustible: raw.idCombustible != null ? Number(raw.idCombustible) : null,
@@ -350,13 +412,13 @@ export class AgregarVehiculoComponent implements OnInit {
         });
         this.regresar();
       },
-      () => {
+      (error) => {
         this.submitButton = 'Guardar';
         this.loading = false;
         this.alerts.open({
           type: 'error',
           title: '¡Ops!',
-          message: 'Ocurrió un error al agregar el vehículo.',
+          message: this.getErrorMessage(error, 'Ocurrió un error al agregar el vehículo.'),
           confirmText: 'Confirmar',
           backdropClose: false
         });
@@ -369,64 +431,35 @@ export class AgregarVehiculoComponent implements OnInit {
     this.loading = true;
 
     if (this.vehiculosForm.invalid) {
-  this.submitButton = 'Guardar';
-  this.loading = false;
+      this.submitButton = 'Guardar';
+      this.loading = false;
+      this.vehiculosForm.markAllAsTouched();
 
-  const etiquetas: Record<string, string> = {
-    marca: 'Marca',
-    modelo: 'Modelo',
-    ano: 'Año',
-    placa: 'Placa',
-    numeroEconomico: 'Número Económico',
-    idCliente: 'Cliente',
-    tarjetaCirculacion: 'Tarjeta de Circulación',
-    polizaSeguro: 'Póliza de Seguro',
-    permisoConcesion: 'Permiso de Concesión',
-    inspeccionMecanica: 'Inspección Mecánica',
-    foto: 'Foto',
-    km: 'Rendimiento x Litros',
-    idCombustible: 'Tipo de Combustible',
-    capacidadLitros: 'Capacidad de Combustible',
-    pasajerosSentados: 'Pasajeros Sentados',
-    pasajerosParados: 'Pasajeros Parados',
-  };
-
-  const camposFaltantes: string[] = [];
-  Object.keys(this.vehiculosForm.controls).forEach((key) => {
-    const control = this.vehiculosForm.get(key);
-    if (control?.invalid && control.errors?.['required']) {
-      camposFaltantes.push(etiquetas[key] || key);
-    }
-    if (key === 'placa' && control?.invalid && control.errors?.['maxlength']) {
-      camposFaltantes.push('Placa (máximo 10 caracteres)');
-    }
-  });
-
-  const lista = camposFaltantes.map((campo, i) => `
+      const camposFaltantes = this.collectValidationMessages();
+      const lista = camposFaltantes.map((campo, i) => `
     <div style="padding:8px 12px; border-left:4px solid #d9534f; background:#caa8a8; text-align:center; margin-bottom:8px; border-radius:4px;">
       <strong style="color:#b02a37;">${i + 1}. ${campo}</strong>
     </div>
   `).join('');
 
-  await this.alerts.open({
-    type: 'warning',
-    title: '¡Ops!',
-    message: `
+      await this.alerts.open({
+        type: 'warning',
+        title: '¡Ops!',
+        message: `
       <p style="text-align:center; font-size:15px; margin-bottom:16px;">
-        Hay campos obligatorios sin completar.
+        Hay campos que requieren atención.
       </p>
       <div style="max-height:350px; overflow-y:auto;">${lista}</div>
     `,
-    confirmText: 'Entendido',
-    backdropClose: false,
-  });
-  return;
-}
-
+        confirmText: 'Entendido',
+        backdropClose: false,
+      });
+      return;
+    }
 
     const raw = this.vehiculosForm.getRawValue();
-    const payload = { 
-      ...raw, 
+    const payload = {
+      ...raw,
       ano: Number(raw.ano),
       km: raw.km != null ? Number(raw.km) : null,
       idCombustible: raw.idCombustible != null ? Number(raw.idCombustible) : null,
@@ -448,13 +481,13 @@ export class AgregarVehiculoComponent implements OnInit {
         });
         this.regresar();
       },
-      () => {
+      (error) => {
         this.submitButton = 'Actualizar';
         this.loading = false;
         this.alerts.open({
           type: 'error',
           title: '¡Ops!',
-          message: 'Ocurrió un error al actualizar el vehículo.',
+          message: this.getErrorMessage(error, 'Ocurrió un error al actualizar el vehículo.'),
           confirmText: 'Confirmar',
           backdropClose: false
         });
@@ -802,8 +835,18 @@ export class AgregarVehiculoComponent implements OnInit {
   uploadingFoto = false;
 
   allowOnlyNumbers(event: KeyboardEvent): void {
+    if (event.key === '-' || event.key === '+' || event.key === 'e' || event.key === 'E') {
+      event.preventDefault();
+      return;
+    }
     const charCode = event.keyCode ? event.keyCode : event.which;
     if (charCode < 48 || charCode > 57) {
+      event.preventDefault();
+    }
+  }
+
+  bloquearNegativo(event: KeyboardEvent): void {
+    if (event.key === '-' || event.key === '+' || event.key === 'e' || event.key === 'E') {
       event.preventDefault();
     }
   }

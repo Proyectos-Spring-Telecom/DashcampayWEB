@@ -187,6 +187,43 @@ export class ListaVehiculosComponent implements OnInit {
     this.router.navigateByUrl('/administracion/vehiculos/editar-vehiculo/' + idVehiculo);
   };
 
+  private getErrorMessage(err: any, fallback: string): string {
+    const body = err?.error ?? err;
+
+    const flatten = (value: any): string => {
+      if (value == null || value === '') return '';
+      if (typeof value === 'string') return value.trim();
+      if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+      if (Array.isArray(value)) {
+        return value.map(flatten).filter(Boolean).join('\n');
+      }
+      if (typeof value === 'object') {
+        if (typeof value.message === 'string' && value.message.trim()) return value.message.trim();
+        if (typeof value.mensaje === 'string' && value.mensaje.trim()) return value.mensaje.trim();
+        if (Array.isArray(value.message)) return flatten(value.message);
+        if (Array.isArray(value.mensaje)) return flatten(value.mensaje);
+        if (value.errors) return flatten(value.errors);
+        const lines: string[] = [];
+        for (const key of Object.keys(value)) {
+          if (key === 'statusCode' || key === 'error' || key === 'status') continue;
+          const part = flatten(value[key]);
+          if (part) lines.push(part);
+        }
+        return lines.join('\n');
+      }
+      return '';
+    };
+
+    const fromBody = flatten(body);
+    if (fromBody) return fromBody;
+
+    if (typeof err?.message === 'string' && err.message.trim() && !err.message.startsWith('Http failure')) {
+      return err.message.trim();
+    }
+
+    return fallback;
+  }
+
   async activar(rowData: any) {
     const res = await this.alerts.open({
       type: 'warning',
@@ -216,7 +253,7 @@ export class ListaVehiculosComponent implements OnInit {
         this.alerts.open({
           type: 'error',
           title: '¡Ops!',
-          message: String(error),
+          message: this.getErrorMessage(error, 'Ocurrió un error al activar el vehículo.'),
           confirmText: 'Confirmar',
           backdropClose: false,
         });
@@ -253,7 +290,7 @@ export class ListaVehiculosComponent implements OnInit {
         this.alerts.open({
           type: 'error',
           title: '¡Ops!',
-          message: String(error),
+          message: this.getErrorMessage(error, 'Ocurrió un error al desactivar el vehículo.'),
           confirmText: 'Confirmar',
           backdropClose: false,
         });

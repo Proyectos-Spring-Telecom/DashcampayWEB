@@ -13,7 +13,7 @@
             <span class="sep">/</span>
             <span class="crumb-current" aria-current="page">Vehículos</span>
             <span class="sep">/</span>
-            <span class="crumb-current" aria-current="page">Agregar Vehículo</span>
+            <span class="crumb-current" aria-current="page">{{ title }}</span>
           </nav>
         </div>
 
@@ -31,21 +31,34 @@
               <div class="col-12 col-md-6 col-lg-4">
                 <label class="form-label"><i class="fa fa-industry"></i><span>Marca</span></label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput placeholder="Marca" formControlName="marca" />
+                  <input matInput placeholder="Marca" formControlName="marca" maxlength="100" />
+                  <mat-error *ngIf="vehiculosForm.get('marca')?.hasError('maxlength')">Máximo 100 caracteres.</mat-error>
                 </mat-form-field>
               </div>
 
               <div class="col-12 col-md-6 col-lg-4">
                 <label class="form-label"><i class="fa fa-cogs"></i><span>Modelo</span></label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput placeholder="Modelo" formControlName="modelo" />
+                  <input matInput placeholder="Modelo" formControlName="modelo" maxlength="100" />
+                  <mat-error *ngIf="vehiculosForm.get('modelo')?.hasError('maxlength')">Máximo 100 caracteres.</mat-error>
                 </mat-form-field>
               </div>
 
               <div class="col-12 col-md-6 col-lg-4">
                 <label class="form-label"><i class="fa fa-calendar-alt"></i><span>Año</span></label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput placeholder="Año" formControlName="ano" maxlength="4" (keypress)="allowOnlyNumbers($event)" />
+                  <input matInput placeholder="Año" formControlName="ano" maxlength="4"
+                    [min]="MIN_ANO" [max]="MAX_ANO"
+                    (keypress)="allowOnlyNumbers($event)" (keydown)="bloquearNegativo($event)" />
+                  <mat-error *ngIf="vehiculosForm.get('ano')?.hasError('required')">
+                    El año es obligatorio.
+                  </mat-error>
+                  <mat-error *ngIf="vehiculosForm.get('ano')?.hasError('min')">
+                    El año no puede ser menor a {{ MIN_ANO }}.
+                  </mat-error>
+                  <mat-error *ngIf="vehiculosForm.get('ano')?.hasError('max')">
+                    El año no puede ser mayor a {{ MAX_ANO }}.
+                  </mat-error>
                 </mat-form-field>
               </div>
 
@@ -60,7 +73,8 @@
               <div class="col-12 col-md-6 col-lg-4">
                 <label class="form-label"><i class="fa fa-hashtag"></i><span>Número Económico</span></label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput placeholder="Número Económico" formControlName="numeroEconomico" />
+                  <input matInput placeholder="Número Económico" formControlName="numeroEconomico" maxlength="50" />
+                  <mat-error *ngIf="vehiculosForm.get('numeroEconomico')?.hasError('maxlength')">Máximo 50 caracteres.</mat-error>
                 </mat-form-field>
               </div>
 
@@ -84,7 +98,11 @@
               <div class="col-12 col-md-6 col-lg-4">
                 <label class="form-label"><i class="fa fa-tachometer-alt"></i><span>Rendimiento x Litros</span></label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput type="number" placeholder="Rendimiento x Litros" formControlName="km" (keypress)="allowOnlyNumbers($event)" />
+                  <input matInput type="number" min="0" placeholder="Rendimiento x Litros" formControlName="km"
+                    (keypress)="allowOnlyNumbers($event)" (keydown)="bloquearNegativo($event)" />
+                  <mat-error *ngIf="vehiculosForm.get('km')?.hasError('min')">
+                    El rendimiento no puede ser negativo.
+                  </mat-error>
                 </mat-form-field>
               </div>
 
@@ -108,28 +126,44 @@
               <div class="col-12 col-md-6 col-lg-4">
                 <label class="form-label"><i class="fa fa-flask"></i><span>Capacidad de Combustible</span></label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput type="number" placeholder="Capacidad de Combustible" formControlName="capacidadLitros" (keypress)="allowOnlyNumbers($event)" />
+                  <input matInput type="number" min="0" placeholder="Capacidad de Combustible" formControlName="capacidadLitros"
+                    (keypress)="allowOnlyNumbers($event)" (keydown)="bloquearNegativo($event)" />
+                  <mat-error *ngIf="vehiculosForm.get('capacidadLitros')?.hasError('min')">
+                    La capacidad no puede ser negativa.
+                  </mat-error>
                 </mat-form-field>
               </div>
 
               <div class="col-12 col-md-6 col-lg-4">
                 <label class="form-label"><i class="fa fa-chair"></i><span>Pasajeros Sentados</span></label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput type="number" placeholder="Pasajeros Sentados" formControlName="pasajerosSentados" (keypress)="allowOnlyNumbers($event)" />
+                  <input matInput type="number" min="0" placeholder="Pasajeros Sentados" formControlName="pasajerosSentados"
+                    (keypress)="allowOnlyNumbers($event)" (keydown)="bloquearNegativo($event)" />
+                  <mat-error *ngIf="vehiculosForm.get('pasajerosSentados')?.hasError('min')">
+                    La cantidad no puede ser negativa.
+                  </mat-error>
                 </mat-form-field>
               </div>
 
               <div class="col-12 col-md-6 col-lg-4">
                 <label class="form-label"><i class="fa fa-users"></i><span>Pasajeros Parados</span></label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput type="number" placeholder="Pasajeros Parados" formControlName="pasajerosParados" (keypress)="allowOnlyNumbers($event)" />
+                  <input matInput type="number" min="0" placeholder="Pasajeros Parados" formControlName="pasajerosParados"
+                    (keypress)="allowOnlyNumbers($event)" (keydown)="bloquearNegativo($event)" />
+                  <mat-error *ngIf="vehiculosForm.get('pasajerosParados')?.hasError('min')">
+                    La cantidad no puede ser negativa.
+                  </mat-error>
                 </mat-form-field>
               </div>
 
               <div class="col-12 col-md-6 col-lg-4">
                 <label class="form-label"><i class="fa fa-door-open"></i><span>Cantidad de Puertas</span></label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput type="number" placeholder="Cantidad de Puertas" formControlName="cantidadPuertas" (keypress)="allowOnlyNumbers($event)" />
+                  <input matInput type="number" min="0" placeholder="Cantidad de Puertas" formControlName="cantidadPuertas"
+                    (keypress)="allowOnlyNumbers($event)" (keydown)="bloquearNegativo($event)" />
+                  <mat-error *ngIf="vehiculosForm.get('cantidadPuertas')?.hasError('min')">
+                    La cantidad no puede ser negativa.
+                  </mat-error>
                 </mat-form-field>
               </div>
 

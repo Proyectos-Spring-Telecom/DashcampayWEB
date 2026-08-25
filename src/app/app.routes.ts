@@ -1,4 +1,5 @@
 import { AuthGuard } from './core/guards/auth.guard';
+import { DashboardPermissionGuard } from './core/guards/dashboard-permission.guard';
 import { LayoutComponent } from './layouts/layout/layout.component';
 import { VexRoutes } from '@vex/interfaces/vex-route.interface';
 
@@ -241,6 +242,7 @@ export const appRoutes: VexRoutes = [
           },
           {
             path: 'dashboard',
+            canActivate: [DashboardPermissionGuard],
             loadChildren:() => import('./pages/administracion/dashboard/dashboard.module')
               .then(m => m.DashboardModule)
           },

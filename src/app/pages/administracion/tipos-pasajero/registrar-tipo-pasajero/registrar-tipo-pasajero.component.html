@@ -36,7 +36,19 @@
                   <i class="fa fa-tag"></i><span>Nombre</span>
                 </label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput placeholder="Nombre del tipo de pasajero" formControlName="nombre" />
+                  <input matInput placeholder="Nombre del tipo de pasajero" formControlName="nombre"
+                    maxlength="50"
+                    (keydown)="bloquearCaracteresEspecialesNombre($event)"
+                    (paste)="onPasteNombre($event)" />
+                  <mat-error *ngIf="tipoPasajeroForm.get('nombre')?.hasError('required')">
+                    El nombre es obligatorio.
+                  </mat-error>
+                  <mat-error *ngIf="tipoPasajeroForm.get('nombre')?.hasError('maxlength')">
+                    El nombre no puede superar los 50 caracteres.
+                  </mat-error>
+                  <mat-error *ngIf="tipoPasajeroForm.get('nombre')?.hasError('pattern')">
+                    El nombre no permite caracteres especiales.
+                  </mat-error>
                 </mat-form-field>
               </div>
 
@@ -61,7 +73,16 @@
                   <i class="fa fa-calculator"></i><span>Cantidad</span>
                 </label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput type="number" placeholder="Cantidad" formControlName="cantidad" />
+                  <input matInput type="number" min="0" [max]="esTipoPorcentaje ? 100 : null" step="any"
+                    [placeholder]="esTipoPorcentaje ? '0 a 100' : 'Cantidad'"
+                    formControlName="cantidad"
+                    (keydown)="bloquearNegativo($event)" />
+                  <mat-error *ngIf="tipoPasajeroForm.get('cantidad')?.hasError('min')">
+                    La cantidad no puede ser negativa.
+                  </mat-error>
+                  <mat-error *ngIf="tipoPasajeroForm.get('cantidad')?.hasError('max')">
+                    Si el descuento es porcentaje, la cantidad no puede ser mayor a 100.
+                  </mat-error>
                 </mat-form-field>
               </div>
 

@@ -9,6 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { fadeInRight400ms } from '@vex/animations/fade-in-right.animation';
 import { AuthenticationService } from 'src/app/core/services/auth.service';
+import { NavigationService } from 'src/app/core/navigation/navigation.service';
 import { AlertsService } from '../../modal/alerts.service';
 import { User } from 'src/app/entities/User';
 import { Location } from '@angular/common';
@@ -63,6 +64,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private auth: AuthenticationService,
+    private navigation: NavigationService,
     private alerts: AlertsService,
     private router: Router,
     private cdr: ChangeDetectorRef,
@@ -115,13 +117,7 @@ onSubmit() {
       }).then((res) => {
         if (res === 'confirm') {
           this.auth.setData(user);
-
-          const rolNombre = user?.rol?.nombre?.toLowerCase() || '';
-          if (rolNombre === 'pasajero') {
-            this.router.navigate(['/administracion/perfil-pasajero']);
-          } else {
-            this.router.navigate(['/administracion/dashboard']);
-          }
+          this.router.navigateByUrl(this.navigation.getHomeRoute());
         }
       });
     },

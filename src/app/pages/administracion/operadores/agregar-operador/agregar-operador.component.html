@@ -12,7 +12,7 @@
                         <span class="sep">/</span>
                         <span class="crumb-current" aria-current="page">Operadores</span>
                         <span class="sep">/</span>
-                        <span class="crumb-current" aria-current="page">Agregar Operador</span>
+                        <span class="crumb-current" aria-current="page">{{ title }}</span>
                     </nav>
                 </div>
                 <!-- idCliente: {{idClienteUser}} -->
@@ -30,16 +30,29 @@
                                 <label class="form-label"><i class="fa fa-id-card"></i><span>Número de
                                         Licencia</span></label>
                                 <mat-form-field appearance="fill" class="w-100">
-                                    <input matInput placeholder="Número de Licencia" formControlName="numeroLicencia" />
+                                    <input matInput placeholder="Número de Licencia" formControlName="numeroLicencia"
+                                        maxlength="20" />
+                                    <mat-error *ngIf="operadorForm.get('numeroLicencia')?.hasError('maxlength')">
+                                        Máximo 20 caracteres.
+                                    </mat-error>
                                 </mat-form-field>
                             </div>
                             <div class="col-12 col-md-6 col-lg-4">
                                 <label class="form-label"><i class="fa fa-calendar-day"></i><span>Fecha de
                                         Nacimiento</span></label>
                                 <mat-form-field appearance="fill" class="w-100">
-                                    <input matInput [matDatepicker]="fechaNacimientoPicker" placeholder="dd/mm/aaaa" formControlName="fechaNacimiento" />
+                                    <input matInput [matDatepicker]="fechaNacimientoPicker" placeholder="dd/mm/aaaa"
+                                        formControlName="fechaNacimiento"
+                                        [max]="maxFechaNacimiento"
+                                        [matDatepickerFilter]="filtroMayorEdad" />
                                     <mat-datepicker-toggle matIconSuffix [for]="fechaNacimientoPicker"></mat-datepicker-toggle>
-                                    <mat-datepicker #fechaNacimientoPicker></mat-datepicker>
+                                    <mat-datepicker #fechaNacimientoPicker [startAt]="maxFechaNacimiento"></mat-datepicker>
+                                    <mat-error *ngIf="operadorForm.get('fechaNacimiento')?.hasError('required')">
+                                        La fecha de nacimiento es obligatoria.
+                                    </mat-error>
+                                    <mat-error *ngIf="operadorForm.get('fechaNacimiento')?.hasError('underAge')">
+                                        Debe ser mayor o igual a 18 años.
+                                    </mat-error>
                                 </mat-form-field>
                             </div>
                             <div class="col-12 col-md-6 col-lg-4">

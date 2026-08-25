@@ -1,5 +1,5 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { FormBuilder, FormGroup, UntypedFormControl, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, UntypedFormControl, ValidationErrors, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { fadeInRight400ms } from '@vex/animations/fade-in-right.animation';
 import { finalize } from 'rxjs';
@@ -28,6 +28,16 @@ export class AgregarOperadorComponent implements OnInit {
   public showCliente: any;
   listaClientes: any[] = [];
   public idClienteUser: number = 0;
+  /** Fecha máxima permitida: hace exactamente 18 años (mayor o igual a 18). */
+  public maxFechaNacimiento: Date = this.calcularFechaMaxima18();
+
+  /** Deshabilita en el calendario cualquier fecha posterior al límite de 18 años. */
+  public filtroMayorEdad = (date: Date | null): boolean => {
+    if (!date) return false;
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    return d.getTime() <= this.maxFechaNacimiento.getTime();
+  };
   public selectedClienteId: number | null = null;
   selectedFileName: string = '';
   previewUrl: string | ArrayBuffer | null = null;
@@ -352,8 +362,8 @@ export class AgregarOperadorComponent implements OnInit {
 
   initForm() {
     this.operadorForm = this.fb.group({
-      numeroLicencia: ['', Validators.required],
-      fechaNacimiento: ['', Validators.required],
+      numeroLicencia: ['', [Validators.required, Validators.maxLength(20)]],
+      fechaNacimiento: ['', [Validators.required, this.mayorDeEdadValidator]],
       vigencia: this.fb.group({
         start: [null, Validators.required],
         end: [null, Validators.required]
@@ -370,6 +380,25 @@ export class AgregarOperadorComponent implements OnInit {
       idUsuario: [null, Validators.required]
     });
   }
+
+  private calcularFechaMaxima18(): Date {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setFullYear(d.getFullYear() - 18);
+    return d;
+  }
+
+  private mayorDeEdadValidator = (control: AbstractControl): ValidationErrors | null => {
+    const value = control.value;
+    if (!value) return null;
+
+    const birth = value instanceof Date ? new Date(value.getTime()) : new Date(value);
+    if (isNaN(birth.getTime())) return null;
+
+    birth.setHours(0, 0, 0, 0);
+    const limite = this.calcularFechaMaxima18();
+    return birth.getTime() <= limite.getTime() ? null : { underAge: true };
+  };
 
   submit() {
     this.submitButton = 'Cargando...';
@@ -388,6 +417,7 @@ export class AgregarOperadorComponent implements OnInit {
     if (this.operadorForm.invalid) {
       this.submitButton = 'Guardar';
       this.loading = false;
+      this.operadorForm.markAllAsTouched();
 
       const etiquetas: any = {
         numeroLicencia: 'Número de Licencia',
@@ -407,8 +437,14 @@ export class AgregarOperadorComponent implements OnInit {
       const camposFaltantes: string[] = [];
       Object.keys(this.operadorForm.controls).forEach(key => {
         const control = this.operadorForm.get(key);
-        if (control?.invalid && control.errors?.['required']) {
+        if (control?.errors?.['required']) {
           camposFaltantes.push(etiquetas[key] || key);
+        }
+        if (key === 'numeroLicencia' && control?.errors?.['maxlength']) {
+          camposFaltantes.push('Número de Licencia (máximo 20 caracteres)');
+        }
+        if (key === 'fechaNacimiento' && control?.errors?.['underAge']) {
+          camposFaltantes.push('Fecha de Nacimiento (debe ser mayor o igual a 18 años)');
         }
         // Validar el FormGroup anidado de vigencia
         if (key === 'vigencia' && control instanceof FormGroup) {
@@ -433,7 +469,7 @@ export class AgregarOperadorComponent implements OnInit {
         title: '¡Ops!',
         message: `
         <p style="text-align:center; font-size:15px; margin-bottom:16px;">
-          Hay campos obligatorios sin completar.
+          Hay campos que requieren atención.
         </p>
         <div style="max-height: 350px; overflow-y: auto;">${lista}</div>
       `,
@@ -491,6 +527,7 @@ export class AgregarOperadorComponent implements OnInit {
     if (this.operadorForm.invalid) {
       this.submitButton = 'Guardar';
       this.loading = false;
+      this.operadorForm.markAllAsTouched();
 
       const etiquetas: any = {
         numeroLicencia: 'Número de Licencia',
@@ -510,8 +547,14 @@ export class AgregarOperadorComponent implements OnInit {
       const camposFaltantes: string[] = [];
       Object.keys(this.operadorForm.controls).forEach(key => {
         const control = this.operadorForm.get(key);
-        if (control?.invalid && control.errors?.['required']) {
+        if (control?.errors?.['required']) {
           camposFaltantes.push(etiquetas[key] || key);
+        }
+        if (key === 'numeroLicencia' && control?.errors?.['maxlength']) {
+          camposFaltantes.push('Número de Licencia (máximo 20 caracteres)');
+        }
+        if (key === 'fechaNacimiento' && control?.errors?.['underAge']) {
+          camposFaltantes.push('Fecha de Nacimiento (debe ser mayor o igual a 18 años)');
         }
         // Validar el FormGroup anidado de vigencia
         if (key === 'vigencia' && control instanceof FormGroup) {
@@ -536,7 +579,7 @@ export class AgregarOperadorComponent implements OnInit {
         title: '¡Ops!',
         message: `
         <p style="text-align:center; font-size:15px; margin-bottom:16px;">
-          Hay campos obligatorios sin completar.
+          Hay campos que requieren atención.
         </p>
         <div style="max-height: 350px; overflow-y: auto;">${lista}</div>
       `,

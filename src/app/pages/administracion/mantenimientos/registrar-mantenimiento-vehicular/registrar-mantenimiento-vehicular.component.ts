@@ -1,8 +1,11 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import {
+  AbstractControl,
   FormBuilder,
   FormGroup,
   UntypedFormControl,
+  ValidationErrors,
+  ValidatorFn,
   Validators
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -70,43 +73,76 @@ export class RegistrarMantenimientoVehicularComponent implements OnInit {
       idInstalacion: [null, Validators.required],
       idReferencia: [null, Validators.required],
       idTaller: [null, Validators.required],
-      fechaInicio: [null, Validators.required],
-      fechaFinal: [null, Validators.required],
+      fechaInicio: [null, [Validators.required, this.fechaValidaValidator]],
+      fechaFinal: [null, [Validators.required, this.fechaValidaValidator, this.fechaFinalMinValidator]],
       costo: [null, Validators.required],
       encargado: ['', Validators.required],
       servicioDescripcion: ['', Validators.required],
       notaServicio: [null, Validators.required],
       idEstatus: [1, Validators.required]
     });
+
+    this.mantenimientoForm.get('fechaInicio')?.valueChanges.subscribe(() => {
+      this.mantenimientoForm.get('fechaFinal')?.updateValueAndValidity({ emitEvent: false });
+    });
+  }
+
+  /** Normaliza a medianoche local para comparar solo día. */
+  private toDateOnly(value: unknown): Date | null {
+    if (!value) return null;
+    const d = value instanceof Date ? new Date(value.getTime()) : new Date(value as string | number);
+    if (isNaN(d.getTime())) return null;
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+
+  private fechaValidaValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
+    if (control.value == null || control.value === '') return null;
+    return this.toDateOnly(control.value) ? null : { fechaInvalida: true };
+  };
+
+  private fechaFinalMinValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
+    const parent = control.parent;
+    if (!parent) return null;
+    const inicio = this.toDateOnly(parent.get('fechaInicio')?.value);
+    const fin = this.toDateOnly(control.value);
+    if (!inicio || !fin) return null;
+    return fin < inicio ? { fechaMenor: true } : null;
+  };
+
+  get fechaInicioMinBound(): Date | null {
+    return this.toDateOnly(this.mantenimientoForm?.get('fechaInicio')?.value);
+  }
+
+  get fechaFinalMaxBound(): Date | null {
+    return this.toDateOnly(this.mantenimientoForm?.get('fechaFinal')?.value);
   }
 
   obtenerMantenimiento() {
     if (!this.idMantenimiento) return;
-    
+
     this.loading = true;
     this.mantenimientosService.obtenerMantenimientoVehicularPorId(this.idMantenimiento).subscribe({
       next: (response: any) => {
-        const data = response.data || response;
         this.loading = false;
-        
-        // Llenar el formulario
-        this.mantenimientoForm.patchValue({
-          idInstalacion: data.idInstalacion,
-          idReferencia: data.idReferencia,
-          idTaller: data.idTaller,
-          fechaInicio: data.fechaInicio ? new Date(data.fechaInicio) : null,
-          fechaFinal: data.fechaFinal ? new Date(data.fechaFinal) : null,
-          costo: data.costo,
-          encargado: data.encargado,
-          servicioDescripcion: data.servicioDescripcion,
-          idEstatus: data.idEstatus || 1
-        });
 
-        // Si hay una URL de imagen, mostrarla
-        if (data.notaServicio || data.urlNotaServicio) {
-          this.notaServicioPreviewUrl = data.notaServicio || data.urlNotaServicio;
-          this.notaServicioFileName = data.nombreArchivo || 'Archivo existente';
+        const raw = response?.data ?? response;
+        const data = Array.isArray(raw)
+          ? (raw.find((x: any) => Number(x?.id) === Number(this.idMantenimiento)) ?? raw[0])
+          : raw;
+
+        if (!data) {
+          this.alerts.open({
+            type: 'warning',
+            title: '¡Ops!',
+            message: 'No se encontraron datos del mantenimiento.',
+            confirmText: 'Confirmar',
+            backdropClose: false
+          });
+          return;
         }
+
+        this.patchMantenimientoForm(data);
       },
       error: (error) => {
         this.loading = false;
@@ -121,6 +157,31 @@ export class RegistrarMantenimientoVehicularComponent implements OnInit {
         this.regresar();
       }
     });
+  }
+
+  private patchMantenimientoForm(data: any): void {
+    const idInstalacion = data?.idInstalacion ?? data?.instalacion?.id ?? null;
+    const idReferencia = data?.idReferencia ?? data?.referenciaServicio?.id ?? null;
+    const idTaller = data?.idTaller ?? data?.taller?.id ?? null;
+    const idEstatus = data?.idEstatus ?? data?.estatusMantenimiento?.id ?? 1;
+
+    this.mantenimientoForm.patchValue({
+      idInstalacion: idInstalacion != null ? Number(idInstalacion) : null,
+      idReferencia: idReferencia != null ? Number(idReferencia) : null,
+      idTaller: idTaller != null ? Number(idTaller) : null,
+      fechaInicio: data?.fechaInicio ? new Date(data.fechaInicio) : null,
+      fechaFinal: data?.fechaFinal ? new Date(data.fechaFinal) : null,
+      costo: data?.costo != null ? Number(data.costo) : null,
+      encargado: data?.encargado ?? '',
+      servicioDescripcion: data?.servicioDescripcion ?? '',
+      idEstatus: idEstatus != null ? Number(idEstatus) : 1
+    });
+
+    // Si hay una URL de imagen, mostrarla
+    if (data?.notaServicio || data?.urlNotaServicio) {
+      this.notaServicioPreviewUrl = data.notaServicio || data.urlNotaServicio;
+      this.notaServicioFileName = data.nombreArchivo || 'Archivo existente';
+    }
   }
 
   obtenerInstalaciones() {
@@ -261,15 +322,25 @@ export class RegistrarMantenimientoVehicularComponent implements OnInit {
         notaServicio: 'Nota de Servicio'
       };
 
-      const camposFaltantes: string[] = [];
+      const mensajes: string[] = [];
       Object.keys(this.mantenimientoForm.controls).forEach((key) => {
         const control = this.mantenimientoForm.get(key);
-        if (control?.invalid && control.errors?.['required']) {
-          camposFaltantes.push(etiquetas[key] || key);
+        if (!control?.invalid || !control.errors) return;
+        const label = etiquetas[key] || key;
+        if (control.errors['required']) {
+          mensajes.push(label);
+        } else if (control.errors['fechaInvalida'] || control.errors['matDatepickerParse']) {
+          mensajes.push(`${label}: fecha no válida`);
+        } else if (control.errors['fechaMenor']) {
+          mensajes.push('La fecha final no puede ser menor a la fecha de inicio');
+        } else if (control.errors['matDatepickerMin']) {
+          mensajes.push('La fecha final no puede ser menor a la fecha de inicio');
+        } else if (control.errors['matDatepickerMax']) {
+          mensajes.push('La fecha de inicio no puede ser mayor a la fecha final');
         }
       });
 
-      const lista = camposFaltantes.map((campo, i) => `
+      const lista = mensajes.map((campo, i) => `
         <div style="padding:8px 12px; border-left:4px solid #d9534f; background:#caa8a8; text-align:center; margin-bottom:8px; border-radius:4px;">
           <strong style="color:#b02a37;">${i + 1}. ${campo}</strong>
         </div>
@@ -280,7 +351,7 @@ export class RegistrarMantenimientoVehicularComponent implements OnInit {
         title: '¡Ops!',
         message: `
           <p style="text-align:center; font-size:15px; margin-bottom:16px;">
-            Hay campos obligatorios sin completar.
+            Hay campos con errores de validación.
           </p>
           <div style="max-height:350px; overflow-y:auto;">${lista}</div>
         `,

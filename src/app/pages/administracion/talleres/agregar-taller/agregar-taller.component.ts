@@ -6,6 +6,11 @@ import { AlertsService } from 'src/app/pages/pages/modal/alerts.service';
 import { TalleresService } from 'src/app/pages/services/talleres.service';
 import { ClientesService } from 'src/app/pages/services/clientes.service';
 import { NgZone } from '@angular/core';
+import {
+  bloquearCaracteresEspecialesNombre,
+  NOMBRE_SIN_ESPECIALES_REGEX,
+  onPasteNombreSinEspeciales
+} from 'src/app/core/validators/nombre-sin-especiales';
 
 declare const google: any;
 
@@ -78,8 +83,8 @@ export class AgregarTallerComponent implements OnInit, AfterViewInit, OnDestroy 
   initForm() {
     this.tallerForm = this.fb.group({
       idCliente: [null, Validators.required],
-      nombre: ['', Validators.required],
-      descripcion: ['', Validators.required],
+      nombre: ['', [Validators.required, Validators.maxLength(100), Validators.pattern(NOMBRE_SIN_ESPECIALES_REGEX)]],
+      descripcion: ['', [Validators.required, Validators.maxLength(255)]],
       icono: [''],
       direccion: [''],
       lat: [null, Validators.required],
@@ -305,15 +310,50 @@ export class AgregarTallerComponent implements OnInit, AfterViewInit, OnDestroy 
           confirmText: 'Entendido',
           backdropClose: false
         });
-      } else {
-        this.alerts.open({
-          type: 'warning',
-          title: '¡Ops!',
-          message: 'Hay campos obligatorios sin completar.',
-          confirmText: 'Entendido',
-          backdropClose: false
-        });
+        return;
       }
+
+      const etiquetas: Record<string, string> = {
+        idCliente: 'Cliente',
+        nombre: 'Nombre',
+        descripcion: 'Descripción',
+        lat: 'Latitud',
+        lng: 'Longitud'
+      };
+
+      const mensajes: string[] = [];
+      Object.keys(this.tallerForm.controls).forEach((key) => {
+        const control = this.tallerForm.get(key);
+        if (!control?.invalid || !control.errors) return;
+        const label = etiquetas[key] || key;
+        if (control.errors['required']) {
+          mensajes.push(label);
+        } else if (control.errors['maxlength']) {
+          const max = control.errors['maxlength'].requiredLength;
+          mensajes.push(`${label}: máximo ${max} caracteres`);
+        } else if (control.errors['pattern']) {
+          mensajes.push(`${label}: no permite caracteres especiales`);
+        }
+      });
+
+      const lista = mensajes.map((campo, i) => `
+        <div style="padding:8px 12px; border-left:4px solid #d9534f; background:#caa8a8; text-align:center; margin-bottom:8px; border-radius:4px;">
+          <strong style="color:#b02a37;">${i + 1}. ${campo}</strong>
+        </div>
+      `).join('');
+
+      this.alerts.open({
+        type: 'warning',
+        title: '¡Ops!',
+        message: `
+          <p style="text-align:center; font-size:15px; margin-bottom:16px;">
+            Hay campos con errores de validación.
+          </p>
+          <div style="max-height:350px; overflow-y:auto;">${lista}</div>
+        `,
+        confirmText: 'Entendido',
+        backdropClose: false
+      });
       return;
     }
 
@@ -367,6 +407,12 @@ export class AgregarTallerComponent implements OnInit, AfterViewInit, OnDestroy 
       }
     });
   }
+
+  onPasteNombre(event: ClipboardEvent): void {
+    onPasteNombreSinEspeciales(event, this.tallerForm.get('nombre'));
+  }
+
+  bloquearCaracteresEspecialesNombre = bloquearCaracteresEspecialesNombre;
 
   regresar() {
     this.route.navigateByUrl('/administracion/talleres');
