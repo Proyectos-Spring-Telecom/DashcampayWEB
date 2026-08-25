@@ -5,6 +5,11 @@ import { fadeInRight400ms } from '@vex/animations/fade-in-right.animation';
 import { AlertsService } from 'src/app/pages/pages/modal/alerts.service';
 import { ClientesService } from 'src/app/pages/services/clientes.service';
 import { TransbordosService } from 'src/app/pages/services/transbordos.service';
+import {
+  bloquearCaracteresEspecialesNombre,
+  NOMBRE_SIN_ESPECIALES_REGEX,
+  onPasteNombreSinEspeciales
+} from 'src/app/core/validators/nombre-sin-especiales';
 
 @Component({
   selector: 'vex-agregar-transbordo',
@@ -67,9 +72,9 @@ export class AgregarTransbordoComponent implements OnInit {
 
   initForm() {
     this.transbordoForm = this.fb.group({
-      nombre: [null, Validators.required],
-      tiempo: [null, Validators.required],
-      numeroTransbordos: [1, Validators.required],
+      nombre: [null, [Validators.required, Validators.maxLength(100), Validators.pattern(NOMBRE_SIN_ESPECIALES_REGEX)]],
+      tiempo: [null, [Validators.required, Validators.min(0)]],
+      numeroTransbordos: [1, [Validators.required, Validators.min(0)]],
       idCliente: [null, Validators.required],
       idTipoDescuento: [null],
       detalles: this.fb.array([
@@ -95,7 +100,7 @@ export class AgregarTransbordoComponent implements OnInit {
         if (item.detalles && Array.isArray(item.detalles)) {
           item.detalles.forEach((detalle: any, index: number) => {
             this.detallesFormArray.push(this.fb.group({
-              costo: [detalle.costo, Validators.required],
+              costo: [detalle.costo, [Validators.required, Validators.min(0)]],
               nroTransbordo: [detalle.nroTransbordo || index + 1, Validators.required]
             }));
           });
@@ -127,7 +132,7 @@ export class AgregarTransbordoComponent implements OnInit {
 
   createDetalleGroup(): FormGroup {
     return this.fb.group({
-      costo: [null, Validators.required],
+      costo: [null, [Validators.required, Validators.min(0)]],
       nroTransbordo: [1, Validators.required]
     });
   }
@@ -139,10 +144,22 @@ export class AgregarTransbordoComponent implements OnInit {
   agregarDetalle() {
     const nuevoNroTransbordo = this.detallesFormArray.length + 1;
     this.detallesFormArray.push(this.fb.group({
-      costo: [null, Validators.required],
+      costo: [null, [Validators.required, Validators.min(0)]],
       nroTransbordo: [nuevoNroTransbordo, Validators.required]
     }));
     this.actualizarNumeroTransbordos();
+  }
+
+  bloquearNegativo(event: KeyboardEvent): void {
+    if (event.key === '-' || event.key === '+' || event.key === 'e' || event.key === 'E') {
+      event.preventDefault();
+    }
+  }
+
+  bloquearCaracteresEspecialesNombre = bloquearCaracteresEspecialesNombre;
+
+  onPasteNombre(event: ClipboardEvent): void {
+    onPasteNombreSinEspeciales(event, this.transbordoForm.get('nombre'));
   }
 
   eliminarDetalle(index: number) {
@@ -177,6 +194,7 @@ export class AgregarTransbordoComponent implements OnInit {
     if (this.transbordoForm.invalid) {
       this.submitButton = 'Guardar';
       this.loading = false;
+      this.transbordoForm.markAllAsTouched();
 
       const etiquetas: Record<string, string> = {
         nombre: 'Nombre',
@@ -190,8 +208,17 @@ export class AgregarTransbordoComponent implements OnInit {
       Object.keys(this.transbordoForm.controls).forEach((key) => {
         if (key !== 'detalles') {
           const control = this.transbordoForm.get(key);
-          if (control?.invalid && control.errors?.['required']) {
+          if (control?.errors?.['required']) {
             camposFaltantes.push(etiquetas[key] || key);
+          }
+          if (key === 'nombre' && control?.errors?.['maxlength']) {
+            camposFaltantes.push('El nombre no puede exceder los 100 caracteres');
+          }
+          if (key === 'nombre' && control?.errors?.['pattern']) {
+            camposFaltantes.push('El nombre no permite caracteres especiales');
+          }
+          if ((key === 'tiempo' || key === 'numeroTransbordos') && control?.errors?.['min']) {
+            camposFaltantes.push(`${etiquetas[key]} no puede ser negativo`);
           }
         }
       });
@@ -199,8 +226,11 @@ export class AgregarTransbordoComponent implements OnInit {
       // Validar detalles
       const detallesArray = this.transbordoForm.get('detalles') as FormArray;
       detallesArray.controls.forEach((control, index) => {
-        if (control.invalid) {
+        if (control.get('costo')?.errors?.['required']) {
           camposFaltantes.push(`Detalle ${index + 1} - Costo`);
+        }
+        if (control.get('costo')?.errors?.['min']) {
+          camposFaltantes.push(`Detalle ${index + 1} - Costo no puede ser negativo`);
         }
       });
 
@@ -220,7 +250,7 @@ export class AgregarTransbordoComponent implements OnInit {
         title: '¡Ops!',
         message: `
         <p style="text-align: center; font-size: 15px; margin-bottom: 16px; color: white">
-          Hay campos obligatorios sin completar.<br>
+          Hay campos que requieren atención.<br>
         </p>
         <div style="max-height: 350px; overflow-y: auto;">${lista}</div>
       `,
@@ -268,7 +298,7 @@ export class AgregarTransbordoComponent implements OnInit {
         this.alerts.open({
           type: 'error',
           title: '¡Ops!',
-          message: String(error ?? 'Ocurrió un error al agregar el transbordo.'),
+          message: this.getErrorMessage(error),
           confirmText: 'Confirmar',
           backdropClose: false,
         });
@@ -299,12 +329,52 @@ export class AgregarTransbordoComponent implements OnInit {
         this.alerts.open({
           type: 'error',
           title: '¡Ops!',
-          message: String(error ?? 'Ocurrió un error al actualizar el transbordo.'),
+          message: this.getErrorMessage(error),
           confirmText: 'Confirmar',
           backdropClose: false,
         });
       }
     );
+  }
+
+  private getErrorMessage(err: any): string {
+    const body = err?.error ?? err;
+
+    const flatten = (value: any): string => {
+      if (value == null || value === '') return '';
+      if (typeof value === 'string') return value.trim();
+      if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+      if (Array.isArray(value)) {
+        return value.map(flatten).filter(Boolean).join('\n');
+      }
+      if (typeof value === 'object') {
+        if (typeof value.message === 'string' && value.message.trim()) return value.message.trim();
+        if (Array.isArray(value.message)) return flatten(value.message);
+        if (value.errors) return flatten(value.errors);
+        const lines: string[] = [];
+        for (const key of Object.keys(value)) {
+          if (key === 'statusCode' || key === 'error' || key === 'status') continue;
+          const part = flatten(value[key]);
+          if (part) lines.push(part);
+        }
+        return lines.join('\n');
+      }
+      return '';
+    };
+
+    let message = flatten(body);
+    if (!message && typeof err?.message === 'string' && err.message.trim() && !err.message.startsWith('Http failure')) {
+      message = err.message.trim();
+    }
+    if (!message) {
+      return 'Ocurrió un error al procesar el transbordo.';
+    }
+
+    if (/nombre.*no puede exceder|exceed.*100|max.*100/i.test(message)) {
+      return 'El nombre no puede exceder los 100 caracteres';
+    }
+
+    return message;
   }
 
   regresar() {

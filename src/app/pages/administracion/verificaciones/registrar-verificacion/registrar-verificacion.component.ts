@@ -1,8 +1,11 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import {
+  AbstractControl,
   FormBuilder,
   FormGroup,
   UntypedFormControl,
+  ValidationErrors,
+  ValidatorFn,
   Validators
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -73,23 +76,72 @@ export class RegistrarVerificacionComponent implements OnInit {
 
   initForm() {
     this.verificacionForm = this.fb.group({
-      verificacionActual: [null, Validators.required],
-      proximaVerificacion: [null, Validators.required],
+      verificacionActual: [null, [Validators.required, this.fechaValidaValidator]],
+      proximaVerificacion: [null, [Validators.required, this.fechaValidaValidator, this.proximaMinValidator]],
       idInstalacion: [null, Validators.required],
       idOperador: [null, Validators.required],
       notaVerificacion: [null, Validators.required],
       idTipoVerificacion: [null, Validators.required],
       evaluacion: ['{}'] // Oculto pero necesario para el API
     });
+
+    this.verificacionForm.get('verificacionActual')?.valueChanges.subscribe(() => {
+      this.verificacionForm.get('proximaVerificacion')?.updateValueAndValidity({ emitEvent: false });
+    });
+  }
+
+  private toDateOnly(value: unknown): Date | null {
+    if (value == null || value === '') return null;
+    let d: Date;
+    if (value instanceof Date) {
+      d = new Date(value.getTime());
+    } else {
+      const s = String(value);
+      // Fecha sola YYYY-MM-DD → local medianoche; ISO completo → Date normal
+      d = /^\d{4}-\d{2}-\d{2}$/.test(s)
+        ? new Date(`${s}T00:00:00`)
+        : new Date(s);
+    }
+    if (isNaN(d.getTime())) return null;
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+
+  private fechaValidaValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
+    if (control.value == null || control.value === '') return null;
+    return this.toDateOnly(control.value) ? null : { fechaInvalida: true };
+  };
+
+  private proximaMinValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
+    const parent = control.parent;
+    if (!parent) return null;
+    const actual = this.toDateOnly(parent.get('verificacionActual')?.value);
+    const proxima = this.toDateOnly(control.value);
+    if (!actual || !proxima) return null;
+    return proxima < actual ? { fechaMenor: true } : null;
+  };
+
+  get verificacionActualMinBound(): Date | null {
+    return this.toDateOnly(this.verificacionForm?.get('verificacionActual')?.value);
+  }
+
+  get proximaVerificacionMaxBound(): Date | null {
+    return this.toDateOnly(this.verificacionForm?.get('proximaVerificacion')?.value);
+  }
+
+  private normalizeLista(response: any): any[] {
+    const raw = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
+    return raw.map((item: any) => ({
+      ...item,
+      id: Number(item?.id ?? item?.Id ?? item?.ID)
+    }));
   }
 
   obtenerInstalaciones() {
     this.mantenimientosService.obtenerInstalaciones().subscribe({
       next: (response: any) => {
-        this.listaInstalaciones = Array.isArray(response.data) ? response.data : (Array.isArray(response) ? response : []);
+        this.listaInstalaciones = this.normalizeLista(response);
         this.instalacionesCargadas = true;
-        
-        // Si hay datos de verificación esperando, intentar llenar el formulario
         if (this.datosVerificacion) {
           this.todosLosDatosCargados();
         }
@@ -104,10 +156,8 @@ export class RegistrarVerificacionComponent implements OnInit {
   obtenerOperadores() {
     this.mantenimientosService.obtenerOperadores().subscribe({
       next: (response: any) => {
-        this.listaOperadores = Array.isArray(response.data) ? response.data : (Array.isArray(response) ? response : []);
+        this.listaOperadores = this.normalizeLista(response);
         this.operadoresCargados = true;
-        
-        // Si hay datos de verificación esperando, intentar llenar el formulario
         if (this.datosVerificacion) {
           this.todosLosDatosCargados();
         }
@@ -122,10 +172,8 @@ export class RegistrarVerificacionComponent implements OnInit {
   obtenerTiposVerificacion() {
     this.mantenimientosService.obtenerTiposVerificacion().subscribe({
       next: (response: any) => {
-        this.listaTiposVerificacion = Array.isArray(response.data) ? response.data : (Array.isArray(response) ? response : []);
+        this.listaTiposVerificacion = this.normalizeLista(response);
         this.tiposVerificacionCargados = true;
-        
-        // Si hay datos de verificación esperando, intentar llenar el formulario
         if (this.datosVerificacion) {
           this.todosLosDatosCargados();
         }
@@ -139,25 +187,31 @@ export class RegistrarVerificacionComponent implements OnInit {
 
   obtenerVerificacion() {
     if (!this.idVerificacion) return;
-    
+
     this.loading = true;
     this.mantenimientosService.obtenerVerificacionPorId(this.idVerificacion).subscribe({
       next: (response: any) => {
-        // La respuesta puede venir como { data: [{...}] } o { data: {...} } o directamente {...}
-        let data = response.data || response;
-        
-        // Si data es un array, tomar el primer elemento
-        if (Array.isArray(data) && data.length > 0) {
-          data = data[0];
-        }
-        
+        const raw = response?.data ?? response;
+        const data = Array.isArray(raw)
+          ? (raw.find((x: any) => Number(x?.id) === Number(this.idVerificacion)) ?? raw[0])
+          : raw;
+
         this.loading = false;
-        
-        // Si todos los datos están cargados, llenar el formulario directamente
+
+        if (!data) {
+          this.alerts.open({
+            type: 'warning',
+            title: '¡Ops!',
+            message: 'No se encontraron datos de la verificación.',
+            confirmText: 'Confirmar',
+            backdropClose: false
+          });
+          return;
+        }
+
         if (this.todosLosDatosCargados()) {
           this.llenarFormulario(data);
         } else {
-          // Guardar los datos para llenar el formulario cuando todos los datos estén listos
           this.datosVerificacion = data;
         }
       },
@@ -178,60 +232,69 @@ export class RegistrarVerificacionComponent implements OnInit {
 
   todosLosDatosCargados(): boolean {
     const todosCargados = this.instalacionesCargadas && this.operadoresCargados && this.tiposVerificacionCargados;
-    
-    // Si todos están cargados y hay datos esperando, llenar el formulario
+
     if (todosCargados && this.datosVerificacion) {
       const datos = this.datosVerificacion;
-      this.datosVerificacion = null; // Limpiar para evitar llenar múltiples veces
+      this.datosVerificacion = null;
       this.llenarFormulario(datos);
     }
-    
+
     return todosCargados;
   }
 
   llenarFormulario(data: any) {
-    // Si data es un array, tomar el primer elemento
     if (Array.isArray(data) && data.length > 0) {
-      data = data[0];
+      data = data.find((x: any) => Number(x?.id) === Number(this.idVerificacion)) ?? data[0];
     }
-    
-    // Normalizar los datos del API (manejar variaciones de mayúsculas/minúsculas)
-    const idInstalacion = data?.idInstalacion ?? data?.IdInstalacion ?? data?.ID_INSTALACION ?? data?.id_instalacion ?? null;
-    const idOperador = data?.idOperador ?? data?.IdOperador ?? data?.ID_OPERADOR ?? data?.id_operador ?? null;
-    const idTipoVerificacion = data?.idTipoVerificacion ?? data?.IdTipoVerificacion ?? data?.ID_TIPO_VERIFICACION ?? data?.id_tipo_verificacion ?? null;
-    const verificacionActual = data?.verificacionActual ?? data?.VerificacionActual ?? data?.VERIFICACION_ACTUAL ?? null;
-    const proximaVerificacion = data?.proximaVerificacion ?? data?.ProximaVerificacion ?? data?.PROXIMA_VERIFICACION ?? null;
-    const notaVerificacion = data?.notaVerificacion ?? data?.NotaVerificacion ?? data?.NOTA_VERIFICACION ?? null;
-    const evaluacion = data?.evaluacion ?? data?.Evaluacion ?? data?.EVALUACION ?? '{}';
-    
-    // Preparar los valores para el formulario
+
+    const idInstalacion =
+      data?.idInstalacion ??
+      data?.IdInstalacion ??
+      data?.instalacion?.id ??
+      data?.Instalacion?.id ??
+      null;
+    const idOperador =
+      data?.idOperador ??
+      data?.IdOperador ??
+      data?.operador?.id ??
+      data?.Operador?.id ??
+      null;
+    const idTipoVerificacion =
+      data?.idTipoVerificacion ??
+      data?.IdTipoVerificacion ??
+      data?.tipoVerificacion?.id ??
+      data?.TipoVerificacion?.id ??
+      null;
+    const verificacionActual = data?.verificacionActual ?? data?.VerificacionActual ?? null;
+    const proximaVerificacion = data?.proximaVerificacion ?? data?.ProximaVerificacion ?? null;
+    const notaVerificacion = data?.notaVerificacion ?? data?.NotaVerificacion ?? null;
+    const evaluacion = data?.evaluacion ?? data?.Evaluacion ?? '{}';
+
     const formValues: any = {
-      idInstalacion: idInstalacion != null && idInstalacion !== undefined ? Number(idInstalacion) : null,
-      idOperador: idOperador != null && idOperador !== undefined ? Number(idOperador) : null,
-      idTipoVerificacion: idTipoVerificacion != null && idTipoVerificacion !== undefined ? Number(idTipoVerificacion) : null,
-      verificacionActual: verificacionActual ? new Date(verificacionActual + 'T00:00:00') : null,
-      proximaVerificacion: proximaVerificacion ? new Date(proximaVerificacion + 'T00:00:00') : null,
-      evaluacion: evaluacion != null ? (typeof evaluacion === 'string' ? evaluacion : JSON.stringify(evaluacion)) : '{}'
+      idInstalacion: idInstalacion != null ? Number(idInstalacion) : null,
+      idOperador: idOperador != null ? Number(idOperador) : null,
+      idTipoVerificacion: idTipoVerificacion != null ? Number(idTipoVerificacion) : null,
+      verificacionActual: this.toDateOnly(verificacionActual),
+      proximaVerificacion: this.toDateOnly(proximaVerificacion),
+      evaluacion: evaluacion != null
+        ? (typeof evaluacion === 'string' ? evaluacion : JSON.stringify(evaluacion))
+        : '{}'
     };
-    
-    // Llenar el formulario con los datos normalizados usando setValue en cada control
-    Object.keys(formValues).forEach(key => {
+
+    Object.keys(formValues).forEach((key) => {
       const control = this.verificacionForm.get(key);
       if (control) {
         control.setValue(formValues[key], { emitEvent: false });
       }
     });
-    
-    // Si hay una nota de verificación (URL), mostrar preview
+
     if (notaVerificacion && typeof notaVerificacion === 'string') {
       this.notaVerificacionPreviewUrl = notaVerificacion;
       this.notaVerificacionFileName = 'Nota de verificación';
-      // En modo edición, no requerir el archivo si ya existe una URL
       this.verificacionForm.get('notaVerificacion')?.clearValidators();
       this.verificacionForm.get('notaVerificacion')?.updateValueAndValidity();
     }
-    
-    // Actualizar validez de todos los controles
+
     setTimeout(() => {
       this.verificacionForm.updateValueAndValidity({ emitEvent: false });
     }, 100);
@@ -324,15 +387,23 @@ export class RegistrarVerificacionComponent implements OnInit {
         evaluacion: 'Evaluación'
       };
 
-      const camposFaltantes: string[] = [];
+      const mensajes: string[] = [];
       Object.keys(this.verificacionForm.controls).forEach((key) => {
         const control = this.verificacionForm.get(key);
-        if (control?.invalid && control.errors?.['required']) {
-          camposFaltantes.push(etiquetas[key] || key);
+        if (!control?.invalid || !control.errors) return;
+        const label = etiquetas[key] || key;
+        if (control.errors['required']) {
+          mensajes.push(label);
+        } else if (control.errors['fechaInvalida'] || control.errors['matDatepickerParse']) {
+          mensajes.push(`${label}: fecha no válida`);
+        } else if (control.errors['fechaMenor'] || control.errors['matDatepickerMin']) {
+          mensajes.push('La próxima verificación no puede ser menor a la verificación actual');
+        } else if (control.errors['matDatepickerMax']) {
+          mensajes.push('La verificación actual no puede ser mayor a la próxima verificación');
         }
       });
 
-      const lista = camposFaltantes.map((campo, i) => `
+      const lista = mensajes.map((campo, i) => `
         <div style="padding:8px 12px; border-left:4px solid #d9534f; background:#caa8a8; text-align:center; margin-bottom:8px; border-radius:4px;">
           <strong style="color:#b02a37;">${i + 1}. ${campo}</strong>
         </div>
@@ -343,7 +414,7 @@ export class RegistrarVerificacionComponent implements OnInit {
         title: '¡Ops!',
         message: `
           <p style="text-align:center; font-size:15px; margin-bottom:16px;">
-            Hay campos obligatorios sin completar.
+            Hay campos con errores de validación.
           </p>
           <div style="max-height:350px; overflow-y:auto;">${lista}</div>
         `,

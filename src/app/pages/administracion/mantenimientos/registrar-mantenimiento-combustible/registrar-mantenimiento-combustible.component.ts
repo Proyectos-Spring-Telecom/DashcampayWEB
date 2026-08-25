@@ -1,8 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import {
+  AbstractControl,
   FormBuilder,
   FormGroup,
   UntypedFormControl,
+  ValidationErrors,
   Validators
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -64,18 +66,28 @@ export class RegistrarMantenimientoCombustibleComponent implements OnInit {
   }
 
   initForm() {
-    const now = new Date();
     this.mantenimientoForm = this.fb.group({
       idTipoCombustible: [null, Validators.required],
-      cantidadCombustible: [null, Validators.required],
-      precioCombustible: [null, Validators.required],
+      cantidadCombustible: [null, [Validators.required, Validators.min(0)]],
+      precioCombustible: [null, [Validators.required, Validators.min(0)]],
       idInstalacion: [null, Validators.required],
       estatus: [1, Validators.required],
-      fechaHora: [now, Validators.required],
-      kilometraje: [null, Validators.required],
+      fechaHora: [new Date(), [Validators.required, this.fechaValidaValidator]],
+      kilometraje: [null, [Validators.required, Validators.min(0)]],
       idOperador: [null, Validators.required]
     });
   }
+
+  private toDateValue(value: unknown): Date | null {
+    if (value == null || value === '') return null;
+    const d = value instanceof Date ? value : new Date(value as string | number);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  private fechaValidaValidator = (control: AbstractControl): ValidationErrors | null => {
+    if (control.value == null || control.value === '') return null;
+    return this.toDateValue(control.value) ? null : { fechaInvalida: true };
+  };
 
   obtenerInstalaciones() {
     this.mantenimientosService.obtenerInstalaciones().subscribe({
@@ -149,18 +161,31 @@ export class RegistrarMantenimientoCombustibleComponent implements OnInit {
 
   obtenerMantenimiento() {
     if (!this.idMantenimiento) return;
-    
+
     this.loading = true;
     this.mantenimientosService.obtenerMantenimientoCombustiblePorId(this.idMantenimiento).subscribe({
       next: (response: any) => {
-        const data = response.data || response;
-        
-        // Si todas las listas ya están cargadas, llenar el formulario directamente
+        const raw = response?.data ?? response;
+        const data = Array.isArray(raw)
+          ? (raw.find((x: any) => Number(x?.id) === Number(this.idMantenimiento)) ?? raw[0])
+          : raw;
+
+        if (!data) {
+          this.loading = false;
+          this.alerts.open({
+            type: 'warning',
+            title: '¡Ops!',
+            message: 'No se encontraron datos del mantenimiento.',
+            confirmText: 'Confirmar',
+            backdropClose: false
+          });
+          return;
+        }
+
         if (this.todosLosDatosCargados()) {
           this.llenarFormulario(data);
           this.loading = false;
         } else {
-          // Guardar los datos para llenar el formulario cuando las listas estén listas
           this.datosMantenimiento = data;
           this.loading = false;
         }
@@ -181,42 +206,52 @@ export class RegistrarMantenimientoCombustibleComponent implements OnInit {
   }
 
   llenarFormulario(data: any) {
-    // Si data es un array, tomar el primer elemento
     if (Array.isArray(data) && data.length > 0) {
-      data = data[0];
+      data = data.find((x: any) => Number(x?.id) === Number(this.idMantenimiento)) ?? data[0];
     }
-    
-    // Normalizar los datos del API (manejar variaciones de mayúsculas/minúsculas)
-    const idTipoCombustible = data?.idTipoCombustible ?? data?.IdTipoCombustible ?? data?.ID_TIPO_COMBUSTIBLE ?? null;
-    const cantidadCombustible = data?.cantidadCombustible ?? data?.CantidadCombustible ?? data?.CANTIDAD_COMBUSTIBLE ?? null;
-    const precioCombustible = data?.precioCombustible ?? data?.PrecioCombustible ?? data?.PRECIO_COMBUSTIBLE ?? null;
-    const idInstalacion = data?.idInstalacion ?? data?.IdInstalacion ?? data?.ID_INSTALACION ?? null;
-    const estatus = data?.estatus ?? data?.Estatus ?? data?.ESTATUS ?? 1;
-    const fechaHora = data?.fechaHora ?? data?.FechaHora ?? data?.FECHA_HORA ?? null;
-    const kilometraje = data?.kilometraje ?? data?.Kilometraje ?? data?.KILOMETRAJE ?? null;
-    const idOperador = data?.idOperador ?? data?.IdOperador ?? data?.ID_OPERADOR ?? null;
-    
-    // Preparar los valores para el formulario
+
+    const idTipoCombustible =
+      data?.idTipoCombustible ??
+      data?.IdTipoCombustible ??
+      data?.tipoCombustible?.id ??
+      data?.TipoCombustible?.id ??
+      null;
+    const cantidadCombustible = data?.cantidadCombustible ?? data?.CantidadCombustible ?? null;
+    const precioCombustible = data?.precioCombustible ?? data?.PrecioCombustible ?? null;
+    const idInstalacion =
+      data?.idInstalacion ??
+      data?.IdInstalacion ??
+      data?.instalacion?.id ??
+      data?.Instalacion?.id ??
+      null;
+    const estatus = data?.estatus ?? data?.Estatus ?? 1;
+    const fechaHora = data?.fechaHora ?? data?.FechaHora ?? null;
+    const kilometraje = data?.kilometraje ?? data?.Kilometraje ?? null;
+    const idOperador =
+      data?.idOperador ??
+      data?.IdOperador ??
+      data?.operador?.id ??
+      data?.Operador?.id ??
+      null;
+
     const formValues: any = {
-      idTipoCombustible: idTipoCombustible != null && idTipoCombustible !== undefined ? Number(idTipoCombustible) : null,
-      cantidadCombustible: cantidadCombustible != null && cantidadCombustible !== undefined ? Number(cantidadCombustible) : null,
-      precioCombustible: precioCombustible != null && precioCombustible !== undefined ? Number(precioCombustible) : null,
-      idInstalacion: idInstalacion != null && idInstalacion !== undefined ? Number(idInstalacion) : null,
-      estatus: estatus != null && estatus !== undefined ? Number(estatus) : 1,
-      fechaHora: fechaHora ? new Date(fechaHora) : new Date(),
-      kilometraje: kilometraje != null && kilometraje !== undefined ? Number(kilometraje) : null,
-      idOperador: idOperador != null && idOperador !== undefined ? Number(idOperador) : null
+      idTipoCombustible: idTipoCombustible != null ? Number(idTipoCombustible) : null,
+      cantidadCombustible: cantidadCombustible != null ? Number(cantidadCombustible) : null,
+      precioCombustible: precioCombustible != null ? Number(precioCombustible) : null,
+      idInstalacion: idInstalacion != null ? Number(idInstalacion) : null,
+      estatus: estatus != null ? Number(estatus) : 1,
+      fechaHora: this.toDateValue(fechaHora) ?? new Date(),
+      kilometraje: kilometraje != null ? Number(kilometraje) : null,
+      idOperador: idOperador != null ? Number(idOperador) : null
     };
-    
-    // Llenar el formulario con los datos normalizados usando setValue en cada control
-    Object.keys(formValues).forEach(key => {
+
+    Object.keys(formValues).forEach((key) => {
       const control = this.mantenimientoForm.get(key);
       if (control) {
         control.setValue(formValues[key], { emitEvent: false });
       }
     });
-    
-    // Actualizar validez de todos los controles
+
     this.mantenimientoForm.updateValueAndValidity({ emitEvent: false });
   }
 
@@ -238,15 +273,21 @@ export class RegistrarMantenimientoCombustibleComponent implements OnInit {
         idOperador: 'Operador'
       };
 
-      const camposFaltantes: string[] = [];
+      const mensajes: string[] = [];
       Object.keys(this.mantenimientoForm.controls).forEach((key) => {
         const control = this.mantenimientoForm.get(key);
-        if (control?.invalid && control.errors?.['required']) {
-          camposFaltantes.push(etiquetas[key] || key);
+        if (!control?.invalid || !control.errors) return;
+        const label = etiquetas[key] || key;
+        if (control.errors['required']) {
+          mensajes.push(label);
+        } else if (control.errors['fechaInvalida']) {
+          mensajes.push(`${label}: fecha no válida`);
+        } else if (control.errors['min']) {
+          mensajes.push(`${label}: no puede ser negativo`);
         }
       });
 
-      const lista = camposFaltantes.map((campo, i) => `
+      const lista = mensajes.map((campo, i) => `
         <div style="padding:8px 12px; border-left:4px solid #d9534f; background:#caa8a8; text-align:center; margin-bottom:8px; border-radius:4px;">
           <strong style="color:#b02a37;">${i + 1}. ${campo}</strong>
         </div>
@@ -257,7 +298,7 @@ export class RegistrarMantenimientoCombustibleComponent implements OnInit {
         title: '¡Ops!',
         message: `
           <p style="text-align:center; font-size:15px; margin-bottom:16px;">
-            Hay campos obligatorios sin completar.
+            Hay campos con errores de validación.
           </p>
           <div style="max-height:350px; overflow-y:auto;">${lista}</div>
         `,

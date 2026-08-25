@@ -14,6 +14,11 @@ export class NavigationLoaderService {
     return this._items.asObservable();
   }
 
+  /** Snapshot síncrono del menú (mismo orden que el sidenav). */
+  getItems(): NavigationItem[] {
+    return this._items.getValue();
+  }
+
   constructor(private readonly layoutService: VexLayoutService) {
     this.loadNavigation();
   }
@@ -257,42 +262,42 @@ export class NavigationLoaderService {
       {
         type: 'subheading',
         label: 'Reportes',
-        permissions: [94],
+        permissions: [139, 140, 141, 142, 143],
         children: [
           {
             type: 'link',
             label: 'Recaud. Diaria por Ruta',
             route: '/administracion/reportes/recaudacion-diaria-ruta',
             icon: 'mat:analytics',
-            permissions: [94],
+            permissions: [139],
           },
           {
             type: 'link',
             label: 'Recaud. por Operador',
             route: '/administracion/reportes/recaudacion-operador',
             icon: 'mat:badge',
-            permissions: [94],
+            permissions: [140],
           },
           {
             type: 'link',
             label: 'Recaud. por Vehículo',
             route: '/administracion/reportes/recaudacion-vehiculo',
             icon: 'mat:directions_bus',
-            permissions: [94],
+            permissions: [141],
           },
           {
             type: 'link',
             label: 'Recaud. por Val/Inst',
             route: '/administracion/reportes/recaudacion-instalacionInstalacion',
             icon: 'mat:qr_code_2',
-            permissions: [94],
+            permissions: [142],
           },
           {
             type: 'link',
             label: 'Validaciones Detalladas',
             route: '/administracion/reportes/validaciones-detalladas',
             icon: 'mat:fact_check',
-            permissions: [94],
+            permissions: [143],
           },
           // {
           //   type: 'link',

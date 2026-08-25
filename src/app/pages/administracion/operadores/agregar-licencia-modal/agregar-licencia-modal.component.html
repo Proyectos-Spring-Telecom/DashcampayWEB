@@ -18,10 +18,13 @@
             <span>N° Licencia</span>
           </label>
           <mat-form-field appearance="fill" class="w-100">
-            <input matInput formControlName="numeroLicencia" placeholder="Ingrese el número de licencia">
+            <input matInput formControlName="numeroLicencia" placeholder="Ingrese el número de licencia" maxlength="20">
           </mat-form-field>
           <mat-error *ngIf="showRequiredMsgs && licenciaForm.get('numeroLicencia')?.hasError('required')">
             El número de licencia es obligatorio.
+          </mat-error>
+          <mat-error *ngIf="licenciaForm.get('numeroLicencia')?.hasError('maxlength')">
+            Máximo 20 caracteres.
           </mat-error>
         </div>
 

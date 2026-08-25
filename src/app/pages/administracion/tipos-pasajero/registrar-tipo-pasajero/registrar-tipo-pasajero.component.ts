@@ -14,6 +14,11 @@ import { TiposPasajeroService } from '../../../services/tipos-pasajero.service';
 import { ClientesService } from '../../../services/clientes.service';
 import { AlertsService } from '../../../pages/modal/alerts.service';
 import { AuthenticationService } from 'src/app/core/services/auth.service';
+import {
+  bloquearCaracteresEspecialesNombre,
+  NOMBRE_SIN_ESPECIALES_REGEX,
+  onPasteNombreSinEspeciales
+} from 'src/app/core/validators/nombre-sin-especiales';
 
 @Component({
   selector: 'vex-registrar-tipo-pasajero',
@@ -77,11 +82,39 @@ export class RegistrarTipoPasajeroComponent implements OnInit {
 
   initForm(): void {
     this.tipoPasajeroForm = this.fb.group({
-      nombre: ['', Validators.required],
-      idCatTipoDescuento: ['', Validators.required],
-      cantidad: [null],
-      idCliente: ['', Validators.required]
+      nombre: ['', [Validators.required, Validators.maxLength(50), Validators.pattern(NOMBRE_SIN_ESPECIALES_REGEX)]],
+      idCatTipoDescuento: [null, Validators.required],
+      cantidad: [null, [Validators.min(0)]],
+      idCliente: [null, Validators.required]
     });
+
+    this.tipoPasajeroForm.get('idCatTipoDescuento')?.valueChanges.subscribe(() => {
+      this.actualizarValidadoresCantidad();
+    });
+  }
+
+  get esTipoPorcentaje(): boolean {
+    const id = Number(this.tipoPasajeroForm?.get('idCatTipoDescuento')?.value);
+    if (!Number.isFinite(id)) return false;
+    const tipo = this.listaTiposDescuento.find(
+      (t: any) => Number(t?.idCatTipoDescuento ?? t?.id) === id
+    );
+    const nombre = String(
+      tipo?.nombreCatTipoDescuento ?? tipo?.nombre ?? tipo?.nombreTipoDescuento ?? ''
+    ).toLowerCase();
+    return nombre.includes('porcentaje') || nombre.includes('%');
+  }
+
+  private actualizarValidadoresCantidad(): void {
+    const cantidadCtrl = this.tipoPasajeroForm.get('cantidad');
+    if (!cantidadCtrl) return;
+
+    const validators = [Validators.min(0)];
+    if (this.esTipoPorcentaje) {
+      validators.push(Validators.max(100));
+    }
+    cantidadCtrl.setValidators(validators);
+    cantidadCtrl.updateValueAndValidity({ emitEvent: false });
   }
 
   obtenerTiposDescuento(): void {
@@ -90,6 +123,7 @@ export class RegistrarTipoPasajeroComponent implements OnInit {
       next: (response) => {
         this.listaTiposDescuento = response.data || [];
         this.loadingDependientes = false;
+        this.actualizarValidadoresCantidad();
       },
       error: (err) => {
         console.error('Error al obtener tipos de descuento:', err);
@@ -149,6 +183,7 @@ export class RegistrarTipoPasajeroComponent implements OnInit {
             cantidad: data.cantidad != null ? Number(data.cantidad) : null,
             idCliente: idClienteValue
           });
+          this.actualizarValidadoresCantidad();
           
           // Si el rol es >= 4, deshabilitar el campo
           if (this.idRolUser >= 4) {
@@ -178,18 +213,32 @@ export class RegistrarTipoPasajeroComponent implements OnInit {
     if (this.tipoPasajeroForm.invalid) {
       this.submitButton = 'Guardar';
       this.loading = false;
+      this.tipoPasajeroForm.markAllAsTouched();
 
       const etiquetas: any = {
         nombre: 'Nombre',
         idCatTipoDescuento: 'Tipo de Descuento',
-        idCliente: 'Cliente'
+        idCliente: 'Cliente',
+        cantidad: 'Cantidad'
       };
 
       const camposFaltantes: string[] = [];
       Object.keys(this.tipoPasajeroForm.controls).forEach(key => {
         const control = this.tipoPasajeroForm.get(key);
-        if (control?.invalid && control.errors?.['required']) {
+        if (control?.errors?.['required']) {
           camposFaltantes.push(etiquetas[key] || key);
+        }
+        if (key === 'nombre' && control?.errors?.['maxlength']) {
+          camposFaltantes.push('Nombre: máximo 50 caracteres');
+        }
+        if (key === 'nombre' && control?.errors?.['pattern']) {
+          camposFaltantes.push('Nombre: no permite caracteres especiales');
+        }
+        if (key === 'cantidad' && control?.errors?.['min']) {
+          camposFaltantes.push('Cantidad no puede ser negativa');
+        }
+        if (key === 'cantidad' && control?.errors?.['max']) {
+          camposFaltantes.push('Cantidad no puede ser mayor a 100 cuando el descuento es porcentaje');
         }
       });
 
@@ -206,7 +255,7 @@ export class RegistrarTipoPasajeroComponent implements OnInit {
         title: '¡Ops!',
         message: `
           <p style="text-align: center; font-size: 15px; margin-bottom: 16px; color: white">
-            Hay campos obligatorios sin completar.<br>
+            Hay campos que requieren atención.<br>
           </p>
           <div style="max-height: 350px; overflow-y: auto;">${lista}</div>
         `,
@@ -245,7 +294,7 @@ export class RegistrarTipoPasajeroComponent implements OnInit {
         this.alerts.open({
           type: 'error',
           title: '¡Ops!',
-          message: String(error),
+          message: this.getErrorMessage(error),
           confirmText: 'Confirmar',
           backdropClose: false
         });
@@ -275,13 +324,71 @@ export class RegistrarTipoPasajeroComponent implements OnInit {
         this.alerts.open({
           type: 'error',
           title: '¡Ops!',
-          message: String(error),
+          message: this.getErrorMessage(error),
           confirmText: 'Confirmar',
           backdropClose: false
         });
       }
     });
   }
+
+  private getErrorMessage(err: any): string {
+    const body = err?.error ?? err;
+
+    if (typeof body === 'string' && body.trim()) {
+      return body;
+    }
+
+    if (typeof body?.message === 'string' && body.message.trim()) {
+      return body.message;
+    }
+
+    if (Array.isArray(body?.message)) {
+      return body.message.filter(Boolean).join('\n');
+    }
+
+    if (body?.message && typeof body.message === 'object') {
+      const lines: string[] = [];
+      for (const key of Object.keys(body.message)) {
+        const val = body.message[key];
+        if (Array.isArray(val)) lines.push(val.join(', '));
+        else if (typeof val === 'string') lines.push(val);
+      }
+      if (lines.length) return lines.join('\n');
+    }
+
+    if (body?.errors) {
+      const e = body.errors;
+      if (Array.isArray(e)) return e.filter(Boolean).join('\n');
+      if (typeof e === 'object') {
+        const lines: string[] = [];
+        for (const key of Object.keys(e)) {
+          const val = e[key];
+          if (Array.isArray(val)) lines.push(val.join(', '));
+          else if (typeof val === 'string') lines.push(val);
+        }
+        if (lines.length) return lines.join('\n');
+      }
+    }
+
+    if (typeof err?.message === 'string' && err.message.trim() && !err.message.startsWith('Http failure')) {
+      return err.message;
+    }
+
+    return 'Ocurrió un error al procesar el tipo de pasajero.';
+  }
+
+  bloquearNegativo(event: KeyboardEvent): void {
+    if (event.key === '-' || event.key === 'e' || event.key === 'E' || event.key === '+') {
+      event.preventDefault();
+    }
+  }
+
+  onPasteNombre(event: ClipboardEvent): void {
+    onPasteNombreSinEspeciales(event, this.tipoPasajeroForm.get('nombre'));
+  }
+
+  bloquearCaracteresEspecialesNombre = bloquearCaracteresEspecialesNombre;
 
   regresar(): void {
     this.router.navigateByUrl('/administracion/tipos-pasajero');

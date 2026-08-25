@@ -94,7 +94,7 @@ export class AlertsService {
     const state: AlertState = {
       type,
       title: opts.title ?? this.textDefaults.titles[type] ?? '',
-      message: opts.message ?? this.textDefaults.messages[type] ?? '',
+      message: this.asDisplayString(opts.message ?? this.textDefaults.messages[type] ?? ''),
       confirmText: opts.confirmText ?? this.textDefaults.confirmText,
       cancelText: opts.cancelText ?? this.textDefaults.cancelText,
       showCancel: !!opts.showCancel,
@@ -114,6 +114,26 @@ export class AlertsService {
     this.queue.push(state);
     this.pump();
     return p;
+  }
+
+  private asDisplayString(value: unknown): string {
+    if (value == null) return '';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+    if (Array.isArray(value)) {
+      return value.map((v) => this.asDisplayString(v)).filter(Boolean).join('\n');
+    }
+    if (typeof value === 'object') {
+      const obj = value as Record<string, unknown>;
+      if (typeof obj['message'] === 'string') return obj['message'];
+      if (Array.isArray(obj['message'])) return this.asDisplayString(obj['message']);
+      try {
+        return JSON.stringify(value);
+      } catch {
+        return 'Ocurrió un problema.';
+      }
+    }
+    return String(value);
   }
 
   _setInputValue(value: string): void {

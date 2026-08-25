@@ -20,14 +20,19 @@ export class AgregarMonederoComponent implements OnInit {
   public submitButton: string = 'Guardar';
   public loading: boolean = false;
   public monederoForm!: FormGroup;
-  public idMonedero!: number;
+  public idMonedero: number | null = null;
   public title = 'Agregar Monedero';
-  public listaClientes: any;
-  public listaPasajeros: any;
+  public listaClientes: any[] = [];
+  public listaPasajeros: any[] = [];
   public listaTiposPasajero: any[] = [];
   public showDatosID = true;
   selectedFileName: string = '';
   previewUrl: string | ArrayBuffer | null = null;
+
+  private clientesCargados = false;
+  private pasajerosCargados = false;
+  private tiposCargados = false;
+  private datosMonedero: any = null;
 
   constructor(
     private route: Router,
@@ -42,90 +47,187 @@ export class AgregarMonederoComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.obtenerClientes();
     this.initForm();
+    this.obtenerClientes();
     this.obtenerPasajeros();
     this.obtenerTiposPasajero();
+
     this.activatedRouted.params.subscribe((params) => {
-      this.idMonedero = params['idMonedero'];
+      this.idMonedero = params['idMonedero'] ? Number(params['idMonedero']) : null;
       if (this.idMonedero) {
         this.title = 'Actualizar Monedero';
-        this.obtenerMonedero();
+        this.submitButton = 'Actualizar';
         this.showDatosID = false;
 
         const saldoCtrl = this.monederoForm.get('saldo');
         saldoCtrl?.clearValidators();
         saldoCtrl?.updateValueAndValidity();
+        this.obtenerMonedero();
       }
     });
 
-    // Suscribirse a cambios en el select de pasajero para auto-seleccionar tipo de pasajero
     this.monederoForm.get('idPasajero')?.valueChanges.subscribe((idPasajero) => {
-      if (idPasajero) {
-        const pasajeroSeleccionado = this.listaPasajeros.find((p: any) => p.id === idPasajero);
-        if (pasajeroSeleccionado?.idTipoPasajero) {
-          // Usar setValue para campos deshabilitados
-          this.monederoForm.get('idTipoPasajero')?.setValue(pasajeroSeleccionado.idTipoPasajero, { emitEvent: false });
-        } else {
-          this.monederoForm.get('idTipoPasajero')?.setValue(null, { emitEvent: false });
-        }
-      } else {
-        this.monederoForm.get('idTipoPasajero')?.setValue(null, { emitEvent: false });
-      }
+      this.sincronizarTipoPasajero(idPasajero);
     });
+  }
+
+  private sincronizarTipoPasajero(idPasajero: unknown): void {
+    if (idPasajero == null || idPasajero === '') {
+      this.monederoForm.get('idTipoPasajero')?.setValue(null, { emitEvent: false });
+      return;
+    }
+    const pasajeroSeleccionado = this.listaPasajeros.find(
+      (p: any) => Number(p.id) === Number(idPasajero)
+    );
+    const idTipo =
+      pasajeroSeleccionado?.idTipoPasajero ??
+      pasajeroSeleccionado?.tipoPasajero?.id ??
+      null;
+    this.monederoForm.get('idTipoPasajero')?.setValue(
+      idTipo != null ? Number(idTipo) : null,
+      { emitEvent: false }
+    );
+  }
+
+  private intentarLlenarFormulario(): void {
+    if (this.datosMonedero && this.clientesCargados && this.pasajerosCargados && this.tiposCargados) {
+      const data = this.datosMonedero;
+      this.datosMonedero = null;
+      this.llenarFormulario(data);
+    }
   }
 
   obtenerPasajeros() {
     this.pasaService.obtenerPasajeros().subscribe((response) => {
-      this.listaPasajeros = (response.data || []).map((c: any) => ({
+      this.listaPasajeros = (response?.data || response || []).map((c: any) => ({
         ...c,
         id: Number(c?.id ?? c?.Id ?? c?.ID),
+        idTipoPasajero: c?.idTipoPasajero != null
+          ? Number(c.idTipoPasajero)
+          : (c?.tipoPasajero?.id != null ? Number(c.tipoPasajero.id) : null),
       }));
-    })
+      this.pasajerosCargados = true;
+      this.intentarLlenarFormulario();
+    });
   }
 
   obtenerClientes() {
     this.clieService.obtenerClientes().subscribe((response) => {
-      this.listaClientes = (response.data || []).map((c: any) => ({
+      this.listaClientes = (response?.data || response || []).map((c: any) => ({
         ...c,
         id: Number(c?.id ?? c?.Id ?? c?.ID),
       }));
+      this.clientesCargados = true;
+      this.intentarLlenarFormulario();
     });
   }
 
   obtenerMonedero() {
-    this.moneService.obtenerMonedero(this.idMonedero).subscribe((response) => {
-      this.monederoForm.patchValue({
-        numeroSerie: response.data.numeroSerie,
-        idPasajero: Number(response.data.idPasajero),
-        idCliente: Number(response.data.idCliente),
-        // saldo: Number(response.data.saldo)
-      });
-      // Actualizar idTipoPasajero usando setValue para campos deshabilitados
-      if (response.data.idTipoPasajero) {
-        this.monederoForm.get('idTipoPasajero')?.setValue(Number(response.data.idTipoPasajero));
+    if (!this.idMonedero) return;
+
+    this.moneService.obtenerMonedero(this.idMonedero).subscribe({
+      next: (response: any) => {
+        const raw = response?.data ?? response;
+        const data = Array.isArray(raw)
+          ? (raw.find((x: any) => Number(x?.id) === Number(this.idMonedero)) ?? raw[0])
+          : raw;
+
+        if (!data) {
+          this.alerts.open({
+            type: 'warning',
+            title: '¡Ops!',
+            message: 'No se encontraron datos del monedero.',
+            confirmText: 'Confirmar',
+            backdropClose: false,
+          });
+          return;
+        }
+
+        if (this.clientesCargados && this.pasajerosCargados && this.tiposCargados) {
+          this.llenarFormulario(data);
+        } else {
+          this.datosMonedero = data;
+        }
+      },
+      error: () => {
+        this.alerts.open({
+          type: 'error',
+          title: '¡Ops!',
+          message: 'Ocurrió un error al cargar los datos del monedero.',
+          confirmText: 'Confirmar',
+          backdropClose: false,
+        });
+        this.regresar();
       }
-    })
+    });
+  }
+
+  private llenarFormulario(data: any): void {
+    if (Array.isArray(data) && data.length > 0) {
+      data = data.find((x: any) => Number(x?.id) === Number(this.idMonedero)) ?? data[0];
+    }
+
+    const numeroSerie = data?.numeroSerie ?? data?.NumeroSerie ?? '';
+    const idPasajero =
+      data?.idPasajero ??
+      data?.IdPasajero ??
+      data?.pasajero?.id ??
+      data?.Pasajero?.id ??
+      null;
+    const idCliente =
+      data?.idCliente ??
+      data?.IdCliente ??
+      data?.cliente?.id ??
+      data?.Cliente?.id ??
+      null;
+    const idTipoPasajero =
+      data?.idTipoPasajero ??
+      data?.IdTipoPasajero ??
+      data?.tipoPasajero?.id ??
+      data?.TipoPasajero?.id ??
+      data?.pasajero?.idTipoPasajero ??
+      null;
+
+    this.monederoForm.patchValue({
+      numeroSerie: numeroSerie ?? '',
+      idPasajero: idPasajero != null ? Number(idPasajero) : null,
+      idCliente: idCliente != null ? Number(idCliente) : null,
+    }, { emitEvent: false });
+
+    let tipoFinal: number | null = idTipoPasajero != null ? Number(idTipoPasajero) : null;
+    if (tipoFinal == null && idPasajero != null) {
+      const p = this.listaPasajeros.find((x: any) => Number(x.id) === Number(idPasajero));
+      tipoFinal = p?.idTipoPasajero != null ? Number(p.idTipoPasajero) : null;
+    }
+
+    this.monederoForm.get('idTipoPasajero')?.setValue(tipoFinal, { emitEvent: false });
+    this.monederoForm.updateValueAndValidity({ emitEvent: false });
   }
 
   obtenerTiposPasajero() {
-    this.tiposPasajeroService.obtenerTiposPasajeroList().subscribe(
-      (response: any) => {
-        // Manejar diferentes estructuras de respuesta
+    this.tiposPasajeroService.obtenerTiposPasajeroList().subscribe({
+      next: (response: any) => {
+        let raw: any[] = [];
         if (Array.isArray(response)) {
-          this.listaTiposPasajero = response;
-        } else if (response?.data && Array.isArray(response.data)) {
-          this.listaTiposPasajero = response.data;
-        } else if (response?.data?.data && Array.isArray(response.data.data)) {
-          this.listaTiposPasajero = response.data.data;
-        } else {
-          this.listaTiposPasajero = [];
+          raw = response;
+        } else if (Array.isArray(response?.data)) {
+          raw = response.data;
+        } else if (Array.isArray(response?.data?.data)) {
+          raw = response.data.data;
         }
+        this.listaTiposPasajero = raw.map((tipo: any) => ({
+          ...tipo,
+          id: Number(tipo?.id ?? tipo?.idTipoPasajero ?? tipo?.Id ?? tipo?.ID),
+        }));
+        this.tiposCargados = true;
+        this.intentarLlenarFormulario();
       },
-      (error: any) => {
+      error: () => {
         this.listaTiposPasajero = [];
+        this.tiposCargados = true;
+        this.intentarLlenarFormulario();
       }
-    );
+    });
   }
 
   initForm() {
@@ -249,7 +351,7 @@ export class AgregarMonederoComponent implements OnInit {
     this.loading = true;
 
     if (this.monederoForm.invalid) {
-      this.submitButton = 'Guardar';
+      this.submitButton = 'Actualizar';
       this.loading = false;
 
       const etiquetas: any = {
@@ -290,30 +392,15 @@ export class AgregarMonederoComponent implements OnInit {
     }
 
     const raw = this.monederoForm.getRawValue();
-    const payload: any = { ...raw };
+    const payload: any = {
+      numeroSerie: raw.numeroSerie,
+      idCliente: Number(raw.idCliente),
+      idPasajero: raw.idPasajero != null ? Number(raw.idPasajero) : null,
+      idTipoPasajero: raw.idTipoPasajero != null ? Number(raw.idTipoPasajero) : null,
+      estatus: Number(raw.estatus || 1),
+    };
 
-    const saldoStr = raw.saldo != null ? String(raw.saldo).trim() : '';
-    if (saldoStr !== '') {
-      const s = saldoStr.replace(',', '.').replace(/[^0-9.]/g, '');
-      const n = parseFloat(s);
-      if (!Number.isFinite(n)) {
-        this.submitButton = 'Actualizar';
-        this.loading = false;
-        await this.alerts.open({
-          type: 'error',
-          title: '¡Ops!',
-          message: 'Saldo inválido. Verifica el campo Saldo.',
-          confirmText: 'Entendido',
-          backdropClose: false,
-        });
-        return;
-      }
-      payload.saldo = Number(n.toFixed(2));
-    } else {
-      delete payload.saldo;
-    }
-
-    this.moneService.actualizarMonedero(this.idMonedero, payload).subscribe(
+    this.moneService.actualizarMonedero(this.idMonedero!, payload).subscribe(
       () => {
         this.submitButton = 'Actualizar';
         this.loading = false;
@@ -339,17 +426,6 @@ export class AgregarMonederoComponent implements OnInit {
       }
     );
   }
-
-
-  private toNumber2dec(value: any): number {
-    if (value === null || value === undefined) throw new Error('Saldo inválido');
-    const s = String(value).replace(',', '.').replace(/[^0-9.]/g, '');
-    if (!s) throw new Error('Saldo vacío');
-    const n = parseFloat(s);
-    if (!Number.isFinite(n)) throw new Error('Saldo no numérico');
-    return Number(n.toFixed(2));
-  }
-
 
   moneyKeydown(e: KeyboardEvent) {
     const allowed = ['Backspace', 'Tab', 'ArrowLeft', 'ArrowRight', 'Delete', 'Home', 'End'];
@@ -427,7 +503,6 @@ export class AgregarMonederoComponent implements OnInit {
   }
 
   regresar() {
-    this.route.navigateByUrl('/administracion/monederos')
+    this.route.navigateByUrl('/administracion/monederos');
   }
-
 }

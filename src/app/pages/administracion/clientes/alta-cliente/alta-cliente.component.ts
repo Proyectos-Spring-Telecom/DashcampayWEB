@@ -13,6 +13,10 @@ import { finalize, forkJoin, map, of, switchMap } from 'rxjs';
 import { AlertsService } from 'src/app/pages/pages/modal/alerts.service';
 import { ClientesService } from 'src/app/pages/services/clientes.service';
 import { UsuariosService } from 'src/app/pages/services/usuarios.service';
+import {
+  bloquearCaracteresEspecialesNombre,
+  NOMBRE_SIN_ESPECIALES_REGEX
+} from 'src/app/core/validators/nombre-sin-especiales';
 
 @Component({
   selector: 'vex-alta-cliente',
@@ -80,8 +84,8 @@ export class AltaClienteComponent {
         estatus: Number(d?.estatus ?? d?.estatusCliente ?? 1),
         logotipo: d.logotipo ?? null,
         nombre: d.nombre ?? '',
-        apellidoPaterno: d.apellidoPaterno ?? null,
-        apellidoMaterno: d.apellidoMaterno ?? null,
+        apellidoPaterno: d.apellidoPaterno ?? '',
+        apellidoMaterno: d.apellidoMaterno ?? '',
         telefono: d.telefono ?? '',
         correo: d.correo ?? '',
         estado: d.estado ?? '',
@@ -125,22 +129,31 @@ export class AltaClienteComponent {
     }
   }
 
+  private readonly nombreValidators = [
+    Validators.required,
+    Validators.maxLength(100),
+    Validators.pattern(NOMBRE_SIN_ESPECIALES_REGEX)
+  ];
+
+  private readonly apellidoValidators = [
+    Validators.required,
+    Validators.maxLength(100),
+    Validators.pattern(NOMBRE_SIN_ESPECIALES_REGEX)
+  ];
+
   onTipoPersonaChange(_event: any) {
     const value: number | null = this.tipoPersonaVal;
 
-    // Nombre siempre requerido (sirve para "Nombre" o "Razón Social")
-    this.clienteForm.get('nombre')?.setValidators([Validators.required]);
+    this.clienteForm.get('nombre')?.setValidators(this.nombreValidators);
     this.clienteForm.get('nombre')?.updateValueAndValidity({ emitEvent: false });
 
     if (value === 1) {
-      // Física: apellidos requeridos
-      this.clienteForm.get('apellidoPaterno')?.setValidators([Validators.required]);
-      this.clienteForm.get('apellidoMaterno')?.setValidators([Validators.required]);
+      this.clienteForm.get('apellidoPaterno')?.setValidators(this.apellidoValidators);
+      this.clienteForm.get('apellidoMaterno')?.setValidators(this.apellidoValidators);
     } else if (value === 2) {
-      // Moral: apellidos no aplican
       this.clienteForm.get('apellidoPaterno')?.clearValidators();
       this.clienteForm.get('apellidoMaterno')?.clearValidators();
-      this.clienteForm.patchValue({ apellidoPaterno: null, apellidoMaterno: null });
+      this.clienteForm.patchValue({ apellidoPaterno: '', apellidoMaterno: '' });
     }
 
     this.clienteForm.get('apellidoPaterno')?.updateValueAndValidity({ emitEvent: false });
@@ -164,6 +177,18 @@ export class AltaClienteComponent {
     }
   }
 
+  onNombreKeydown(event: KeyboardEvent): void {
+    if ((event.ctrlKey || event.metaKey) && (event.key === 'v' || event.key === 'V')) {
+      event.preventDefault();
+      return;
+    }
+    bloquearCaracteresEspecialesNombre(event);
+  }
+
+  bloquearPegado(event: Event): void {
+    event.preventDefault();
+  }
+
   private readonly DEFAULT_AVATAR_URL =
     'https://wallpapercat.com/w/full/9/5/a/945731-3840x2160-desktop-4k-matte-black-wallpaper-image.jpg';
 
@@ -177,9 +202,9 @@ export class AltaClienteComponent {
       constanciaSituacionFiscal: [null, Validators.required],
       comprobanteDomicilio: [null, Validators.required],
       actaConstitutiva: [null, Validators.required],
-      nombre: ['', Validators.required],
-      apellidoPaterno: ['', Validators.required],
-      apellidoMaterno: ['', Validators.required],
+      nombre: ['', this.nombreValidators],
+      apellidoPaterno: ['', this.apellidoValidators],
+      apellidoMaterno: ['', this.apellidoValidators],
       telefono: ['', Validators.required],
       correo: ['', [Validators.required, Validators.email]],
       estado: ['', Validators.required],
@@ -251,15 +276,17 @@ export class AltaClienteComponent {
     this.submitButton = 'Cargando...';
     this.loading = true;
 
-    // === Reglas dinámicas por tipoPersona ===
     const tipo = Number(this.clienteForm.get('tipoPersona')?.value ?? null);
+    this.clienteForm.get('nombre')?.setValidators(this.nombreValidators);
+    this.clienteForm.get('nombre')?.updateValueAndValidity({ emitEvent: false });
+
     if (tipo === 1) {
-      this.clienteForm.get('apellidoPaterno')?.setValidators([Validators.required]);
-      this.clienteForm.get('apellidoMaterno')?.setValidators([Validators.required]);
+      this.clienteForm.get('apellidoPaterno')?.setValidators(this.apellidoValidators);
+      this.clienteForm.get('apellidoMaterno')?.setValidators(this.apellidoValidators);
     } else if (tipo === 2) {
       this.clienteForm.get('apellidoPaterno')?.clearValidators();
       this.clienteForm.get('apellidoMaterno')?.clearValidators();
-      this.clienteForm.patchValue({ apellidoPaterno: null, apellidoMaterno: null });
+      this.clienteForm.patchValue({ apellidoPaterno: '', apellidoMaterno: '' });
     }
     this.clienteForm.get('apellidoPaterno')?.updateValueAndValidity({ emitEvent: false });
     this.clienteForm.get('apellidoMaterno')?.updateValueAndValidity({ emitEvent: false });
@@ -268,6 +295,7 @@ export class AltaClienteComponent {
     if (this.clienteForm.invalid) {
       this.submitButton = 'Guardar';
       this.loading = false;
+      this.clienteForm.markAllAsTouched();
 
       const etiquetas: Record<string, string> = {
         rfc: 'RFC',
@@ -294,10 +322,17 @@ export class AltaClienteComponent {
       };
 
       const faltantes: string[] = [];
+      const camposNombre = ['nombre', 'apellidoPaterno', 'apellidoMaterno'];
       Object.keys(this.clienteForm.controls).forEach((key) => {
         const c = this.clienteForm.get(key);
-        if (c?.invalid && c.errors?.['required'])
-          faltantes.push(etiquetas[key] || key);
+        if (!c?.invalid || !c.errors) return;
+        if (c.errors['required']) faltantes.push(etiquetas[key] || key);
+        if (camposNombre.includes(key) && c.errors['maxlength']) {
+          faltantes.push(`${etiquetas[key]}: máximo 100 caracteres`);
+        }
+        if (camposNombre.includes(key) && c.errors['pattern']) {
+          faltantes.push(`${etiquetas[key]}: no permite caracteres especiales`);
+        }
       });
 
       const lista = faltantes
@@ -406,16 +441,16 @@ export class AltaClienteComponent {
     this.loading = true;
 
     const tipo = Number(this.clienteForm.get('tipoPersona')?.value ?? null);
-    this.clienteForm.get('nombre')?.setValidators([Validators.required]);
+    this.clienteForm.get('nombre')?.setValidators(this.nombreValidators);
     this.clienteForm.get('nombre')?.updateValueAndValidity({ emitEvent: false });
 
     if (tipo === 1) {
-      this.clienteForm.get('apellidoPaterno')?.setValidators([Validators.required]);
-      this.clienteForm.get('apellidoMaterno')?.setValidators([Validators.required]);
+      this.clienteForm.get('apellidoPaterno')?.setValidators(this.apellidoValidators);
+      this.clienteForm.get('apellidoMaterno')?.setValidators(this.apellidoValidators);
     } else if (tipo === 2) {
       this.clienteForm.get('apellidoPaterno')?.clearValidators();
       this.clienteForm.get('apellidoMaterno')?.clearValidators();
-      this.clienteForm.patchValue({ apellidoPaterno: null, apellidoMaterno: null });
+      this.clienteForm.patchValue({ apellidoPaterno: '', apellidoMaterno: '' });
     }
     this.clienteForm.get('apellidoPaterno')?.updateValueAndValidity({ emitEvent: false });
     this.clienteForm.get('apellidoMaterno')?.updateValueAndValidity({ emitEvent: false });
@@ -423,6 +458,7 @@ export class AltaClienteComponent {
     if (this.clienteForm.invalid) {
       this.submitButton = 'Actualizar';
       this.loading = false;
+      this.clienteForm.markAllAsTouched();
 
       const etiquetas: Record<string, string> = {
         idPadre: 'Id Padre',
@@ -451,9 +487,17 @@ export class AltaClienteComponent {
       };
 
       const faltantes: string[] = [];
+      const camposNombre = ['nombre', 'apellidoPaterno', 'apellidoMaterno'];
       Object.keys(this.clienteForm.controls).forEach((key) => {
         const c = this.clienteForm.get(key);
-        if (c?.invalid && c.errors?.['required']) faltantes.push(etiquetas[key] || key);
+        if (!c?.invalid || !c.errors) return;
+        if (c.errors['required']) faltantes.push(etiquetas[key] || key);
+        if (camposNombre.includes(key) && c.errors['maxlength']) {
+          faltantes.push(`${etiquetas[key]}: máximo 100 caracteres`);
+        }
+        if (camposNombre.includes(key) && c.errors['pattern']) {
+          faltantes.push(`${etiquetas[key]}: no permite caracteres especiales`);
+        }
       });
 
       const lista = faltantes.map((campo, i) => `

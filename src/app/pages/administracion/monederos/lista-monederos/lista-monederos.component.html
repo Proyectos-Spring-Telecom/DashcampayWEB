@@ -144,7 +144,19 @@
         </div>
         <div class="am-item">
           <div class="am-label">Monto</div>
-          <input type="number" class="am-input" placeholder="Ingrese el monto" formControlName="monto" />
+          <input
+            type="number"
+            class="am-input"
+            placeholder="Ingrese el monto"
+            formControlName="monto"
+            min="0.01"
+            [max]="tipoOperacion === 'recarga' ? MAX_RECARGA : null"
+            (input)="onMontoInput($event)" />
+          <div
+            class="am-hint-error"
+            *ngIf="tipoOperacion === 'recarga' && recargaForm.get('monto')?.touched && recargaForm.get('monto')?.hasError('max')">
+            El monto máximo de recarga es {{ MAX_RECARGA | number:'1.0-0' }}.
+          </div>
         </div>
         <div class="am-actions">
           <button class="am-btn am-btn--primary" type="submit" [disabled]="loading">

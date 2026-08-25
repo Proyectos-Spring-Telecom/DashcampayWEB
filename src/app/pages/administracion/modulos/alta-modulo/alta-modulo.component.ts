@@ -4,6 +4,10 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { fadeInRight400ms } from '@vex/animations/fade-in-right.animation';
 import { AlertsService } from 'src/app/pages/pages/modal/alerts.service';
 import { ModulosService } from 'src/app/pages/services/modulos.service';
+import {
+  bloquearCaracteresEspecialesNombre,
+  NOMBRE_SIN_ESPECIALES_REGEX
+} from 'src/app/core/validators/nombre-sin-especiales';
 
 @Component({
   selector: 'vex-alta-modulo',
@@ -59,8 +63,8 @@ export class AltaModuloComponent implements OnInit {
 
   initForm() {
     this.moduloForm = this.fb.group({
-      nombre: ['', Validators.required],
-      descripcion: ['', Validators.required],
+      nombre: ['', [Validators.required, Validators.maxLength(100), Validators.pattern(NOMBRE_SIN_ESPECIALES_REGEX)]],
+      descripcion: ['', [Validators.required, Validators.maxLength(255), Validators.pattern(NOMBRE_SIN_ESPECIALES_REGEX)]],
     });
   }
 
@@ -93,6 +97,13 @@ export class AltaModuloComponent implements OnInit {
         const control = this.moduloForm.get(key);
         if (control?.invalid && control.errors?.['required']) {
           camposFaltantes.push(etiquetas[key] || key);
+        }
+        if (control?.errors?.['maxlength']) {
+          const max = control.errors['maxlength'].requiredLength;
+          camposFaltantes.push(`${etiquetas[key] || key}: máximo ${max} caracteres`);
+        }
+        if (control?.errors?.['pattern']) {
+          camposFaltantes.push(`${etiquetas[key] || key}: no permite caracteres especiales`);
         }
       });
 
@@ -146,7 +157,7 @@ export class AltaModuloComponent implements OnInit {
         this.alerts.open({
           type: 'error',
           title: '¡Ops!',
-          message: String(error ?? 'Ocurrió un error al agregar el módulo.'),
+          message: this.getErrorMessage(error),
           confirmText: 'Confirmar',
           backdropClose: false,
         });
@@ -173,6 +184,13 @@ export class AltaModuloComponent implements OnInit {
         const control = this.moduloForm.get(key);
         if (control?.invalid && control.errors?.['required']) {
           camposFaltantes.push(etiquetas[key] || key);
+        }
+        if (control?.errors?.['maxlength']) {
+          const max = control.errors['maxlength'].requiredLength;
+          camposFaltantes.push(`${etiquetas[key] || key}: máximo ${max} caracteres`);
+        }
+        if (control?.errors?.['pattern']) {
+          camposFaltantes.push(`${etiquetas[key] || key}: no permite caracteres especiales`);
         }
       });
 
@@ -223,12 +241,72 @@ export class AltaModuloComponent implements OnInit {
         this.alerts.open({
           type: 'error',
           title: '¡Ops!',
-          message: String(error ?? 'Ocurrió un error al actualizar el módulo.'),
+          message: this.getErrorMessage(error),
           confirmText: 'Confirmar',
           backdropClose: false,
         });
       }
     );
+  }
+
+  private getErrorMessage(err: any): string {
+    const body = err?.error ?? err;
+    let message = '';
+
+    if (typeof body === 'string' && body.trim()) {
+      message = body;
+    } else if (typeof body?.message === 'string' && body.message.trim()) {
+      message = body.message;
+    } else if (Array.isArray(body?.message)) {
+      message = body.message.filter(Boolean).join('\n');
+    } else if (body?.message && typeof body.message === 'object') {
+      const lines: string[] = [];
+      for (const key of Object.keys(body.message)) {
+        const val = body.message[key];
+        if (Array.isArray(val)) lines.push(val.join(', '));
+        else if (typeof val === 'string') lines.push(val);
+      }
+      if (lines.length) message = lines.join('\n');
+    } else if (body?.errors) {
+      const e = body.errors;
+      if (Array.isArray(e)) message = e.filter(Boolean).join('\n');
+      else if (typeof e === 'object') {
+        const lines: string[] = [];
+        for (const key of Object.keys(e)) {
+          const val = e[key];
+          if (Array.isArray(val)) lines.push(val.join(', '));
+          else if (typeof val === 'string') lines.push(val);
+        }
+        if (lines.length) message = lines.join('\n');
+      }
+    } else if (typeof err?.message === 'string' && err.message.trim() && !err.message.startsWith('Http failure')) {
+      message = err.message;
+    }
+
+    if (!message) {
+      return 'Ocurrió un error al procesar el módulo.';
+    }
+
+    if (/el m[oó]dulo ya existe/i.test(message.trim())) {
+      return 'Ya existe un módulo registrado con este nombre';
+    }
+
+    return message;
+  }
+
+  onTextoKeydown(event: KeyboardEvent): void {
+    if (event.ctrlKey || event.metaKey) {
+      const key = event.key.toLowerCase();
+      if (key === 'c' || key === 'v' || key === 'x') {
+        event.preventDefault();
+        return;
+      }
+    }
+    bloquearCaracteresEspecialesNombre(event);
+  }
+
+  bloquearCopiarPegar(event: Event): void {
+    event.preventDefault();
   }
 
   regresar() {

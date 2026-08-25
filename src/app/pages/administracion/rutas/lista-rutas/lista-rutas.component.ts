@@ -629,6 +629,27 @@ export class ListaRutasComponent implements OnInit {
   private async reverseGeocode(lat: number, lng: number): Promise<string> {
     if (!this.geocoder) this.geocoder = new google.maps.Geocoder();
     const { results } = await this.geocoder.geocode({ location: { lat, lng } });
-    return results?.[0]?.formatted_address ?? 'Dirección no disponible';
+    return this.pickReadableAddress(results || [], 'Dirección no disponible');
+  }
+
+  private pickReadableAddress(results: any[], fallback: string): string {
+    const plusPrefix = /^[2-9C-HJ-NP-X]{4,8}\+[2-9C-HJ-NP-X]{2,3}\s*/i;
+    const preferTypes = [
+      'street_address', 'route', 'intersection', 'premise',
+      'neighborhood', 'sublocality', 'sublocality_level_1',
+      'locality', 'administrative_area_level_2', 'political'
+    ];
+
+    const withoutPlus = (results || []).filter(
+      (r: any) => !(r?.types || []).includes('plus_code')
+    );
+    const preferred =
+      withoutPlus.find((r: any) => (r?.types || []).some((t: string) => preferTypes.includes(t))) ||
+      withoutPlus[0] ||
+      results[0];
+
+    const raw = String(preferred?.formatted_address || '').trim();
+    const cleaned = raw.replace(plusPrefix, '').replace(/^,\s*/, '').trim();
+    return cleaned || fallback;
   }
 }

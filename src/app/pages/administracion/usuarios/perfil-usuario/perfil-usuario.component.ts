@@ -205,9 +205,10 @@ export class PerfilUsuarioComponent {
     const d = new Date(raw);
     if (isNaN(d.getTime())) return String(raw);
     const pad = (n: number) => String(n).padStart(2, '0');
+    // Mostrar en UTC para no desplazar la hora del instante real (06:11 GMT-0600 → 12:11)
     return (
-      `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ` +
-      `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+      `${pad(d.getUTCDate())}/${pad(d.getUTCMonth() + 1)}/${d.getUTCFullYear()} ` +
+      `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`
     );
   }
 

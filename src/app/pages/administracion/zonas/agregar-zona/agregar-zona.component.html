@@ -35,7 +35,18 @@
                                     <i class="fa fa-user-tie"></i><span>Nombre</span>
                                 </label>
                                 <mat-form-field appearance="fill" class="w-100">
-                                    <input matInput placeholder="Nombre" formControlName="nombre" />
+                                    <input matInput placeholder="Nombre" formControlName="nombre" maxlength="100"
+                                      (keydown)="bloquearCaracteresEspecialesNombre($event)"
+                                      (paste)="onPasteSinEspeciales($event, 'nombre')" />
+                                    <mat-error *ngIf="zonasForm.get('nombre')?.hasError('required')">
+                                      El nombre es obligatorio.
+                                    </mat-error>
+                                    <mat-error *ngIf="zonasForm.get('nombre')?.hasError('maxlength')">
+                                      El nombre no puede superar los 100 caracteres.
+                                    </mat-error>
+                                    <mat-error *ngIf="zonasForm.get('nombre')?.hasError('pattern')">
+                                      El nombre no permite caracteres especiales.
+                                    </mat-error>
                                 </mat-form-field>
                             </div>
 
@@ -45,7 +56,18 @@
                                     <i class="fa fa-microchip"></i><span>Descripción</span>
                                 </label>
                                 <mat-form-field appearance="fill" class="w-100">
-                                    <input matInput placeholder="Descripción" formControlName="descripcion" />
+                                    <input matInput placeholder="Descripción" formControlName="descripcion" maxlength="255"
+                                      (keydown)="bloquearCaracteresEspecialesNombre($event)"
+                                      (paste)="onPasteSinEspeciales($event, 'descripcion')" />
+                                    <mat-error *ngIf="zonasForm.get('descripcion')?.hasError('required')">
+                                      La descripción es obligatoria.
+                                    </mat-error>
+                                    <mat-error *ngIf="zonasForm.get('descripcion')?.hasError('maxlength')">
+                                      La descripción no puede superar los 255 caracteres.
+                                    </mat-error>
+                                    <mat-error *ngIf="zonasForm.get('descripcion')?.hasError('pattern')">
+                                      La descripción no permite caracteres especiales.
+                                    </mat-error>
                                 </mat-form-field>
                             </div>
 

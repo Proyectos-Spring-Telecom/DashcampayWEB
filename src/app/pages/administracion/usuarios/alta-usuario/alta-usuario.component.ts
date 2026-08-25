@@ -14,6 +14,10 @@ import {
   getPasswordRuleKey,
   PASSWORD_PATTERN,
 } from 'src/app/core/validators/password-policy';
+import {
+  bloquearCaracteresEspecialesNombre,
+  NOMBRE_SIN_ESPECIALES_REGEX
+} from 'src/app/core/validators/nombre-sin-especiales';
 
 @Component({
   selector: 'vex-alta-usuario',
@@ -101,8 +105,13 @@ export class AltaUsuarioComponent {
       this.idUsuario = params['idUsuario'];
       if (this.idUsuario) {
         this.title = 'Actualizar Usuario';
-        this.obtenerUsuarioID();
+        this.submitButton = 'Actualizar';
         this.inputContrasena = false;
+        this.usuarioForm.get('passwordHash')?.clearValidators();
+        this.usuarioForm.get('passwordHash')?.updateValueAndValidity({ emitEvent: false });
+        this.usuarioForm.get('confirmPassword')?.clearValidators();
+        this.usuarioForm.get('confirmPassword')?.updateValueAndValidity({ emitEvent: false });
+        this.obtenerUsuarioID();
       }
     });
   }
@@ -124,11 +133,11 @@ export class AltaUsuarioComponent {
         passwordHash: ['', [Validators.required, Validators.pattern(PASSWORD_PATTERN)]],
         confirmPassword: [''],
         telefono: ['', [Validators.required]],
-        nombre: ['', [Validators.required]],
-        apellidoPaterno: ['', [Validators.required]],
-        apellidoMaterno: [null],
+        nombre: ['', [Validators.required, Validators.maxLength(100), Validators.pattern(NOMBRE_SIN_ESPECIALES_REGEX)]],
+        apellidoPaterno: ['', [Validators.required, Validators.maxLength(100), Validators.pattern(NOMBRE_SIN_ESPECIALES_REGEX)]],
+        apellidoMaterno: ['', [Validators.maxLength(100), Validators.pattern(NOMBRE_SIN_ESPECIALES_REGEX)]],
         fotoPerfil: [this.DEFAULT_FOTO_URL],
-        idRol: [null],
+        idRol: [null, Validators.required],
         emailConfirmado: [0],
         estatus: [1],
         idCliente: [null],
@@ -308,7 +317,7 @@ export class AltaUsuarioComponent {
         telefono: u?.telefono ?? '',
         nombre: u?.nombre ?? '',
         apellidoPaterno: u?.apellidoPaterno ?? '',
-        apellidoMaterno: u?.apellidoMaterno ?? null,
+        apellidoMaterno: u?.apellidoMaterno ?? '',
         fotoPerfil: u?.fotoPerfil ?? this.usuarioForm.get('fotoPerfil')?.value,
         emailConfirmado: Number(u?.emailConfirmado ?? 0),
         estatus: Number(u?.estatus ?? 1),
@@ -389,6 +398,7 @@ export class AltaUsuarioComponent {
       telefono: 'Teléfono',
       nombre: 'Nombre',
       apellidoPaterno: 'Apellido Paterno',
+      apellidoMaterno: 'Apellido Materno',
       fotoPerfil: 'Foto de perfil',
       idRol: 'Rol',
       estatus: 'Estatus',
@@ -397,6 +407,7 @@ export class AltaUsuarioComponent {
 
     if (this.usuarioForm.invalid) {
       const camposFaltantes: string[] = [];
+      const camposNombre = ['nombre', 'apellidoPaterno', 'apellidoMaterno'];
       Object.keys(this.usuarioForm.controls).forEach((key) => {
         const control = this.usuarioForm.get(key);
         if (control?.errors?.['required']) {
@@ -404,6 +415,12 @@ export class AltaUsuarioComponent {
         }
         if (key === 'passwordHash' && control?.errors?.['pattern']) {
           camposFaltantes.push('Contraseña (no cumple la política de seguridad)');
+        }
+        if (camposNombre.includes(key) && control?.errors?.['maxlength']) {
+          camposFaltantes.push(`${etiquetas[key]}: máximo 100 caracteres`);
+        }
+        if (camposNombre.includes(key) && control?.errors?.['pattern']) {
+          camposFaltantes.push(`${etiquetas[key]}: no permite caracteres especiales`);
         }
       });
 
@@ -524,17 +541,25 @@ export class AltaUsuarioComponent {
       telefono: 'Teléfono',
       nombre: 'Nombre',
       apellidoPaterno: 'Apellido Paterno',
+      apellidoMaterno: 'Apellido Materno',
       idRol: 'Rol',
       estatus: 'Estatus',
       permisosIds: 'Permisos',
     };
 
     const camposFaltantes: string[] = [];
+    const camposNombre = ['nombre', 'apellidoPaterno', 'apellidoMaterno'];
     Object.keys(this.usuarioForm.controls).forEach((key) => {
       if (!this.inputContrasena && (key === 'passwordHash' || key === 'confirmPassword')) return;
       const control = this.usuarioForm.get(key);
       if (control?.errors?.['required']) {
         camposFaltantes.push(etiquetas[key] || key);
+      }
+      if (camposNombre.includes(key) && control?.errors?.['maxlength']) {
+        camposFaltantes.push(`${etiquetas[key]}: máximo 100 caracteres`);
+      }
+      if (camposNombre.includes(key) && control?.errors?.['pattern']) {
+        camposFaltantes.push(`${etiquetas[key]}: no permite caracteres especiales`);
       }
     });
 
@@ -702,6 +727,18 @@ export class AltaUsuarioComponent {
       confirmText: 'De acuerdo',
       backdropClose: false,
     });
+  }
+
+  onNombreKeydown(event: KeyboardEvent): void {
+    if ((event.ctrlKey || event.metaKey) && (event.key === 'v' || event.key === 'V')) {
+      event.preventDefault();
+      return;
+    }
+    bloquearCaracteresEspecialesNombre(event);
+  }
+
+  bloquearPegado(event: Event): void {
+    event.preventDefault();
   }
 
   regresar() {

@@ -4,6 +4,11 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { fadeInRight400ms } from '@vex/animations/fade-in-right.animation';
 import { AlertsService } from 'src/app/pages/pages/modal/alerts.service';
 import { PasajerosService } from 'src/app/pages/services/pasajeros.service';
+import {
+  bloquearCaracteresEspecialesNombre,
+  NOMBRE_SIN_ESPECIALES_REGEX,
+  onPasteNombreSinEspeciales
+} from 'src/app/core/validators/nombre-sin-especiales';
 
 @Component({
   selector: 'vex-agregar-pasajero',
@@ -98,7 +103,7 @@ export class AgregarPasajeroComponent implements OnInit {
 
   initForm() {
     this.pasajeroForm = this.fb.group({
-      nombre: ['', Validators.required],
+      nombre: ['', [Validators.required, Validators.pattern(NOMBRE_SIN_ESPECIALES_REGEX)]],
       apellidoPaterno: ['', Validators.required],
       apellidoMaterno: ['', Validators.required],
       fechaNacimiento: ['', Validators.required],
@@ -415,6 +420,12 @@ export class AgregarPasajeroComponent implements OnInit {
     }
     return date;
   }
+
+  onPasteNombre(event: ClipboardEvent): void {
+    onPasteNombreSinEspeciales(event, this.pasajeroForm.get('nombre'));
+  }
+
+  bloquearCaracteresEspecialesNombre = bloquearCaracteresEspecialesNombre;
 
   regresar() {
     this.router.navigateByUrl('/administracion/pasajeros')
