@@ -17,11 +17,11 @@
         </div>
 
         <section class="mt-4">
-          <form [formGroup]="tarifaForm" class="container-fluid form-skin-lite">
+          <form [formGroup]="tarifaForm" class="container-fluid form-skin-lite" autocomplete="off" novalidate>
             <div class="row g-3">
               <div class="col-12">
                 <div class="section-head">
-                  <h5 class="mb-1">Datos Generales</h5>
+                  <h5 class="mb-1">Configura la Tarifa</h5>
                 </div>
                 <div class="section-bar"></div>
               </div>
@@ -31,9 +31,24 @@
                   <i class="fa fa-tags"></i><span>Variante</span>
                 </label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <mat-select placeholder="Variante" formControlName="idVariante">
+                  <mat-select placeholder="Seleccione una variante" formControlName="idVariante">
+                    <mat-option [value]="null">— Seleccione —</mat-option>
                     <mat-option *ngFor="let c of listaVariantes" [value]="c.id">
-                      {{ c.nombreVariantes }}
+                      {{ c.nombreVariante || c.nombreVariantes || c.nombre }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <label class="form-label">
+                  <i class="fa fa-list"></i><span>Tipo Tarifa</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <mat-select placeholder="Seleccione un tipo" formControlName="idTipoTarifa">
+                    <mat-option [value]="null">— Seleccione —</mat-option>
+                    <mat-option *ngFor="let tipo of listaTiposTarifa" [value]="tipo.id">
+                      {{ tipo.nombre }}
                     </mat-option>
                   </mat-select>
                 </mat-form-field>
@@ -50,6 +65,26 @@
                 </mat-form-field>
               </div>
 
+              <div class="col-12 col-md-6 col-lg-4" *ngIf="esTipoTarifaEstacionaria()">
+                <label class="form-label">
+                  <i class="fa fa-map-marker-alt"></i><span>Cantidad Estaciones Base</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput type="text" class="form-control" formControlName="cantidadEstacionesBase"
+                    placeholder="Ej: 5" inputmode="numeric" (keydown)="estacionesKeydown($event)"
+                    (input)="estacionesInput($event)" (paste)="estacionesPaste($event)" />
+                  <mat-hint *ngIf="maxCantidadEstacionesBase > 0">
+                    Máx. {{ maxCantidadEstacionesBase }} (estaciones en el recorrido)
+                  </mat-hint>
+                  <mat-error *ngIf="tarifaForm.get('cantidadEstacionesBase')?.hasError('required')">
+                    Obligatorio para tarifa Estacionaria
+                  </mat-error>
+                  <mat-error *ngIf="tarifaForm.get('cantidadEstacionesBase')?.hasError('cantidadEstacionesBaseMax')">
+                    No puede superar las {{ maxCantidadEstacionesBase }} estaciones del recorrido
+                  </mat-error>
+                </mat-form-field>
+              </div>
+
               <div class="col-12 col-md-6 col-lg-4">
                 <label class="form-label">
                   <i class="fa fa-road"></i><span>Distancia Base Km</span>
@@ -58,17 +93,6 @@
                   <input matInput type="text" class="form-control" formControlName="distanciaBaseKm"
                     placeholder="Ej: 100" inputmode="decimal" (keydown)="distanciaKeydown($event)"
                     (input)="distanciaInput($event)" (paste)="distanciaPaste($event)" />
-                </mat-form-field>
-              </div>
-
-              <div class="col-12 col-md-6 col-lg-4">
-                <label class="form-label">
-                  <i class="fa fa-map-marker-alt"></i><span>Cantidad Estaciones Base</span>
-                </label>
-                <mat-form-field appearance="fill" class="w-100">
-                  <input matInput type="text" class="form-control" formControlName="cantidadEstacionesBase"
-                    placeholder="Ej: 5" inputmode="numeric" (keydown)="estacionesKeydown($event)"
-                    (input)="estacionesInput($event)" (paste)="estacionesPaste($event)" />
                 </mat-form-field>
               </div>
 
@@ -94,11 +118,28 @@
                 </mat-form-field>
               </div>
 
+              <div class="col-12 col-md-6 col-lg-4" *ngIf="esTipoTarifaEstacionaria()">
+                <label class="form-label">
+                  <i class="fa fa-map-pin"></i><span>Costo por Estación</span>
+                </label>
+                <mat-form-field appearance="fill" class="w-100">
+                  <input matInput type="text" class="form-control" formControlName="costoPorEstacion"
+                    placeholder="Ej: 25.00" inputmode="decimal" (keydown)="costoKeydown($event)"
+                    (input)="costoPorEstacionInput($event)" (paste)="costoPorEstacionPaste($event)"
+                    (blur)="costoPorEstacionBlur($event)" />
+                  <mat-error *ngIf="tarifaForm.get('costoPorEstacion')?.hasError('required')">
+                    El costo por estación es obligatorio
+                  </mat-error>
+                </mat-form-field>
+              </div>
+
               <div class="col-12 d-flex justify-content-end gap-2 pt-2">
-                <button mat-raised-button color="primary" type="button" (click)="submit()">
-                  <mat-icon>save</mat-icon> Guardar
+                <button mat-raised-button color="primary" type="button"
+                  [disabled]="tarifaForm.invalid || loading"
+                  (click)="submit()">
+                  <mat-icon>save</mat-icon> {{ submitButton }}
                 </button>
-                <button mat-raised-button color="warn" type="button" (click)="regresar()">
+                <button mat-raised-button color="warn" type="button" (click)="regresar()" [disabled]="loading">
                   <mat-icon>close</mat-icon> Cancelar
                 </button>
               </div>

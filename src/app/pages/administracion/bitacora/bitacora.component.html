@@ -55,7 +55,7 @@
             <dxi-column dataField="descripcion" caption="Descripción" alignment="center"></dxi-column>
             <dxi-column dataField="fechaCreacion" caption="Fecha" alignment="center" [width]="250" cellTemplate="fech">
               <div *dxTemplate="let i of 'fech' ">
-                {{i.data.fechaCreacion | date: 'dd/MM/yyyy HH:mm:ss a' : '+0000'}}
+                {{i.data.fechaCreacion | date: 'dd/MM/yyyy HH:mm:ss a' : '-0600'}}
               </div>
             </dxi-column>
             <dxo-export [enabled]="false" [allowExportSelectedData]="true"

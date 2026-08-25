@@ -56,10 +56,18 @@
                   <span>Nombre</span>
                 </label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput placeholder="Taller GMC" formControlName="nombre" />
+                  <input matInput placeholder="Taller GMC" formControlName="nombre" maxlength="100"
+                    (keydown)="bloquearCaracteresEspecialesNombre($event)"
+                    (paste)="onPasteNombre($event)" />
                 </mat-form-field>
                 <mat-error *ngIf="showRequiredMsgs && tallerForm.get('nombre')?.hasError('required')">
                   El nombre es obligatorio.
+                </mat-error>
+                <mat-error *ngIf="showRequiredMsgs && tallerForm.get('nombre')?.hasError('maxlength')">
+                  El nombre no puede superar los 100 caracteres.
+                </mat-error>
+                <mat-error *ngIf="showRequiredMsgs && tallerForm.get('nombre')?.hasError('pattern')">
+                  El nombre no permite caracteres especiales.
                 </mat-error>
               </div>
 
@@ -70,10 +78,13 @@
                   <span>Descripción</span>
                 </label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput placeholder="Lugar de mantenimiento" formControlName="descripcion" />
+                  <input matInput placeholder="Lugar de mantenimiento" formControlName="descripcion" maxlength="255" />
                 </mat-form-field>
                 <mat-error *ngIf="showRequiredMsgs && tallerForm.get('descripcion')?.hasError('required')">
                   La descripción es obligatoria.
+                </mat-error>
+                <mat-error *ngIf="showRequiredMsgs && tallerForm.get('descripcion')?.hasError('maxlength')">
+                  La descripción no puede superar los 255 caracteres.
                 </mat-error>
               </div>
 

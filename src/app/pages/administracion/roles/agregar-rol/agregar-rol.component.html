@@ -12,7 +12,7 @@
                         <span class="sep">/</span>
                         <span class="crumb-current" aria-current="page">Roles</span>
                         <span class="sep">/</span>
-                        <span class="crumb-current" aria-current="page">Agregar Rol</span>
+                        <span class="crumb-current" aria-current="page">{{ title }}</span>
                     </nav>
                 </div>
                 <section class="mt-4">
@@ -29,7 +29,18 @@
                                     <i class="fa fa-tag"></i><span>Nombre</span>
                                 </label>
                                 <mat-form-field appearance="fill" class="w-100">
-                                    <input matInput placeholder="Nombre del rol" formControlName="nombre" />
+                                    <input matInput placeholder="Nombre del rol" formControlName="nombre"
+                                      (keydown)="bloquearCaracteresEspecialesNombre($event)"
+                                      (paste)="onPasteNombre($event)" />
+                                    <mat-error *ngIf="rolForm.get('nombre')?.hasError('required')">
+                                        El nombre es obligatorio.
+                                    </mat-error>
+                                    <mat-error *ngIf="rolForm.get('nombre')?.hasError('maxlength')">
+                                        El nombre no puede exceder 100 caracteres.
+                                    </mat-error>
+                                    <mat-error *ngIf="rolForm.get('nombre')?.hasError('pattern')">
+                                        El nombre no permite caracteres especiales.
+                                    </mat-error>
                                 </mat-form-field>
                             </div>
                             <div class="col-12 col-md-6 col-lg-6">
@@ -38,10 +49,18 @@
                                 </label>
                                 <mat-form-field appearance="fill" class="w-100">
                                     <input matInput placeholder="Descripción del rol" formControlName="descripcion" />
+                                    <mat-error *ngIf="rolForm.get('descripcion')?.hasError('required')">
+                                        La descripción es obligatoria.
+                                    </mat-error>
+                                    <mat-error *ngIf="rolForm.get('descripcion')?.hasError('maxlength')">
+                                        La descripción no puede exceder 255 caracteres.
+                                    </mat-error>
                                 </mat-form-field>
                             </div>
                             <div class="col-12 d-flex justify-content-end gap-2 pt-2">
-                                <button mat-raised-button color="primary" type="button" (click)="submit()">
+                                <button mat-raised-button color="primary" type="button"
+                                    [disabled]="rolForm.invalid || loading"
+                                    (click)="submit()">
                                     <mat-icon>save</mat-icon> Guardar
                                 </button>
                                 <button mat-raised-button color="warn" type="button" (click)="regresar()">

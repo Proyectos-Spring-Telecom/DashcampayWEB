@@ -441,10 +441,35 @@ export class AgregarRutaComponent implements OnInit, OnDestroy {
     return new Promise((resolve) => {
       if (!this.geocoder) { resolve(`${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`); return; }
       this.geocoder.geocode({ location: latlng }, (results: any, status: string) => {
-        if (status === 'OK' && results?.length) resolve(results[0].formatted_address);
-        else resolve(`${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`);
+        if (status === 'OK' && results?.length) {
+          resolve(this.pickReadableAddress(results, `${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`));
+        } else {
+          resolve(`${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`);
+        }
       });
     });
+  }
+
+  /** Evita Plus Codes tipo "34WR+26 ..." y toma una dirección de calle/localidad. */
+  private pickReadableAddress(results: any[], fallback: string): string {
+    const plusPrefix = /^[2-9C-HJ-NP-X]{4,8}\+[2-9C-HJ-NP-X]{2,3}\s*/i;
+    const preferTypes = [
+      'street_address', 'route', 'intersection', 'premise',
+      'neighborhood', 'sublocality', 'sublocality_level_1',
+      'locality', 'administrative_area_level_2', 'political'
+    ];
+
+    const withoutPlus = (results || []).filter(
+      (r: any) => !(r?.types || []).includes('plus_code')
+    );
+    const preferred =
+      withoutPlus.find((r: any) => (r?.types || []).some((t: string) => preferTypes.includes(t))) ||
+      withoutPlus[0] ||
+      results[0];
+
+    const raw = String(preferred?.formatted_address || '').trim();
+    const cleaned = raw.replace(plusPrefix, '').replace(/^,\s*/, '').trim();
+    return cleaned || fallback;
   }
 
   private fitBoundsIfBoth() {

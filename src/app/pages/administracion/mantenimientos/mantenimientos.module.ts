@@ -12,7 +12,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatError } from '@angular/material/form-field';
 import { MatDialogModule } from '@angular/material/dialog';
-import { DxDataGridModule } from 'devextreme-angular';
+import { DxDataGridModule, DxDateBoxModule } from 'devextreme-angular';
 import { RouterModule } from '@angular/router';
 import { VexPageLayoutComponent } from '@vex/components/vex-page-layout/vex-page-layout.component';
 import { VexPageLayoutContentDirective } from '@vex/components/vex-page-layout/vex-page-layout-content.directive';
@@ -50,6 +50,7 @@ import { RegistrarMantenimientoVehicularComponent } from './registrar-mantenimie
     MatNativeDateModule,
     MatDialogModule,
     DxDataGridModule,
+    DxDateBoxModule,
     RouterModule,
     VexPageLayoutComponent,
     VexPageLayoutContentDirective

@@ -5,6 +5,11 @@ import { fadeInRight400ms } from '@vex/animations/fade-in-right.animation';
 import { AlertsService } from 'src/app/pages/pages/modal/alerts.service';
 import { ModulosService } from 'src/app/pages/services/modulos.service';
 import { PermisosService } from 'src/app/pages/services/permisos.service';
+import {
+  bloquearCaracteresEspecialesNombre,
+  NOMBRE_SIN_ESPECIALES_REGEX,
+  onPasteNombreSinEspeciales
+} from 'src/app/core/validators/nombre-sin-especiales';
 
 @Component({
   selector: 'vex-alta-permiso',
@@ -77,7 +82,7 @@ export class AltaPermisoComponent implements OnInit {
   initForm() {
     this.permisoForm = this.fb.group({
       idModulo: [null, Validators.required],
-      nombre: ['', Validators.required],
+      nombre: ['', [Validators.required, Validators.pattern(NOMBRE_SIN_ESPECIALES_REGEX)]],
       descripcion: ['', Validators.required],
     });
   }
@@ -254,6 +259,12 @@ export class AltaPermisoComponent implements OnInit {
       }
     );
   }
+
+  onPasteNombre(event: ClipboardEvent): void {
+    onPasteNombreSinEspeciales(event, this.permisoForm.get('nombre'));
+  }
+
+  bloquearCaracteresEspecialesNombre = bloquearCaracteresEspecialesNombre;
 
   regresar() {
     this.route.navigateByUrl('/administracion/permisos');

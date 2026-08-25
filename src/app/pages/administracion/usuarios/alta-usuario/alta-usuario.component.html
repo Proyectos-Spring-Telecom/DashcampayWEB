@@ -12,7 +12,7 @@
             <span class="sep">/</span>
             <span class="crumb-current" aria-current="page">Usuarios</span>
             <span class="sep">/</span>
-            <span class="crumb-current" aria-current="page">Agregar Usuario</span>
+            <span class="crumb-current" aria-current="page">{{ title }}</span>
           </nav>
         </div>
         <section class="mt-4">
@@ -27,19 +27,36 @@
               <div class="col-12 col-md-6 col-lg-4">
                 <label class="form-label"><i class="fa fa-user"></i><span>Nombre</span></label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput placeholder="Nombre" formControlName="nombre" />
+                  <input matInput placeholder="Nombre" formControlName="nombre" maxlength="100"
+                    (keydown)="onNombreKeydown($event)"
+                    (paste)="bloquearPegado($event)"
+                    (drop)="bloquearPegado($event)" />
+                  <mat-error *ngIf="usuarioForm.get('nombre')?.hasError('required')">El nombre es obligatorio.</mat-error>
+                  <mat-error *ngIf="usuarioForm.get('nombre')?.hasError('maxlength')">Máximo 100 caracteres.</mat-error>
+                  <mat-error *ngIf="usuarioForm.get('nombre')?.hasError('pattern')">No permite caracteres especiales.</mat-error>
                 </mat-form-field>
               </div>
               <div class="col-12 col-md-6 col-lg-4">
                 <label class="form-label"><i class="fa fa-user-pen"></i><span>Apellido Paterno</span></label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput placeholder="Apellido Paterno" formControlName="apellidoPaterno" />
+                  <input matInput placeholder="Apellido Paterno" formControlName="apellidoPaterno" maxlength="100"
+                    (keydown)="onNombreKeydown($event)"
+                    (paste)="bloquearPegado($event)"
+                    (drop)="bloquearPegado($event)" />
+                  <mat-error *ngIf="usuarioForm.get('apellidoPaterno')?.hasError('required')">El apellido paterno es obligatorio.</mat-error>
+                  <mat-error *ngIf="usuarioForm.get('apellidoPaterno')?.hasError('maxlength')">Máximo 100 caracteres.</mat-error>
+                  <mat-error *ngIf="usuarioForm.get('apellidoPaterno')?.hasError('pattern')">No permite caracteres especiales.</mat-error>
                 </mat-form-field>
               </div>
               <div class="col-12 col-md-6 col-lg-4">
                 <label class="form-label"><i class="fa fa-user"></i><span>Apellido Materno</span></label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput placeholder="Apellido Materno" formControlName="apellidoMaterno" />
+                  <input matInput placeholder="Apellido Materno" formControlName="apellidoMaterno" maxlength="100"
+                    (keydown)="onNombreKeydown($event)"
+                    (paste)="bloquearPegado($event)"
+                    (drop)="bloquearPegado($event)" />
+                  <mat-error *ngIf="usuarioForm.get('apellidoMaterno')?.hasError('maxlength')">Máximo 100 caracteres.</mat-error>
+                  <mat-error *ngIf="usuarioForm.get('apellidoMaterno')?.hasError('pattern')">No permite caracteres especiales.</mat-error>
                 </mat-form-field>
               </div>
               <div class="col-12 col-md-6 col-lg-4" *ngIf="inputContrasena">
@@ -56,7 +73,7 @@
               </div>
               <div class="col-12 col-md-6 col-lg-4">
                 <label class="form-label">
-                  <i class="fa fa-user-shield"></i><span>Rol</span>
+                  <i class="fa fa-user-shield"></i><span>Rol *</span>
                 </label>
                 <mat-form-field appearance="fill" class="w-100">
                   <mat-select placeholder="Selecciona un rol" formControlName="idRol" (selectionChange)="onRolChanged($event.value)">
@@ -64,6 +81,9 @@
                       {{ r.nombre }}
                     </mat-option>
                   </mat-select>
+                  <mat-error *ngIf="usuarioForm.get('idRol')?.hasError('required')">
+                    El rol es obligatorio.
+                  </mat-error>
                 </mat-form-field>
               </div>
               <div class="col-12 col-md-6 col-lg-4">
@@ -198,8 +218,10 @@
                 </div>
               </div>
               <div class="col-12 d-flex justify-content-end gap-2 pt-2">
-                <button mat-raised-button color="primary" (click)="submit()">
-                  <mat-icon>save</mat-icon> Guardar
+                <button mat-raised-button color="primary" type="button"
+                  [disabled]="usuarioForm.invalid || loading"
+                  (click)="submit()">
+                  <mat-icon>save</mat-icon> {{ submitButton }}
                 </button>
                 <button mat-raised-button color="warn" type="button" (click)="regresar()">
                   <mat-icon>close</mat-icon> Cancelar

@@ -29,7 +29,9 @@
                 </label>
                 <mat-form-field appearance="fill">
                   <input matInput placeholder="Nombre" formControlName="nombre"
-                    [attr.aria-labelledby]="'lbl-nombre'">
+                    [attr.aria-labelledby]="'lbl-nombre'"
+                    (keydown)="bloquearCaracteresEspecialesNombre($event)"
+                    (paste)="onPasteNombre($event)">
                 </mat-form-field>
               </div>
 

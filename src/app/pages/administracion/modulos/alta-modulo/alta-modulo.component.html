@@ -14,7 +14,7 @@
                         <span class="sep">/</span>
                         <span class="crumb-current" aria-current="page">Módulos</span>
                         <span class="sep">/</span>
-                        <span class="crumb-current" aria-current="page">Agregar Módulo</span>
+                        <span class="crumb-current" aria-current="page">{{ title }}</span>
                     </nav>
                 </div>
 
@@ -37,7 +37,22 @@
                                 </label>
                                 <mat-form-field appearance="fill" class="w-100">
                                     <!-- Ajusta el control al correcto (ej. formControlName="nombre") -->
-                                    <input matInput placeholder="Nombre del módulo" formControlName="nombre" />
+                                    <input matInput placeholder="Nombre del módulo" formControlName="nombre"
+                                      maxlength="100"
+                                      (keydown)="onTextoKeydown($event)"
+                                      (paste)="bloquearCopiarPegar($event)"
+                                      (copy)="bloquearCopiarPegar($event)"
+                                      (cut)="bloquearCopiarPegar($event)"
+                                      (drop)="bloquearCopiarPegar($event)" />
+                                    <mat-error *ngIf="moduloForm.get('nombre')?.hasError('required')">
+                                      El nombre es obligatorio.
+                                    </mat-error>
+                                    <mat-error *ngIf="moduloForm.get('nombre')?.hasError('maxlength')">
+                                      El nombre no puede superar los 100 caracteres.
+                                    </mat-error>
+                                    <mat-error *ngIf="moduloForm.get('nombre')?.hasError('pattern')">
+                                      El nombre no permite caracteres especiales.
+                                    </mat-error>
                                 </mat-form-field>
                             </div>
 
@@ -47,9 +62,22 @@
                                     <i class="fa fa-align-left"></i><span>Descripción</span>
                                 </label>
                                 <mat-form-field appearance="fill" class="w-100">
-                                    <!-- Si prefieres textarea: <textarea matInput rows="3" ...></textarea> -->
                                     <input matInput placeholder="Descripción del módulo"
-                                        formControlName="descripcion" />
+                                        formControlName="descripcion" maxlength="255"
+                                        (keydown)="onTextoKeydown($event)"
+                                        (paste)="bloquearCopiarPegar($event)"
+                                        (copy)="bloquearCopiarPegar($event)"
+                                        (cut)="bloquearCopiarPegar($event)"
+                                        (drop)="bloquearCopiarPegar($event)" />
+                                    <mat-error *ngIf="moduloForm.get('descripcion')?.hasError('required')">
+                                      La descripción es obligatoria.
+                                    </mat-error>
+                                    <mat-error *ngIf="moduloForm.get('descripcion')?.hasError('maxlength')">
+                                      La descripción no puede superar los 255 caracteres.
+                                    </mat-error>
+                                    <mat-error *ngIf="moduloForm.get('descripcion')?.hasError('pattern')">
+                                      La descripción no permite caracteres especiales.
+                                    </mat-error>
                                 </mat-form-field>
                             </div>
 

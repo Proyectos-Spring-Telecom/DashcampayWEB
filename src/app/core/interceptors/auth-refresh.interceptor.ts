@@ -30,11 +30,15 @@ export const authRefreshInterceptor: HttpInterceptorFn = (req, next) => {
         return throwError(() => error);
       }
 
-      if (isAuthExemptUrl(req.url) || req.context.get(AUTH_RETRY)) {
-        if (!isAuthExemptUrl(req.url)) {
-          auth.forceLogout();
-          router.navigate(['/login']);
-        }
+      // Login/refresh/logout: no intentar renovar sesión
+      if (isAuthExemptUrl(req.url)) {
+        return throwError(() => error);
+      }
+
+      // Ya reintentamos tras refresh: no cerrar sesión automáticamente.
+      // Un 401 repetido suele ser permiso/negocio, no token inválido
+      // (si el refresh hubiera fallado, se cierra abajo).
+      if (req.context.get(AUTH_RETRY)) {
         return throwError(() => error);
       }
 

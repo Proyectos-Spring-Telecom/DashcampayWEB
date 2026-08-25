@@ -13,7 +13,7 @@
             <span class="sep">/</span>
             <span class="crumb-current" aria-current="page">Gestión Vehícular</span>
             <span class="sep">/</span>
-            <span class="crumb-current" aria-current="page">Registrar Mantenimiento Combustible</span>
+            <span class="crumb-current" aria-current="page">{{ title }}</span>
           </nav>
         </div>
 
@@ -98,10 +98,13 @@
                   <span>Cantidad de Combustible</span>
                 </label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput type="number" placeholder="Cantidad de Combustible" formControlName="cantidadCombustible" (keypress)="allowOnlyNumbers($event)" step="0.01" />
+                  <input matInput type="number" min="0" placeholder="Cantidad de Combustible" formControlName="cantidadCombustible" (keypress)="allowOnlyNumbers($event)" step="0.01" />
                 </mat-form-field>
                 <mat-error *ngIf="showRequiredMsgs && mantenimientoForm.get('cantidadCombustible')?.hasError('required')">
                   La cantidad de combustible es obligatoria.
+                </mat-error>
+                <mat-error *ngIf="showRequiredMsgs && mantenimientoForm.get('cantidadCombustible')?.hasError('min')">
+                  La cantidad no puede ser negativa.
                 </mat-error>
               </div>
 
@@ -112,10 +115,13 @@
                   <span>Precio de Combustible</span>
                 </label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput type="number" placeholder="Precio de Combustible" formControlName="precioCombustible" (keypress)="allowOnlyNumbers($event)" step="0.01" />
+                  <input matInput type="number" min="0" placeholder="Precio de Combustible" formControlName="precioCombustible" (keypress)="allowOnlyNumbers($event)" step="0.01" />
                 </mat-form-field>
                 <mat-error *ngIf="showRequiredMsgs && mantenimientoForm.get('precioCombustible')?.hasError('required')">
                   El precio de combustible es obligatorio.
+                </mat-error>
+                <mat-error *ngIf="showRequiredMsgs && mantenimientoForm.get('precioCombustible')?.hasError('min')">
+                  El precio no puede ser negativo.
                 </mat-error>
               </div>
 
@@ -126,22 +132,41 @@
                   <span>Kilometraje</span>
                 </label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput type="number" placeholder="Kilometraje" formControlName="kilometraje" (keypress)="allowOnlyNumbers($event)" step="0.01" />
+                  <input matInput type="number" min="0" placeholder="Kilometraje" formControlName="kilometraje" (keypress)="allowOnlyNumbers($event)" step="0.01" />
                 </mat-form-field>
                 <mat-error *ngIf="showRequiredMsgs && mantenimientoForm.get('kilometraje')?.hasError('required')">
                   El kilometraje es obligatorio.
                 </mat-error>
-              </div>              <!-- Fecha y Hora -->
+                <mat-error *ngIf="showRequiredMsgs && mantenimientoForm.get('kilometraje')?.hasError('min')">
+                  El kilometraje no puede ser negativo.
+                </mat-error>
+              </div>
+
+              <!-- Fecha y Hora -->
               <div class="col-12 col-md-6 col-lg-4">
                 <label class="form-label">
                   <i class="fa fa-calendar-alt"></i>
                   <span>Fecha y Hora</span>
                 </label>
-                <mat-form-field appearance="fill" class="w-100">
-                  <input matInput type="datetime-local" placeholder="Fecha y Hora" formControlName="fechaHora" step="60" />
-                </mat-form-field>
+                <dx-date-box
+                  class="w-100 fecha-hora-box"
+                  type="datetime"
+                  formControlName="fechaHora"
+                  displayFormat="dd/MM/yyyy HH:mm"
+                  [openOnFieldClick]="true"
+                  [showClearButton]="false"
+                  pickerType="calendar"
+                  [useMaskBehavior]="true"
+                  [applyValueMode]="'instantly'"
+                  stylingMode="filled"
+                  placeholder="dd/mm/aaaa hh:mm"
+                  [interval]="15">
+                </dx-date-box>
                 <mat-error *ngIf="showRequiredMsgs && mantenimientoForm.get('fechaHora')?.hasError('required')">
                   La fecha y hora es obligatoria.
+                </mat-error>
+                <mat-error *ngIf="showRequiredMsgs && mantenimientoForm.get('fechaHora')?.hasError('fechaInvalida')">
+                  La fecha y hora no es válida.
                 </mat-error>
               </div>
             </div>            <!-- Botones de acción -->

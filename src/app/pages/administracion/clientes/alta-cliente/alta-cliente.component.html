@@ -13,7 +13,7 @@
             <span class="sep">/</span>
             <span class="crumb-current" aria-current="page">Clientes</span>
             <span class="sep">/</span>
-            <span class="crumb-current" aria-current="page">Agregar Cliente</span>
+            <span class="crumb-current" aria-current="page">{{ title }}</span>
           </nav>
         </div>
 
@@ -66,19 +66,42 @@
                   <span>{{ esMoral ? 'Razón Social' : 'Nombre' }}</span>
                 </label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput [placeholder]="esMoral ? 'Razón Social' : 'Nombre'" formControlName="nombre" />
+                  <input matInput [placeholder]="esMoral ? 'Razón Social' : 'Nombre'" formControlName="nombre"
+                    maxlength="100"
+                    (keydown)="onNombreKeydown($event)"
+                    (paste)="bloquearPegado($event)"
+                    (drop)="bloquearPegado($event)" />
+                  <mat-error *ngIf="clienteForm.get('nombre')?.hasError('required')">
+                    {{ esMoral ? 'La razón social es obligatoria.' : 'El nombre es obligatorio.' }}
+                  </mat-error>
+                  <mat-error *ngIf="clienteForm.get('nombre')?.hasError('maxlength')">Máximo 100 caracteres.</mat-error>
+                  <mat-error *ngIf="clienteForm.get('nombre')?.hasError('pattern')">No permite caracteres especiales.</mat-error>
                 </mat-form-field>
               </div>
               <div class="col-12 col-md-6 col-lg-3" *ngIf="esFisica">
                 <label class="form-label"><i class="fa fa-user-pen"></i><span>Apellido Paterno</span></label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput placeholder="Apellido Paterno" formControlName="apellidoPaterno" />
+                  <input matInput placeholder="Apellido Paterno" formControlName="apellidoPaterno"
+                    maxlength="100"
+                    (keydown)="onNombreKeydown($event)"
+                    (paste)="bloquearPegado($event)"
+                    (drop)="bloquearPegado($event)" />
+                  <mat-error *ngIf="clienteForm.get('apellidoPaterno')?.hasError('required')">El apellido paterno es obligatorio.</mat-error>
+                  <mat-error *ngIf="clienteForm.get('apellidoPaterno')?.hasError('maxlength')">Máximo 100 caracteres.</mat-error>
+                  <mat-error *ngIf="clienteForm.get('apellidoPaterno')?.hasError('pattern')">No permite caracteres especiales.</mat-error>
                 </mat-form-field>
               </div>
               <div class="col-12 col-md-6 col-lg-3" *ngIf="esFisica">
                 <label class="form-label"><i class="fa fa-user"></i><span>Apellido Materno</span></label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput placeholder="Apellido Materno" formControlName="apellidoMaterno" />
+                  <input matInput placeholder="Apellido Materno" formControlName="apellidoMaterno"
+                    maxlength="100"
+                    (keydown)="onNombreKeydown($event)"
+                    (paste)="bloquearPegado($event)"
+                    (drop)="bloquearPegado($event)" />
+                  <mat-error *ngIf="clienteForm.get('apellidoMaterno')?.hasError('required')">El apellido materno es obligatorio.</mat-error>
+                  <mat-error *ngIf="clienteForm.get('apellidoMaterno')?.hasError('maxlength')">Máximo 100 caracteres.</mat-error>
+                  <mat-error *ngIf="clienteForm.get('apellidoMaterno')?.hasError('pattern')">No permite caracteres especiales.</mat-error>
                 </mat-form-field>
               </div>
               <div class="col-12 col-md-6 col-lg-3">

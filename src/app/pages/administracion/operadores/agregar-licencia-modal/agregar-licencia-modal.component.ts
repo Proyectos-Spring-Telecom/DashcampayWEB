@@ -67,7 +67,7 @@ export class AgregarLicenciaModalComponent implements OnInit {
 
   initForm() {
     this.licenciaForm = this.fb.group({
-      numeroLicencia: [null, Validators.required],
+      numeroLicencia: [null, [Validators.required, Validators.maxLength(20)]],
       fechaExpedicion: [null, Validators.required],
       fechaVencimiento: [null, Validators.required],
       idTipoLicencia: [null, Validators.required],
@@ -212,6 +212,9 @@ export class AgregarLicenciaModalComponent implements OnInit {
         const control = this.licenciaForm.get(key);
         if (control?.invalid && control.errors?.['required']) {
           camposFaltantes.push(etiquetas[key] || key);
+        }
+        if (key === 'numeroLicencia' && control?.errors?.['maxlength']) {
+          camposFaltantes.push('N° Licencia (máximo 20 caracteres)');
         }
       });
 

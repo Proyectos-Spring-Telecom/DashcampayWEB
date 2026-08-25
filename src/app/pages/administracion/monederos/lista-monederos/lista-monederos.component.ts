@@ -16,6 +16,7 @@ import { fadeInRight400ms } from '@vex/animations/fade-in-right.animation';
 import { DxDataGridComponent } from 'devextreme-angular';
 import { AlertsService } from 'src/app/pages/pages/modal/alerts.service';
 import { MonederosServices } from 'src/app/pages/services/monederos.service';
+import { TransaccionesService } from 'src/app/pages/services/transacciones.service';
 import { Router } from '@angular/router';
 import CustomStore from 'devextreme/data/custom_store';
 import { lastValueFrom } from 'rxjs';
@@ -58,6 +59,7 @@ export class ListaMonederosComponent implements OnInit {
   montoIngresado: number | null = null;
   submitButton = 'Confirmar';
   loading = false;
+  readonly MAX_RECARGA = 5000;
   public paginaActual: number = 1;
   public totalRegistros: number = 0;
   public pageSize: number = 20;
@@ -68,6 +70,7 @@ export class ListaMonederosComponent implements OnInit {
   constructor(
     private dialog: MatDialog,
     private moneService: MonederosServices,
+    private transaccionService: TransaccionesService,
     private alerts: AlertsService,
     private fb: FormBuilder,
     private route: Router
@@ -295,7 +298,7 @@ export class ListaMonederosComponent implements OnInit {
   initForm() {
     this.recargaForm = this.fb.group({
       tipoTransaccion: ['Recarga'],
-      monto: [null, [Validators.required]],
+      monto: [null, [Validators.required, Validators.min(0.01), Validators.max(this.MAX_RECARGA)]],
       latitud: [null],
       longitud: [null],
       fechaHora: [null],
@@ -357,6 +360,18 @@ export class ListaMonederosComponent implements OnInit {
     }
   }
 
+  onMontoInput(event: Event) {
+    if (this.tipoOperacion !== 'recarga') return;
+    const input = event.target as HTMLInputElement;
+    const n = Number(input.value);
+    if (!Number.isFinite(n)) return;
+    if (n > this.MAX_RECARGA) {
+      input.value = String(this.MAX_RECARGA);
+      this.recargaForm.get('monto')?.setValue(this.MAX_RECARGA);
+      this.recargaForm.get('monto')?.markAsTouched();
+    }
+  }
+
   confirmarOperacion() {
     const form =
       this.tipoOperacion === 'recarga' ? this.recargaForm : this.debitoForm;
@@ -376,23 +391,49 @@ export class ListaMonederosComponent implements OnInit {
       return;
     }
 
-    const payload = {
-      tipoTransaccion: form.get('tipoTransaccion')?.value,
-      monto: montoVal,
-      latitud: null,
-      longitud: null,
-      fechaHora: form.get('fechaHora')?.value || this.nowWithOffset(),
-      numeroSerieMonedero:
-        this.selectedTransaccion?.numSerie ??
-        form.get('numeroSerieMonedero')?.value ??
-        null,
-      numeroSerieValidador: null
-    };
+    if (this.tipoOperacion === 'recarga' && montoVal > this.MAX_RECARGA) {
+      form.get('monto')?.setValue(this.MAX_RECARGA);
+      setTimeout(() => {
+        this.alerts.open({
+          type: 'warning',
+          title: 'Monto excedido',
+          message: `El monto máximo de recarga es ${this.MAX_RECARGA.toLocaleString('es-MX')}.`,
+          confirmText: 'Aceptar'
+        });
+      }, 200);
+      return;
+    }
+
+    const numeroSerie =
+      this.selectedTransaccion?.numSerie ??
+      form.get('numeroSerieMonedero')?.value ??
+      null;
 
     this.loading = true;
     this.submitButton = 'Cargando...';
 
-    this.moneService.crearTransaccion(payload).subscribe({
+    const request$ =
+      this.tipoOperacion === 'recarga'
+        ? this.transaccionService.agregarRecarga({
+            idTipoTransaccion: 1,
+            monto: montoVal,
+            latitudInicial: null,
+            longitudInicial: null,
+            numeroSerieMonedero: numeroSerie,
+            numeroSerieValidador: null,
+            idMetodoPago: 1
+          })
+        : this.moneService.crearTransaccion({
+            tipoTransaccion: form.get('tipoTransaccion')?.value,
+            monto: montoVal,
+            latitud: null,
+            longitud: null,
+            fechaHora: form.get('fechaHora')?.value || this.nowWithOffset(),
+            numeroSerieMonedero: numeroSerie,
+            numeroSerieValidador: null
+          });
+
+    request$.subscribe({
       next: () => {
         this.loading = false;
         this.submitButton = 'Confirmar';

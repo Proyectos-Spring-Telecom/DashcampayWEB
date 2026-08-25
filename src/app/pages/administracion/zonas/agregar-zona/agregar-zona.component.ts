@@ -6,6 +6,11 @@ import { AuthenticationService } from 'src/app/core/services/auth.service';
 import { AlertsService } from 'src/app/pages/pages/modal/alerts.service';
 import { ClientesService } from 'src/app/pages/services/clientes.service';
 import { ZonasService } from 'src/app/pages/services/zonas.service';
+import {
+  bloquearCaracteresEspecialesNombre,
+  NOMBRE_SIN_ESPECIALES_REGEX,
+  onPasteNombreSinEspeciales
+} from 'src/app/core/validators/nombre-sin-especiales';
 
 declare const google: any;
 
@@ -38,8 +43,13 @@ export class AgregarZonaComponent implements OnInit, AfterViewInit, OnDestroy {
   private static mapsLoading?: Promise<void>;
   private map?: any;
   private resizeObserver?: ResizeObserver;
-  private drawingManager?: any;
   private polygon?: any;
+  private drawingMode = false;
+  private drawPath?: any;
+  private drawPolyline?: any;
+  private mapClickListener?: any;
+  private mapDblClickListener?: any;
+  private drawControlBtn?: HTMLButtonElement;
 
   private readonly defaultCenter = { lat: 21.110778, lng: -86.762590 };
   private readonly defaultZoom = 13;
@@ -82,16 +92,6 @@ export class AgregarZonaComponent implements OnInit, AfterViewInit, OnDestroy {
         await this.initMap();
         this.observeResize();
 
-        if (!(window as any).google?.maps?.drawing) {
-          console.warn('[GMAPS] La librería drawing NO está cargada.');
-          this.showMapsErrorOverlay(
-            'No se cargó la librería de dibujo. Revisa que el script tenga &libraries=drawing.',
-            'Error de configuración'
-          );
-          return;
-        }
-
-        this.initDrawing();
         this.addDrawControl();
         this.addClearControl();
 
@@ -111,6 +111,7 @@ export class AgregarZonaComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.stopCustomDrawing();
     this.resizeObserver?.disconnect();
     this.resizeObserver = undefined;
   }
@@ -220,8 +221,8 @@ export class AgregarZonaComponent implements OnInit, AfterViewInit, OnDestroy {
   initForm() {
     this.zonasForm = this.fb.group({
       estatus: [1, Validators.required],
-      nombre: ['', Validators.required],
-      descripcion: ['', Validators.required],
+      nombre: ['', [Validators.required, Validators.maxLength(100), Validators.pattern(NOMBRE_SIN_ESPECIALES_REGEX)]],
+      descripcion: ['', [Validators.required, Validators.maxLength(255), Validators.pattern(NOMBRE_SIN_ESPECIALES_REGEX)]],
       idCliente: [this.isAdmin ? null : this.idClienteUser, Validators.required],
       geocerca: [[]],
     });
@@ -248,6 +249,7 @@ export class AgregarZonaComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.zonasForm.invalid) {
       this.submitButton = 'Guardar';
       this.loading = false;
+      this.zonasForm.markAllAsTouched();
 
       const etiquetas: any = {
         nombre: 'Nombre',
@@ -258,8 +260,14 @@ export class AgregarZonaComponent implements OnInit, AfterViewInit, OnDestroy {
       const camposFaltantes: string[] = [];
       Object.keys(this.zonasForm.controls).forEach(key => {
         const control = this.zonasForm.get(key);
-        if (control?.invalid && control.errors?.['required']) {
-          camposFaltantes.push(etiquetas[key] || key);
+        if (!control?.invalid || !control.errors) return;
+        const label = etiquetas[key] || key;
+        if (control.errors['required']) {
+          camposFaltantes.push(label);
+        } else if (control.errors['maxlength']) {
+          camposFaltantes.push(`${label}: máximo ${control.errors['maxlength'].requiredLength} caracteres`);
+        } else if (control.errors['pattern']) {
+          camposFaltantes.push(`${label}: no permite caracteres especiales`);
         }
       });
 
@@ -334,6 +342,7 @@ export class AgregarZonaComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.zonasForm.invalid) {
       this.submitButton = 'Guardar';
       this.loading = false;
+      this.zonasForm.markAllAsTouched();
 
       const etiquetas: any = {
         nombre: 'Nombre',
@@ -344,8 +353,14 @@ export class AgregarZonaComponent implements OnInit, AfterViewInit, OnDestroy {
       const camposFaltantes: string[] = [];
       Object.keys(this.zonasForm.controls).forEach(key => {
         const control = this.zonasForm.get(key);
-        if (control?.invalid && control.errors?.['required']) {
-          camposFaltantes.push(etiquetas[key] || key);
+        if (!control?.invalid || !control.errors) return;
+        const label = etiquetas[key] || key;
+        if (control.errors['required']) {
+          camposFaltantes.push(label);
+        } else if (control.errors['maxlength']) {
+          camposFaltantes.push(`${label}: máximo ${control.errors['maxlength'].requiredLength} caracteres`);
+        } else if (control.errors['pattern']) {
+          camposFaltantes.push(`${label}: no permite caracteres especiales`);
         }
       });
 
@@ -414,6 +429,12 @@ export class AgregarZonaComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
 
+  onPasteSinEspeciales(event: ClipboardEvent, controlName: 'nombre' | 'descripcion'): void {
+    onPasteNombreSinEspeciales(event, this.zonasForm.get(controlName));
+  }
+
+  bloquearCaracteresEspecialesNombre = bloquearCaracteresEspecialesNombre;
+
   regresar() {
     this.route.navigateByUrl('/administracion/zonas');
   }
@@ -466,10 +487,7 @@ export class AgregarZonaComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private loadGoogleMaps(): Promise<void> {
-    if (
-      (window as any).google?.maps?.Map &&
-      (window as any).google?.maps?.drawing
-    ) {
+    if ((window as any).google?.maps?.Map) {
       return Promise.resolve();
     }
 
@@ -480,22 +498,11 @@ export class AgregarZonaComponent implements OnInit, AfterViewInit, OnDestroy {
       ) as HTMLScriptElement | undefined);
 
     if (existing) {
-      if ((window as any).google?.maps) {
-        // Verificar si tiene la librería drawing
-        if (!(window as any).google?.maps?.drawing) {
-          // Recargar con drawing
-          return this.loadGoogleMapsWithDrawing();
-        }
+      if ((window as any).google?.maps?.Map) {
         return Promise.resolve();
       }
       return new Promise<void>((resolve, reject) => {
-        existing.addEventListener('load', () => {
-          if (!(window as any).google?.maps?.drawing) {
-            this.loadGoogleMapsWithDrawing().then(resolve).catch(reject);
-          } else {
-            resolve();
-          }
-        });
+        existing.addEventListener('load', () => resolve());
         existing.addEventListener('error', () =>
           reject(new Error('No se pudo cargar Google Maps'))
         );
@@ -503,16 +510,16 @@ export class AgregarZonaComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     if (!AgregarZonaComponent.mapsLoading) {
-      AgregarZonaComponent.mapsLoading = this.loadGoogleMapsWithDrawing();
+      AgregarZonaComponent.mapsLoading = this.loadGoogleMapsScript();
     }
     return AgregarZonaComponent.mapsLoading;
   }
 
-  private loadGoogleMapsWithDrawing(): Promise<void> {
+  private loadGoogleMapsScript(): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       const script = document.createElement('script');
       script.setAttribute('data-gmaps', 'js');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBpLS8xONczrVarb5aZz-mXj1hBMLxhQpU&libraries=drawing&v=weekly`;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBpLS8xONczrVarb5aZz-mXj1hBMLxhQpU&v=weekly&libraries=marker`;
       script.async = true;
       script.defer = true;
       script.onload = () => resolve();
@@ -581,56 +588,105 @@ export class AgregarZonaComponent implements OnInit, AfterViewInit, OnDestroy {
     this.resizeObserver.observe(el);
   }
 
-  private initDrawing(): void {
+  private startCustomDrawing(): void {
     if (!this.map) return;
-    if (!(window as any).google?.maps?.drawing) return;
 
-    const polygonOptions: any = {
-      fillColor: '#1E88E5',
-      fillOpacity: 0.15,
+    this.stopCustomDrawing();
+
+    if (this.polygon) {
+      this.polygon.setMap(null);
+      this.polygon = undefined;
+    }
+    this.zonasForm.get('geocerca')?.setValue([], { emitEvent: false });
+    this.zonasForm.get('geocerca')?.markAsDirty();
+
+    this.drawingMode = true;
+    this.drawPath = new google.maps.MVCArray();
+    this.drawPolyline = new google.maps.Polyline({
+      map: this.map,
+      path: this.drawPath,
       strokeColor: '#1E88E5',
       strokeOpacity: 0.9,
       strokeWeight: 2,
-      clickable: true,
-      editable: true,
-      draggable: false,
+      clickable: false,
       zIndex: 10,
-    };
-
-    this.drawingManager = new google.maps.drawing.DrawingManager({
-      drawingControl: true,
-      drawingControlOptions: {
-        position: google.maps.ControlPosition.TOP_CENTER,
-        drawingModes: [google.maps.drawing.OverlayType.POLYGON],
-      },
-      polygonOptions,
     });
 
-    this.drawingManager.setMap(this.map);
+    this.map.setOptions({
+      draggableCursor: 'crosshair',
+      disableDoubleClickZoom: true,
+    });
 
-    google.maps.event.addListener(
-      this.drawingManager,
-      'polygoncomplete',
-      (poly: any) => {
-        if (this.polygon) this.polygon.setMap(null);
-        this.polygon = poly;
-        this.polygon.setEditable(true);
+    this.mapClickListener = this.map.addListener('click', (e: any) => {
+      if (!this.drawingMode || !e?.latLng || !this.drawPath) return;
+      this.drawPath.push(e.latLng);
+    });
 
-        const path = this.polygon.getPath();
-        path.addListener('insert_at', () => {
-          this.syncPolygonToForm();
-        });
-        path.addListener('set_at', () => {
-          this.syncPolygonToForm();
-        });
-        path.addListener('remove_at', () => {
-          this.syncPolygonToForm();
-        });
+    this.mapDblClickListener = this.map.addListener('dblclick', (e: any) => {
+      if (!this.drawingMode) return;
+      if (e?.domEvent?.preventDefault) e.domEvent.preventDefault();
+      if (e?.domEvent?.stopPropagation) e.domEvent.stopPropagation();
+      this.finishCustomDrawing();
+    });
 
-        this.syncPolygonToForm();
-        this.drawingManager.setDrawingMode(null);
-      }
-    );
+    if (this.drawControlBtn) {
+      this.drawControlBtn.textContent = 'Finalizar geocerca';
+      this.drawControlBtn.style.background = '#198754';
+    }
+  }
+
+  private finishCustomDrawing(): void {
+    if (!this.drawingMode || !this.drawPath) return;
+
+    const points = this.drawPath.getArray() || [];
+    if (points.length < 3) {
+      this.alerts.open({
+        type: 'warning',
+        title: 'Geocerca incompleta',
+        message: 'Debes marcar al menos 3 puntos. Haz clic en el mapa para agregar vértices y luego finaliza.',
+        confirmText: 'Entendido',
+        backdropClose: false,
+      });
+      return;
+    }
+
+    const coords = points.map((ll: any) => ({
+      lat: ll.lat(),
+      lng: ll.lng(),
+    }));
+
+    this.stopCustomDrawing();
+    this.drawPolygonFromPath(coords);
+    this.fitToPolygon();
+  }
+
+  private stopCustomDrawing(): void {
+    this.drawingMode = false;
+
+    if (this.mapClickListener) {
+      google.maps.event.removeListener(this.mapClickListener);
+      this.mapClickListener = undefined;
+    }
+    if (this.mapDblClickListener) {
+      google.maps.event.removeListener(this.mapDblClickListener);
+      this.mapDblClickListener = undefined;
+    }
+
+    if (this.drawPolyline) {
+      this.drawPolyline.setMap(null);
+      this.drawPolyline = undefined;
+    }
+    this.drawPath = undefined;
+
+    this.map?.setOptions({
+      draggableCursor: null,
+      disableDoubleClickZoom: false,
+    });
+
+    if (this.drawControlBtn) {
+      this.drawControlBtn.textContent = 'Dibujar geocerca';
+      this.drawControlBtn.style.background = '#0d6efd';
+    }
   }
 
   private syncPolygonToForm(): void {
@@ -702,20 +758,14 @@ export class AgregarZonaComponent implements OnInit, AfterViewInit, OnDestroy {
     btn.style.background = '#0d6efd';
     btn.style.color = '#fff';
     btn.style.fontSize = '13px';
+    this.drawControlBtn = btn;
 
     btn.onclick = () => {
-      if (this.polygon) {
-        this.polygon.setMap(null);
-        this.polygon = undefined;
+      if (this.drawingMode) {
+        this.finishCustomDrawing();
+        return;
       }
-      this.zonasForm.get('geocerca')?.setValue([], { emitEvent: false });
-      this.zonasForm.get('geocerca')?.markAsDirty();
-
-      if (this.drawingManager && (window as any).google?.maps?.drawing) {
-        this.drawingManager.setDrawingMode(
-          google.maps.drawing.OverlayType.POLYGON
-        );
-      }
+      this.startCustomDrawing();
     };
 
     controlDiv.appendChild(btn);
@@ -741,6 +791,7 @@ export class AgregarZonaComponent implements OnInit, AfterViewInit, OnDestroy {
     btn.style.fontSize = '13px';
 
     btn.onclick = () => {
+      this.stopCustomDrawing();
       if (this.polygon) {
         this.polygon.setMap(null);
         this.polygon = undefined;

@@ -13,7 +13,7 @@
             <span class="sep">/</span>
             <span class="crumb-current" aria-current="page">Verificaciones</span>
             <span class="sep">/</span>
-            <span class="crumb-current" aria-current="page">Registrar Verificación</span>
+            <span class="crumb-current" aria-current="page">{{ title }}</span>
           </nav>
         </div>
 
@@ -35,12 +35,25 @@
                   <span>Fecha de Verificación Actual</span>
                 </label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput [matDatepicker]="pickerActual" formControlName="verificacionActual" placeholder="Seleccione la fecha">
+                  <input
+                    matInput
+                    [matDatepicker]="pickerActual"
+                    formControlName="verificacionActual"
+                    placeholder="Seleccione la fecha"
+                    [max]="proximaVerificacionMaxBound"
+                    readonly
+                    (click)="pickerActual.open()" />
                   <mat-datepicker-toggle matSuffix [for]="pickerActual"></mat-datepicker-toggle>
                   <mat-datepicker #pickerActual></mat-datepicker>
                 </mat-form-field>
                 <mat-error *ngIf="showRequiredMsgs && verificacionForm.get('verificacionActual')?.hasError('required')">
                   La fecha de verificación actual es obligatoria.
+                </mat-error>
+                <mat-error *ngIf="showRequiredMsgs && (verificacionForm.get('verificacionActual')?.hasError('fechaInvalida') || verificacionForm.get('verificacionActual')?.hasError('matDatepickerParse'))">
+                  La fecha de verificación actual no es válida.
+                </mat-error>
+                <mat-error *ngIf="showRequiredMsgs && verificacionForm.get('verificacionActual')?.hasError('matDatepickerMax')">
+                  La verificación actual no puede ser mayor a la próxima verificación.
                 </mat-error>
               </div>
 
@@ -51,12 +64,25 @@
                   <span>Fecha de Próxima Verificación</span>
                 </label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput [matDatepicker]="pickerProxima" formControlName="proximaVerificacion" placeholder="Seleccione la fecha">
+                  <input
+                    matInput
+                    [matDatepicker]="pickerProxima"
+                    formControlName="proximaVerificacion"
+                    placeholder="Seleccione la fecha"
+                    [min]="verificacionActualMinBound"
+                    readonly
+                    (click)="pickerProxima.open()" />
                   <mat-datepicker-toggle matSuffix [for]="pickerProxima"></mat-datepicker-toggle>
                   <mat-datepicker #pickerProxima></mat-datepicker>
                 </mat-form-field>
                 <mat-error *ngIf="showRequiredMsgs && verificacionForm.get('proximaVerificacion')?.hasError('required')">
                   La fecha de próxima verificación es obligatoria.
+                </mat-error>
+                <mat-error *ngIf="showRequiredMsgs && (verificacionForm.get('proximaVerificacion')?.hasError('fechaInvalida') || verificacionForm.get('proximaVerificacion')?.hasError('matDatepickerParse'))">
+                  La fecha de próxima verificación no es válida.
+                </mat-error>
+                <mat-error *ngIf="showRequiredMsgs && (verificacionForm.get('proximaVerificacion')?.hasError('fechaMenor') || verificacionForm.get('proximaVerificacion')?.hasError('matDatepickerMin'))">
+                  La próxima verificación no puede ser menor a la verificación actual.
                 </mat-error>
               </div>
 

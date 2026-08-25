@@ -14,7 +14,7 @@
                         <span class="sep">/</span>
                         <span class="crumb-current" aria-current="page">Monederos</span>
                         <span class="sep">/</span>
-                        <span class="crumb-current" aria-current="page">Agregar Monedero</span>
+                        <span class="crumb-current" aria-current="page">{{ title }}</span>
                     </nav>
                 </div>
 
@@ -38,7 +38,7 @@
                                 </mat-form-field>
                             </div>
 
-                            <div class="col-12 col-md-6 col-lg-3">
+                            <div class="col-12 col-md-6 col-lg-3" *ngIf="!idMonedero">
                                 <label class="form-label">
                                     <i class="fa fa-wallet"></i><span>Saldo</span>
                                 </label>
@@ -86,7 +86,7 @@
                                 <mat-form-field appearance="fill" class="w-100">
                                     <mat-select placeholder="Tipo Pasajero" formControlName="idTipoPasajero" [disabled]="true">
                                         <mat-option [value]="null">Seleccione un tipo</mat-option>
-                                        <mat-option *ngFor="let tipo of listaTiposPasajero" [value]="tipo.id || tipo.idTipoPasajero">
+                                        <mat-option *ngFor="let tipo of listaTiposPasajero" [value]="tipo.id">
                                             {{ tipo.nombre || tipo.nombreCatPasajero || tipo.nombreTipoPasajero }}
                                         </mat-option>
                                     </mat-select>
@@ -99,7 +99,7 @@
 
                             <div class="col-12 d-flex justify-content-end gap-2 pt-2">
                                 <button mat-raised-button color="primary" type="submit" (click)="submit()">
-                                    <mat-icon>save</mat-icon> Guardar
+                                    <mat-icon>save</mat-icon> {{ submitButton }}
                                 </button>
                                 <button mat-raised-button color="warn" type="button" (click)="regresar()">
                                     <mat-icon>close</mat-icon> Cancelar

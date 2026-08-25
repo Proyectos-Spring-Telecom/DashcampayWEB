@@ -83,18 +83,21 @@ export class ListaPermisosComponent implements OnInit {
 
           const dataTransformada = rows.map((item: any) => ({
             ...item,
+            id: Number(item?.id ?? item?.Id),
             estatusTexto:
               Number(item?.estatus) === 1 ? 'Activo' :
                 Number(item?.estatus) === 0 ? 'Inactivo' : null
           }));
 
+          const sortedData = this.applySort(dataTransformada, loadOptions?.sort);
+
           this.totalRegistros = totalRegistros;
           this.paginaActual = paginaActual;
           this.totalPaginas = totalPaginas;
-          this.paginaActualData = dataTransformada;
+          this.paginaActualData = sortedData;
 
           return {
-            data: dataTransformada,
+            data: sortedData,
             totalCount: totalRegistros
           };
         } catch (error) {
@@ -109,6 +112,49 @@ export class ListaPermisosComponent implements OnInit {
       const n = Number(v);
       return Number.isFinite(n) ? n : null;
     }
+  }
+
+  private applySort(data: any[], sort: any): any[] {
+    if (!Array.isArray(sort) || !sort.length || !Array.isArray(data)) {
+      return data;
+    }
+
+    const getByPath = (obj: any, path: string) =>
+      !obj || !path ? undefined : path.split('.').reduce((acc, key) => acc?.[key], obj);
+
+    return [...data].sort((a, b) => {
+      for (const s of sort) {
+        const selector = typeof s?.selector === 'string' ? s.selector : null;
+        if (!selector) continue;
+
+        const va = getByPath(a, selector);
+        const vb = getByPath(b, selector);
+        const na = Number(va);
+        const nb = Number(vb);
+        const bothNumeric =
+          va !== null && va !== undefined && va !== '' &&
+          vb !== null && vb !== undefined && vb !== '' &&
+          Number.isFinite(na) && Number.isFinite(nb) &&
+          typeof va !== 'boolean' && typeof vb !== 'boolean' &&
+          !Array.isArray(va) && !Array.isArray(vb) &&
+          typeof va !== 'object' && typeof vb !== 'object';
+
+        let cmp = 0;
+        if (bothNumeric) {
+          cmp = na - nb;
+        } else {
+          const sa = (va ?? '').toString().toLowerCase();
+          const sb = (vb ?? '').toString().toLowerCase();
+          if (sa < sb) cmp = -1;
+          else if (sa > sb) cmp = 1;
+        }
+
+        if (cmp !== 0) {
+          return s.desc ? -cmp : cmp;
+        }
+      }
+      return 0;
+    });
   }
 
   onGridOptionChanged(e: any) {

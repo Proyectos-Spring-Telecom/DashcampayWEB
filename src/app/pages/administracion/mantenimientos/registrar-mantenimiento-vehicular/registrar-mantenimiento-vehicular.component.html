@@ -13,7 +13,7 @@
             <span class="sep">/</span>
             <span class="crumb-current" aria-current="page">Gestión Vehícular</span>
             <span class="sep">/</span>
-            <span class="crumb-current" aria-current="page">Registrar Mantenimiento</span>
+            <span class="crumb-current" aria-current="page">{{ title }}</span>
           </nav>
         </div>
 
@@ -98,12 +98,25 @@
                   <span>Fecha Inicio del Servicio</span>
                 </label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput [matDatepicker]="fechaInicioPicker" placeholder="dd/mm/aaaa" formControlName="fechaInicio" />
+                  <input
+                    matInput
+                    [matDatepicker]="fechaInicioPicker"
+                    placeholder="dd/mm/aaaa"
+                    formControlName="fechaInicio"
+                    [max]="fechaFinalMaxBound"
+                    readonly
+                    (click)="fechaInicioPicker.open()" />
                   <mat-datepicker-toggle matIconSuffix [for]="fechaInicioPicker"></mat-datepicker-toggle>
                   <mat-datepicker #fechaInicioPicker></mat-datepicker>
                 </mat-form-field>
                 <mat-error *ngIf="showRequiredMsgs && mantenimientoForm.get('fechaInicio')?.hasError('required')">
                   La fecha de inicio es obligatoria.
+                </mat-error>
+                <mat-error *ngIf="showRequiredMsgs && (mantenimientoForm.get('fechaInicio')?.hasError('fechaInvalida') || mantenimientoForm.get('fechaInicio')?.hasError('matDatepickerParse'))">
+                  La fecha de inicio no es válida.
+                </mat-error>
+                <mat-error *ngIf="showRequiredMsgs && mantenimientoForm.get('fechaInicio')?.hasError('matDatepickerMax')">
+                  La fecha de inicio no puede ser mayor a la fecha final.
                 </mat-error>
               </div>
 
@@ -114,12 +127,25 @@
                   <span>Fecha Final del Servicio</span>
                 </label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput [matDatepicker]="fechaFinalPicker" placeholder="dd/mm/aaaa" formControlName="fechaFinal" />
+                  <input
+                    matInput
+                    [matDatepicker]="fechaFinalPicker"
+                    placeholder="dd/mm/aaaa"
+                    formControlName="fechaFinal"
+                    [min]="fechaInicioMinBound"
+                    readonly
+                    (click)="fechaFinalPicker.open()" />
                   <mat-datepicker-toggle matIconSuffix [for]="fechaFinalPicker"></mat-datepicker-toggle>
                   <mat-datepicker #fechaFinalPicker></mat-datepicker>
                 </mat-form-field>
                 <mat-error *ngIf="showRequiredMsgs && mantenimientoForm.get('fechaFinal')?.hasError('required')">
                   La fecha final es obligatoria.
+                </mat-error>
+                <mat-error *ngIf="showRequiredMsgs && (mantenimientoForm.get('fechaFinal')?.hasError('fechaInvalida') || mantenimientoForm.get('fechaFinal')?.hasError('matDatepickerParse'))">
+                  La fecha final no es válida.
+                </mat-error>
+                <mat-error *ngIf="showRequiredMsgs && (mantenimientoForm.get('fechaFinal')?.hasError('fechaMenor') || mantenimientoForm.get('fechaFinal')?.hasError('matDatepickerMin'))">
+                  La fecha final no puede ser menor a la fecha de inicio.
                 </mat-error>
               </div>
 

@@ -42,7 +42,9 @@
                   <i class="fa fa-tag"></i><span>Nombre</span>
                 </label>
                 <mat-form-field appearance="fill" class="w-100">
-                  <input matInput placeholder="Nombre" formControlName="nombre" />
+                  <input matInput placeholder="Nombre" formControlName="nombre"
+                    (keydown)="bloquearCaracteresEspecialesNombre($event)"
+                    (paste)="onPasteNombre($event)" />
                 </mat-form-field>
               </div>
               <div class="col-12 col-md-6 col-lg-4">
